@@ -66,6 +66,10 @@ MIX = {
     'Ladder_Start': 'esc_start_climbing_ladder', 'Ladder_Loop': 'esc_climbing_ladder', 'Ladder_Top': ('esc_climbing_to_top', 0.0, 0.72),
     'Wall_Climb_Run': ('esc_sprint_to_wall_climb', 0.25, 1.0), 'Wall_Run': ('esc_wall_run', 0.12, 0.75), 'Wall_Run_Diag': 'esc_diagonal_wall_run',
 }
+MIX.update({  # combo de espada do Mixamo (One Hand Sword Combo): 4 golpes cortados + o combo inteiro
+    'Esp1': ('espada_combo', 0.12, 0.32), 'Esp2': ('espada_combo', 0.32, 0.53), 'Esp3': ('espada_combo', 0.53, 0.74),
+    'Esp4': ('espada_combo', 0.74, 0.93), 'EspCombo': ('espada_combo', 0.12, 0.93)})
+ROOTZ = {'Esp1', 'Esp2', 'Esp3', 'Esp4', 'EspCombo'}   # só o avanço vai pro jogo (o sobe-desce do quadril fica no clipe)
 ROOT = {'Wall_Up', 'Wall_Down', 'Ledge_Up', 'Ladder_Start', 'Ladder_Loop', 'Ladder_Top', 'Wall_Climb_Run', 'Wall_Run', 'Wall_Run_Diag'}
 ROOTM = {}
 NOY = {'Jump_Idle', 'Jump_Full_Short', 'Jump_Start', 'Jump_Run', 'Flip_Front', 'Flip_Back'}                   # quadril sem subir/descer: a altura do pulo é do jogo
@@ -261,6 +265,8 @@ for (sj, sb), SRCX, CL, PEL in SOURCES:
             t, p = tr; pq, pt, ps = SW[spar[pel]] if pel in spar else (np.array([0, 0, 0, 1.0]), np.zeros(3), np.ones(3))
             w = pt[None] + qrot(np.repeat(pq[None], len(p), 0), p.astype(np.float64) * ps)
             d = (w - SW[pel][1][None]) * k_h
+            if game in ROOTZ and PEL == 'Hips':
+                ROOTM[game] = {'t': [round(float(x), 4) for x in t], 'y': [0.0] * len(t), 'z': [round(float(x), 4) for x in d[:, 2] - d[0, 2]]}
             if game in ROOT and PEL == 'Hips':   # movimento de raiz: o jogo move o personagem por esta curva (subida y, avanço z)
                 ROOTM[game] = {'t': [round(float(x), 4) for x in t], 'y': [round(float(x), 4) for x in d[:, 1] - d[0, 1]], 'z': [round(float(x), 4) for x in d[:, 2] - d[0, 2]]}
                 d = np.repeat(d[:1], len(d), 0)

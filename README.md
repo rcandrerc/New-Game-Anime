@@ -56,6 +56,7 @@ Pra abrir a página no próprio PC: `python3 -m http.server 8000` na pasta do re
 | Roll_Quick / Roll_Dive / Roll_Sprint | esquiva: rolamento / mergulho / arrancada rolando | Mixamo: Quick Roll, Dive Roll From Standing, Sprint To Forward Roll |
 | Slide_Start / Slide_Loop / Slide_Exit | esquiva: deslizar no chão | Quaternius UAL |
 | Climb_Up | subir em obstáculo de ~1 m | Quaternius UAL: ClimbUp_1m |
+| Esp1..Esp4 / EspCombo | combo de 4 golpes de espada (Atacar) e o combo inteiro (skill Fúria), com avanço | Mixamo: One Hand Sword Combo |
 | Sword_A / Sword_B / Sword_C / Sword_Dash_Full / Sword_Heavy | golpes de espada (combo, salto giratório, investida) | Quaternius UAL |
 | Spell_Shoot / Punch_Jab / Punch_Cross / Hit_Knock | magia, socos, levar golpe forte | Quaternius UAL |
 | Wall_Up / Wall_Down / Ledge_Up | escalar parede / descer / subir na beirada | Mixamo: Climbing Up Wall, Climbing Down Wall, Braced Hang To Crouch |

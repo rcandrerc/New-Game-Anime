@@ -210,10 +210,11 @@ function carregar(i) {
     escala(alt / ALT_Q);
     VRMC.fix(R, RUN, WALK); // passada casada com a velocidade, igual ao Quimera
     info.textContent = nome; P.extra = null; P.atk = null; menuMontar(); poeEspada();
+    document.getElementById('bS1').innerHTML = R.act.EspCombo ? 'Fúria' : 'Salto<br>giratório';
   }).catch(() => { if (meu === pedido) info.textContent = 'Não consegui carregar ' + nome + '. Toque de novo.'; delete cache[arq] });
   try { localStorage.setItem('nga-pers', i) } catch (e) {}
 }
-const ONCE = new Set(['Sword_A', 'Sword_B', 'Sword_C', 'Sword_Dash_Full', 'Spell_Shoot', 'Hit_Knock', 'Ledge_Up', 'Ladder_Start', 'Ladder_Top', 'Wall_Climb_Run', 'Wall_Run', 'Wall_Run_Diag', 'Climb_Up', 'Slide_Start', 'Slide_Exit', 'Jump_Full_Short', 'Dodge_Forward', 'Jump_Start', 'Jump_Run', 'Land_A', 'Land_B', 'Flip_Front', 'Flip_Back', 'Roll_Quick', 'Roll_Dive', 'Roll_Sprint', 'Death_A', 'Hit_A', 'Melee_1H_Attack_Slice_Diagonal', 'Melee_2H_Attack_Spin', 'Ranged_Magic_Shoot',
+const ONCE = new Set(['Esp1', 'Esp2', 'Esp3', 'Esp4', 'EspCombo', 'Sword_A', 'Sword_B', 'Sword_C', 'Sword_Dash_Full', 'Spell_Shoot', 'Hit_Knock', 'Ledge_Up', 'Ladder_Start', 'Ladder_Top', 'Wall_Climb_Run', 'Wall_Run', 'Wall_Run_Diag', 'Climb_Up', 'Slide_Start', 'Slide_Exit', 'Jump_Full_Short', 'Dodge_Forward', 'Jump_Start', 'Jump_Run', 'Land_A', 'Land_B', 'Flip_Front', 'Flip_Back', 'Roll_Quick', 'Roll_Dive', 'Roll_Sprint', 'Death_A', 'Hit_A', 'Melee_1H_Attack_Slice_Diagonal', 'Melee_2H_Attack_Spin', 'Ranged_Magic_Shoot',
   'Ranged_Magic_Summon', 'Ranged_Magic_Raise', 'Interact', 'PickUp']);
 function tocar(n, rate = 1, fade = 0.15) {
   const a = R && R.act[n]; if (!a) return;
@@ -411,13 +412,20 @@ const GOLPES = {
   investida: { a: 'Sword_Dash_Full', dur: 1.57, hits: [0.25, 0.4, 0.55], alc: 1.5, dano: [90, 130], cd: 4, anda: [0.12, 0.6, 5.5] },
   magia: { a: 'Spell_Shoot', dur: 0.5, orbe: 0.3, cd: 1.5 },
 };
+// golpes do Mixamo (One Hand Sword Combo): 4 cortes e o combo inteiro; se o personagem não tiver, fica o da Quaternius
+const GOLPES_MX = {
+  combo: [{ a: 'Esp1', dur: 0.89, hits: [0.5], alc: 1.6, dano: [70, 100], raiz: 1 }, { a: 'Esp2', dur: 0.95, hits: [0.53], alc: 1.7, dano: [80, 110], raiz: 1 },
+          { a: 'Esp3', dur: 0.93, hits: [0.58], alc: 1.7, dano: [90, 120], raiz: 1 }, { a: 'Esp4', dur: 0.85, hits: [0.41], alc: 1.9, dano: [120, 170], crit: true, raiz: 1 }],
+  giro: { a: 'EspCombo', dur: 3.66, hits: [0.12, 0.38, 0.66, 0.86], alc: 1.9, dano: [100, 150], cd: 5, crit: true, raiz: 1 },
+};
+function golpes() { return R && R.act.Esp1 ? Object.assign({}, GOLPES, GOLPES_MX) : GOLPES }
 const CD = { giro: 0, investida: 0, magia: 0 };
 let comboN = 0, comboT = 9;
 function atacar(tipo) {
   if (!R || P.modo !== 'normal' || P.dash > 0 || P.climb > 0) return;
   if (P.atk) { if (tipo === 'combo' && P.atk.tipo === 'combo' && P.atk.t > P.atk.g.dur * 0.45) P.atkFila = true; return }
   if (tipo !== 'combo' && CD[tipo] > 0) return;
-  let g; if (tipo === 'combo') { comboN = comboT < 0.6 ? (comboN + 1) % 3 : 0; g = GOLPES.combo[comboN] } else { g = GOLPES[tipo]; CD[tipo] = g.cd }
+  const G = golpes(); let g; if (tipo === 'combo') { comboN = comboT < 0.6 ? (comboN + 1) % G.combo.length : 0; g = G.combo[comboN] } else { g = G[tipo]; CD[tipo] = g.cd }
   if (!R.act[g.a]) return;
   const dx = BON.x - P.x, dz = BON.z - P.z, d = Math.hypot(dx, dz); if (d < 4.5) P.face = Math.atan2(dx, dz); // mira no boneco se estiver perto
   P.atk = { tipo, g, t: 0, feitos: new Set() }; P.extra = null; P.land = 0; P.sp = 0; cur = null;
@@ -426,6 +434,7 @@ function ataquePasso(dt) {
   for (const k in CD) CD[k] = Math.max(0, CD[k] - dt);
   comboT += dt; const A = P.atk; if (!A) return;
   const g = A.g, dur = g.ate ? g.dur * g.ate * 2 : g.dur, x = A.t / g.dur; A.t += dt;
+  if (g.raiz) { const c = curva(g.a); if (c) { const z1 = naCurva(c, A.t)[1], z0 = naCurva(c, A.t - dt)[1]; P.x += Math.sin(P.face) * (z1 - z0); P.z += Math.cos(P.face) * (z1 - z0) } }
   if (g.anda && x > g.anda[0] && x < g.anda[1]) { P.x += Math.sin(P.face) * g.anda[2] * K / 0.68 * dt; P.z += Math.cos(P.face) * g.anda[2] * K / 0.68 * dt }
   (g.hits || []).forEach((h, i) => {
     if (A.feitos.has(i) || x < h) return; A.feitos.add(i);
@@ -482,9 +491,13 @@ function tentaEscalar(mag) { // andando/correndo/pulando contra parede escaláve
     const h = s.top - P.y; if (h <= STEP) continue;
     const [nx, nz] = normalDe(s); if (Math.sin(P.face) * nx + Math.cos(P.face) * nz > -0.5) continue; // tem que estar de frente
     P.face = Math.atan2(-nx, -nz);
-    if (s.climb === 'muro' && P.chao && P.sp > 2.6 * K && curva('Wall_Run')) { // correndo no muro: sobe correndo pela parede
-      const c = curva('Wall_Run'), ate = Math.abs(nx ? P.x - s.x : P.z - s.z); // termina em pé no meio do muro
-      raiz('Wall_Run', () => { fimRaiz(); P.y = s.top; P.chao = true }, h / c.y[c.y.length - 1], ate / c.z[c.z.length - 1]); return;
+    const correndo = P.chao && P.sp > 2.2 * K;
+    if (correndo && curva('Wall_Run') && h <= 2.05 * K / 0.68) { // correndo contra algo de até ~2 m: corre pela parede e sobe em cima
+      const c = curva('Wall_Run'), ate = Math.min(Math.abs(nx ? P.x - s.x : P.z - s.z), RAD + 0.9); // termina em pé em cima
+      raiz('Wall_Run', () => { fimRaiz(); P.y = Math.max(s.top, chaoEm(P.x, P.z, s.top + 1)); P.chao = true }, h / c.y[c.y.length - 1], ate / c.z[c.z.length - 1]); return;
+    }
+    if (correndo && curva('Wall_Climb_Run') && h > 2.05 * K / 0.68) { // parede alta: sobe correndo uns passos e gruda pra escalar
+      raiz('Wall_Climb_Run', () => { P.rm = null; grudar(s, nx, nz) }, 1, 0.08); return;
     }
     if (h > 1.0 * K / 0.68) { grudar(s, nx, nz); return }
   }
