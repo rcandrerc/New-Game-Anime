@@ -16,22 +16,38 @@
   #chars{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
   #chars::-webkit-scrollbar{display:none}
   #chars button{font-size:12px;padding:6px 9px}
-  #info{position:fixed;left:max(12px,env(safe-area-inset-left,0px));top:calc(46px + env(safe-area-inset-top,0px));font-size:12px;opacity:.85;text-shadow:0 1px 2px #0008}
+  #info{position:fixed;left:max(12px,env(safe-area-inset-left,0px));top:calc(84px + env(safe-area-inset-top,0px));font-size:12px;opacity:.85;text-shadow:0 1px 2px #0008}
   /* joystick */
   #stick{position:fixed;left:calc(28px + env(safe-area-inset-left,0px));bottom:calc(28px + env(safe-area-inset-bottom,0px));width:128px;height:128px;border-radius:50%;
     background:var(--glass);border:1px solid var(--line);pointer-events:none}
   #knob{position:absolute;left:39px;top:39px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.75)}
   /* botões de ação */
-  #acts{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:230px;height:220px;pointer-events:none}
+  #acts{position:fixed;inset:0;pointer-events:none}
   #acts button{pointer-events:auto}
   #acts button{position:absolute;border-radius:50%;padding:0;display:grid;place-items:center;font-weight:600;font-size:12px}
-  #bJump{right:0;bottom:0;width:80px;height:80px;font-size:14px!important}
-  #bAtk{right:92px;bottom:8px;width:70px;height:70px;font-size:13px!important;background:rgba(150,40,40,.6)!important}
-  #bDash{right:174px;bottom:8px;width:54px;height:54px}
-  #bEsq{right:6px;bottom:94px;width:56px;height:56px}
-  #bS1{right:100px;bottom:92px;width:54px;height:54px}
-  #bS2{right:168px;bottom:76px;width:54px;height:54px}
-  #bS3{right:66px;bottom:162px;width:54px;height:54px}
+  #bJump{width:80px;height:80px;font-size:14px!important}
+  #bAtk{width:70px;height:70px;font-size:13px!important;background:rgba(150,40,40,.6)!important}
+  #bDash,#bS1,#bS2,#bS3{width:54px;height:54px}
+  #bEsq{width:56px;height:56px}
+  #acts button.semmana{animation:semmana .35s}
+  @keyframes semmana{0%,100%{translate:0}25%{translate:-4px}75%{translate:4px}}
+  /* vida e mana */
+  #vida{position:fixed;left:12px;top:46px;width:190px;display:flex;flex-direction:column;gap:4px;pointer-events:none;filter:drop-shadow(0 1px 2px #0008)}
+  #vida .bar{position:relative;height:14px;border-radius:7px;background:rgba(10,12,20,.6);border:1px solid rgba(255,255,255,.35);overflow:hidden}
+  #vida .bar i{position:absolute;inset:0;transform-origin:left;transition:transform .15s}
+  #vida #hpB i{background:linear-gradient(90deg,#c9302c,#ff6b5a)} #vida #mpB i{background:linear-gradient(90deg,#2d63d6,#5fb2ff)}
+  #vida .bar span{position:absolute;inset:0;font:700 10px/14px system-ui,sans-serif;padding-left:7px;text-shadow:0 1px 1px #000}
+  #vida #mpB.pisca{animation:pisca .4s 2} @keyframes pisca{50%{border-color:#ffd23a;box-shadow:0 0 8px #ffd23a}}
+  #dor{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 90px 30px rgba(220,30,20,.55);opacity:0;transition:opacity .35s}
+  #caiu{position:fixed;inset:0;display:none;place-items:center;font:800 26px system-ui,sans-serif;text-shadow:0 2px 6px #000;background:rgba(40,0,0,.35);pointer-events:none}
+  /* editor de botões */
+  #hudp{display:none;position:fixed;left:50%;top:calc(8px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:20;background:rgba(18,22,34,.92);border:1px solid var(--line);
+    border-radius:14px;padding:8px 12px;flex-direction:column;gap:6px;align-items:center;box-shadow:0 6px 24px #0008;max-width:calc(100vw - 20px)}
+  #hudp b{font-size:14px;color:#ffe7a8} #hudp small{font-size:11.5px;opacity:.8;text-align:center}
+  #hudp .hrow{display:flex;gap:6px;flex-wrap:wrap;justify-content:center} #hudp button{font-size:12px;padding:6px 10px}
+  body.edit #hudp{display:flex} body.edit #top,body.edit #menu,body.edit #info,body.edit #help,body.edit #nums{display:none!important}
+  body.edit [data-hud]{pointer-events:auto!important;outline:2px dashed rgba(255,231,168,.75);outline-offset:3px;cursor:grab;touch-action:none}
+  body.edit [data-hud].sel{outline:3px solid #7fdc68}
   #acts .sk{background:rgba(60,40,110,.6);font-size:10px!important;line-height:1.05;text-align:center}
   #acts .sk[data-cd]::after{content:attr(data-cd);position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;font-size:15px;font-weight:700}
   #top #bSlow,#top #bRun,#top #bMenu{font-size:12px;padding:6px 10px;flex:none}
@@ -54,17 +70,22 @@
 <body>
 <div id="top"><div id="chars"></div><button id="bSlow" aria-label="Câmera lenta">1x</button><button id="bRun">Correr</button><button id="bMenu" aria-label="Estilos e animações">⋯</button><button id="bGal" title="Galeria de animações">Galeria</button></div>
 <div id="info">carregando…</div>
-<div id="stick"><div id="knob"></div></div>
+<div id="vida" data-hud="vida"><div class="bar" id="hpB"><i></i><span>HP 100/100</span></div><div class="bar" id="mpB"><i></i><span>MP 100/100</span></div></div>
+<div id="dor"></div><div id="caiu">Você caiu…</div>
+<div id="stick" data-hud="stick"><div id="knob"></div></div>
 <div id="acts">
-  <button id="bS3" class="sk">Magia</button>
-  <button id="bS2" class="sk">Investida</button>
-  <button id="bS1" class="sk">Salto<br>giratório</button>
-  <button id="bEsq">Esquiva</button>
-  <button id="bDash">Dash</button>
-  <button id="bAtk">Atacar</button>
-  <button id="bJump">Pular</button>
+  <button data-hud="bS3" id="bS3" class="sk">Magia</button>
+  <button data-hud="bS2" id="bS2" class="sk">Investida</button>
+  <button data-hud="bS1" id="bS1" class="sk">Salto<br>giratório</button>
+  <button data-hud="bEsq" id="bEsq">Esquiva</button>
+  <button data-hud="bDash" id="bDash">Dash</button>
+  <button data-hud="bAtk" id="bAtk">Atacar</button>
+  <button data-hud="bJump" id="bJump">Pular</button>
 </div>
 <div id="nums"></div>
+<div id="hudp"><b>✥ Ajustar botões</b><div class="hrow" id="hudesq"></div><small id="hudsel">Toque num botão pra escolher e arraste pra mover</small>
+<div class="hrow"><button id="hudm">− Menor</button><button id="hudpl">+ Maior</button></div>
+<div class="hrow"><button id="hudr">Restaurar este esquema</button><button id="hudok" class="on">Pronto</button></div></div>
 <div id="menu" hidden></div>
 <div id="help">arraste: câmera · pinça: zoom · ande contra paredes de pedra pra escalar · pule 2x: mortal</div>
 <script src="js/three.min.js"></script>
@@ -240,14 +261,14 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => tecla.delete(e.key.toLowerCase()));
 const cv = r.domElement;
 cv.addEventListener('pointerdown', e => {
-  cv.setPointerCapture(e.pointerId);
+  cv.setPointerCapture(e.pointerId); if (P.modo === 'caido') return;
   if (stick.id == null && e.clientX < innerWidth * 0.45 && e.clientY > innerHeight * 0.35) {
     Object.assign(stick, { id: e.pointerId, x0: e.clientX, y0: e.clientY, dx: 0, dy: 0, t: e.timeStamp, lx: e.clientX, ly: e.clientY });
-    stickEl.style.left = (e.clientX - 64) + 'px'; stickEl.style.top = (e.clientY - 64) + 'px'; stickEl.style.bottom = 'auto';
+    stickEl.style.left = (e.clientX - 64) + 'px'; stickEl.style.top = (e.clientY - 64) + 'px'; stickEl.style.bottom = stickEl.style.right = 'auto';
   } else {
     // segundo dedo logo depois e o primeiro quase parado: era pinça, não joystick
     if (stick.id != null && e.timeStamp - stick.t < 350 && Math.hypot(stick.dx, stick.dy) < 0.25) {
-      camT.set(stick.id, [stick.lx, stick.ly]); stick.id = null; stick.dx = stick.dy = 0; knob.style.transform = ''; stickEl.style.left = ''; stickEl.style.top = ''; stickEl.style.bottom = '';
+      camT.set(stick.id, [stick.lx, stick.ly]); stick.id = null; stick.dx = stick.dy = 0; knob.style.transform = ''; hudAplica('stick');
     }
     camT.set(e.pointerId, [e.clientX, e.clientY]);
   }
@@ -262,7 +283,7 @@ cv.addEventListener('pointermove', e => {
   else { const p = [...camT.values()], d = Math.max(20, Math.hypot(p[0][0] - p[1][0], p[0][1] - p[1][1])); if (pinch > 0) dist = Math.min(ZMAX, Math.max(ZMIN, dist * (pinch / d))); pinch = d }
 });
 const solta = e => {
-  if (e.pointerId === stick.id) { stick.id = null; stick.dx = stick.dy = 0; knob.style.transform = ''; stickEl.style.left = ''; stickEl.style.top = ''; stickEl.style.bottom = '' }
+  if (e.pointerId === stick.id) { stick.id = null; stick.dx = stick.dy = 0; knob.style.transform = ''; hudAplica('stick') }
   camT.delete(e.pointerId); if (camT.size === 0) pinch = 0; else if (pinch) pinch = -1;
 };
 cv.addEventListener('pointerup', solta); cv.addEventListener('pointercancel', solta);
@@ -271,7 +292,7 @@ document.getElementById('bSlow').addEventListener('pointerdown', e => {
   e.preventDefault(); e.stopPropagation(); lento = lento === 1 ? 0.5 : lento === 0.5 ? 0.25 : 1;
   const b = document.getElementById('bSlow'); b.textContent = lento === 1 ? '1x' : lento === 0.5 ? '½x' : '¼x'; b.classList.toggle('on', lento !== 1);
 });
-const botao = (id, f) => document.getElementById(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); f() });
+const botao = (id, f) => document.getElementById(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (!document.body.classList.contains('edit') && P.modo !== 'caido') f() });
 botao('bJump', pular); botao('bDash', dash); botao('bEsq', esquiva); botao('bAtk', () => atacar('combo')); botao('bS1', () => atacar('giro')); botao('bS2', () => atacar('investida')); botao('bS3', () => atacar('magia')); botao('bRun', () => { P.run = !P.run; atualRun() });
 botao('bMenu', () => { const m = document.getElementById('menu'); m.hidden = !m.hidden });
 document.getElementById('bGal').onclick = () => location.href = 'galeria.html';
@@ -287,6 +308,9 @@ function menuMontar() {
     }
     m.append(lin);
   }
+  { const lin = document.createElement('div'); lin.className = 'lin'; lin.innerHTML = '<span>Botões</span>';
+    HUD.L.forEach((_, i) => { const b = document.createElement('button'); b.textContent = (i + 1) + ' ' + PRESET_NOME[i]; b.classList.toggle('on', HUD.e === i); b.onclick = () => { HUD.e = i; hudSalva(); hudAplicaTudo(); menuMontar() }; lin.append(b) });
+    const ed = document.createElement('button'); ed.textContent = '✥ Editar'; ed.onclick = () => { m.hidden = true; hudEditar(true) }; lin.append(ed); m.append(lin) }
   const sep = document.createElement('div'); sep.className = 'lin'; sep.innerHTML = '<span>Animações</span>'; m.append(sep);
   for (const [n, t] of EXTRAS) if (R.act[n]) { const b = document.createElement('button'); b.textContent = t; b.onclick = () => { P.extra = n; P.extraT = 0; m.hidden = true }; m.append(b) }
 }
@@ -411,6 +435,86 @@ function acerta(alvo, v, crit, dx, dz, cor) { // um alvo (boneco ou bicho) receb
 }
 function alvos() { return [BON, ...BICHOS.filter(b => b.vivo)] }
 
+
+// ---------------- vida e mana do jogador ----------------
+Object.assign(P, { hp: 100, hpMax: 100, mp: 100, mpMax: 100, mpT: 9, hpT: 9 });
+const hpB = document.querySelector('#hpB i'), hpT = document.querySelector('#hpB span'), mpB = document.querySelector('#mpB i'), mpTx = document.querySelector('#mpB span'), dorEl = document.getElementById('dor');
+let hudV = '';
+function levaDano(v) {
+  if (P.modo !== 'normal') return; P.hp = Math.max(0, P.hp - v); P.hpT = 0;
+  dorEl.style.transition = 'none'; dorEl.style.opacity = 1; void dorEl.offsetWidth; dorEl.style.transition = ''; dorEl.style.opacity = 0;
+  dano(v, false, P.x, P.y + 2 * K / 0.68, P.z);
+  if (P.hp <= 0) { // caiu: anima a queda e volta no começo
+    P.modo = 'caido'; P.caiT = 0; P.atk = null; P.dash = 0; P.flip = 0; P.extra = null; P.sp = 0; cur = null; document.getElementById('caiu').style.display = 'grid';
+  } else if (!P.atk && P.chao && R && R.act.Hit_A) { P.extra = 'Hit_A'; P.extraT = 0 }
+}
+function vidaPasso(dt) {
+  P.mpT += dt; P.hpT += dt;
+  if (P.modo !== 'caido') { P.mp = Math.min(P.mpMax, P.mp + (P.mpT > 0.8 ? 9 : 0) * dt); if (P.hpT > 4) P.hp = Math.min(P.hpMax, P.hp + 3 * dt) }
+  const v = (P.hp | 0) + '/' + (P.mp | 0); if (v === hudV) return; hudV = v;
+  hpB.style.transform = `scaleX(${P.hp / P.hpMax})`; hpT.textContent = `HP ${Math.ceil(P.hp)}/${P.hpMax}`;
+  mpB.style.transform = `scaleX(${P.mp / P.mpMax})`; mpTx.textContent = `MP ${P.mp | 0}/${P.mpMax}`;
+}
+function caidoPasso(dt) {
+  P.caiT += dt;
+  if (P.caiT > 3) { Object.assign(P, { modo: 'normal', x: -3.2, z: 11, y: 0, vy: 0, face: Math.PI, hp: P.hpMax, mp: P.mpMax, chao: true }); cur = null; yaw = P.face + Math.PI; document.getElementById('caiu').style.display = 'none' }
+}
+
+// ---------------- botões: 3 esquemas que dá pra editar (arrasta e muda o tamanho) ----------------
+// cada item guarda o canto de referência (esquerda/direita, cima/baixo), a distância até esse canto e a escala
+const PRESET_NOME = ['Arco', 'Compacto', 'Em linha'];
+const rb = (x, y, s = 1) => ({ h: 'r', v: 'b', x, y, s });
+const BASE = { stick: { h: 'l', v: 'b', x: 28, y: 28, s: 1 }, vida: { h: 'l', v: 't', x: 12, y: 46, s: 1 } };
+const PRESETS = [
+  { ...BASE, bJump: rb(14, 16), bAtk: rb(106, 24), bDash: rb(188, 24), bEsq: rb(20, 110), bS1: rb(114, 108), bS2: rb(182, 92), bS3: rb(80, 178) },
+  { ...BASE, bAtk: rb(29, 29, 1.25), bJump: rb(116, 24, 0.9), bDash: rb(103, 101), bEsq: rb(36, 128), bS1: rb(196, 80), bS2: rb(143, 163), bS3: rb(51, 201) },
+  { ...BASE, bJump: rb(14, 16), bAtk: rb(104, 20), bDash: rb(186, 26), bEsq: rb(252, 25), bS1: rb(20, 112), bS2: rb(84, 112), bS3: rb(148, 112) },
+];
+const HUD_NOME = { bJump: 'Pular', bAtk: 'Atacar', bDash: 'Dash', bEsq: 'Esquiva', bS1: 'Fúria', bS2: 'Investida', bS3: 'Magia', stick: 'Joystick', vida: 'Vida e mana' };
+let HUD = { e: 0, L: [{}, {}, {}] };
+try { const h = JSON.parse(localStorage.getItem('nga-hud')); if (h && h.L && h.L.length === 3) HUD = h } catch (e) {}
+function hudSalva() { try { localStorage.setItem('nga-hud', JSON.stringify(HUD)) } catch (e) {} }
+function hudCfg(id) { return HUD.L[HUD.e][id] || PRESETS[HUD.e][id] }
+function hudAplica(id) {
+  const el = document.querySelector(`[data-hud="${id}"]`), c = hudCfg(id); if (!el || !c) return;
+  el.style.left = c.h === 'l' ? c.x + 'px' : 'auto'; el.style.right = c.h === 'r' ? c.x + 'px' : 'auto';
+  el.style.top = c.v === 't' ? c.y + 'px' : 'auto'; el.style.bottom = c.v === 'b' ? c.y + 'px' : 'auto';
+  el.style.transform = c.s !== 1 ? `scale(${c.s})` : ''; el.style.transformOrigin = 'center';
+}
+function hudAplicaTudo() { for (const id in HUD_NOME) hudAplica(id) }
+hudAplicaTudo();
+const ED = { sel: null, drag: null };
+function hudEditar(on) {
+  document.body.classList.toggle('edit', on); ED.sel = null; ED.drag = null; document.querySelectorAll('[data-hud].sel').forEach(e => e.classList.remove('sel'));
+  if (on) { stick.id = null; stick.dx = stick.dy = 0; knob.style.transform = ''; tecla.clear(); hudMontar() } else hudSalva();
+}
+function hudMontar() {
+  const e = document.getElementById('hudesq'); e.textContent = '';
+  PRESET_NOME.forEach((n, i) => { const b = document.createElement('button'); b.textContent = 'Esquema ' + (i + 1) + ' · ' + n; b.classList.toggle('on', HUD.e === i); b.onclick = () => { HUD.e = i; hudSalva(); hudAplicaTudo(); hudMontar() }; e.append(b) });
+  document.getElementById('hudsel').textContent = ED.sel ? 'Escolhido: ' + HUD_NOME[ED.sel] + ' — arraste pra mover, use Menor/Maior pro tamanho' : 'Toque num botão pra escolher e arraste pra mover';
+}
+function hudGuarda(id, el, cx, cy) { // centro na tela -> canto mais perto + distância
+  const w = el.offsetWidth, h = el.offsetHeight, s = hudCfg(id).s, W = innerWidth, H = innerHeight;
+  cx = Math.max(w * s / 2, Math.min(W - w * s / 2, cx)); cy = Math.max(h * s / 2, Math.min(H - h * s / 2, cy));
+  const l = cx - w / 2, t = cy - h / 2, c = { h: cx > W / 2 ? 'r' : 'l', v: cy > H / 2 ? 'b' : 't', s };
+  c.x = Math.round(c.h === 'l' ? l : W - l - w); c.y = Math.round(c.v === 't' ? t : H - t - h);
+  HUD.L[HUD.e][id] = c; hudAplica(id);
+}
+addEventListener('pointerdown', e => {
+  if (!document.body.classList.contains('edit') || e.target.closest('#hudp')) return;
+  e.preventDefault(); e.stopPropagation();
+  const el = e.target.closest('[data-hud]'); document.querySelectorAll('[data-hud].sel').forEach(x => x.classList.remove('sel'));
+  if (!el) { ED.sel = null; hudMontar(); return }
+  ED.sel = el.dataset.hud; el.classList.add('sel'); const r0 = el.getBoundingClientRect();
+  ED.drag = { id: e.pointerId, el, ox: e.clientX - (r0.left + r0.width / 2), oy: e.clientY - (r0.top + r0.height / 2) }; hudMontar();
+}, true);
+addEventListener('pointermove', e => { const d = ED.drag; if (!d || e.pointerId !== d.id) return; e.preventDefault(); hudGuarda(ED.sel, d.el, e.clientX - d.ox, e.clientY - d.oy) }, true);
+addEventListener('pointerup', e => { if (ED.drag && e.pointerId === ED.drag.id) { ED.drag = null; hudSalva() } }, true);
+const hudTam = f => { if (!ED.sel) return; const c = { ...hudCfg(ED.sel) }; c.s = Math.round(Math.max(0.6, Math.min(1.8, c.s * f)) * 100) / 100; HUD.L[HUD.e][ED.sel] = c; hudAplica(ED.sel); hudSalva() };
+document.getElementById('hudm').onclick = () => hudTam(1 / 1.1); document.getElementById("hudpl").onclick = () => hudTam(1.1);
+document.getElementById('hudr').onclick = () => { HUD.L[HUD.e] = {}; hudSalva(); hudAplicaTudo() };
+document.getElementById('hudok').onclick = () => hudEditar(false);
+
 // ---------------- bichos (alvos que andam) ----------------
 // slimes que pulam e lobos que correm; vêm atrás de quem chega perto, recuam quando apanham, morrem com um "puf" e voltam depois
 const BICHOS = [];
@@ -486,10 +590,10 @@ function bichosPasso(dt) {
     } else if (b.est === 'ataca') { // bote: prepara, pula pra frente e volta
       const u = b.t / 0.7;
       if (u < 0.35) sq = 1 - u * 0.6; else if (u < 0.65) { const v = (b.tipo === 'lobo' ? 7 : 5); mx = Math.sin(b.face) * v; mz = Math.cos(b.face) * v; if (!b.pulou) { b.pulou = true; b.vy = b.tipo === 'lobo' ? 2.2 : 3.5 } }
-      if (u > 0.5 && !b.bateu && dp < b.r + 0.55) { b.bateu = true; P.empurra = [Math.sin(b.face) * 3.2, Math.cos(b.face) * 3.2, 0.25]; tremor = 0.08; faiscas(P.x, P.y + 0.9, P.z, 6, 0xff7a6a) }
+      if (u > 0.5 && !b.bateu && dp < b.r + 0.55 && P.modo === 'normal' && P.dash <= 0) { b.bateu = true; P.empurra = [Math.sin(b.face) * 3.2, Math.cos(b.face) * 3.2, 0.25]; tremor = 0.08; faiscas(P.x, P.y + 0.9, P.z, 6, 0xff7a6a); levaDano(b.tipo === 'lobo' ? 14 : 8) }
       if (u >= 1) { b.est = 'caca'; b.cd = 1.2 + Math.random() }
     } else {
-      if (dp < 7 && longeCasa < 13 && P.modo === 'normal' && P.y < 1) b.est = 'caca'; else if (b.est === 'caca' && (dp > 10 || longeCasa > 14)) { b.est = 'anda'; b.alvoX = b.casa[0]; b.alvoZ = b.casa[1] }
+      if (dp < 7 && longeCasa < 13 && P.modo === 'normal' && P.y < 1) b.est = 'caca'; else if (b.est === 'caca' && (dp > 10 || longeCasa > 14 || P.modo === 'caido')) { b.est = 'anda'; b.alvoX = b.casa[0]; b.alvoZ = b.casa[1] }
       let tx, tz, v;
       if (b.est === 'caca') { tx = P.x; tz = P.z; v = b.veCaca; if (dp < b.r + 1.1 && b.cd <= 0 && P.y < 0.6) { b.est = 'ataca'; b.t = 0; b.pulou = b.bateu = false; b.face = Math.atan2(dxp, dzp) } }
       else { if (b.t > 3 || Math.hypot(b.alvoX - b.x, b.alvoZ - b.z) < 0.3) { b.t = 0; const a = Math.random() * 6.28, r = Math.random() * 3.5; b.alvoX = b.casa[0] + Math.cos(a) * r; b.alvoZ = b.casa[1] + Math.sin(a) * r } tx = b.alvoX; tz = b.alvoZ; v = b.vel }
@@ -543,20 +647,26 @@ const GOLPES = {
 };
 // golpes do Mixamo (One Hand Sword Combo): 4 cortes e o combo inteiro; se o personagem não tiver, fica o da Quaternius
 const GOLPES_MX = {
-  combo: [{ a: 'Esp1', dur: 0.89, hits: [0.5], alc: 1.7, dano: [70, 100], raiz: 1, vel: 1.45, anda: [0.3, 0.55, 3.2] }, { a: 'Esp2', dur: 0.95, hits: [0.53], alc: 1.8, dano: [80, 110], raiz: 1, vel: 1.45, anda: [0.32, 0.58, 3.2] },
-          { a: 'Esp3', dur: 0.93, hits: [0.58], alc: 1.8, dano: [90, 120], raiz: 1, vel: 1.45, anda: [0.36, 0.62, 3.4] }, { a: 'Esp4', dur: 0.85, hits: [0.41], alc: 2.0, dano: [120, 170], crit: true, raiz: 1, vel: 1.35, anda: [0.2, 0.45, 4.5] }],
-  giro: { a: 'EspCombo', dur: 3.66, hits: [0.12, 0.38, 0.66, 0.86], alc: 2.0, dano: [100, 150], cd: 5, crit: true, raiz: 1, vel: 1.45, anda: [0.08, 0.9, 1.6] },
+  combo: [{ a: 'Esp1', dur: 0.89, hits: [0.5], alc: 1.7, dano: [70, 100], raiz: 1, vel: 1.85, anda: [0.3, 0.55, 3.2] }, { a: 'Esp2', dur: 0.95, hits: [0.53], alc: 1.8, dano: [80, 110], raiz: 1, vel: 1.85, anda: [0.32, 0.58, 3.2] },
+          { a: 'Esp3', dur: 0.93, hits: [0.58], alc: 1.8, dano: [90, 120], raiz: 1, vel: 1.85, anda: [0.36, 0.62, 3.4] }, { a: 'Esp4', dur: 0.85, hits: [0.41], alc: 2.0, dano: [120, 170], crit: true, raiz: 1, vel: 1.7, anda: [0.2, 0.45, 4.5] }],
+  giro: { a: 'EspCombo', dur: 3.66, hits: [0.12, 0.38, 0.66, 0.86], alc: 2.0, dano: [100, 150], cd: 5, crit: true, raiz: 1, vel: 1.75, anda: [0.08, 0.9, 1.6] },
 };
 function g0vel(g) { return pausa > 0 ? 0 : (g.vel || 1) }
 function golpes() { return R && R.act.Esp1 ? Object.assign({}, GOLPES, GOLPES_MX) : GOLPES }
-const CD = { giro: 0, investida: 0, magia: 0 };
+const CD = { giro: 0, investida: 0, magia: 0 }, CUSTO = { giro: 30, investida: 20, magia: 15 };
+function semMana(tipo) {
+  const b = document.getElementById({ giro: 'bS1', investida: 'bS2', magia: 'bS3' }[tipo]), mb = document.getElementById('mpB');
+  for (const e of [b, mb]) { e.classList.remove('semmana', 'pisca'); void e.offsetWidth } b.classList.add('semmana'); mb.classList.add('pisca');
+}
 let comboN = 0, comboT = 9;
 function atacar(tipo) {
   if (!R || P.modo !== 'normal' || P.dash > 0 || P.climb > 0) return;
-  if (P.atk) { if (tipo === 'combo' && P.atk.tipo === 'combo' && P.atk.t > P.atk.g.dur * 0.45) P.atkFila = true; return }
+  if (P.atk) { if (tipo === 'combo' && P.atk.tipo === 'combo' && P.atk.t > P.atk.g.dur * 0.25) P.atkFila = true; return }
   if (tipo !== 'combo' && CD[tipo] > 0) return;
+  if (CUSTO[tipo] && P.mp < CUSTO[tipo]) { semMana(tipo); return }
   const G = golpes(); let g; if (tipo === 'combo') { comboN = comboT < 0.6 ? (comboN + 1) % G.combo.length : 0; g = G.combo[comboN] } else { g = G[tipo]; CD[tipo] = g.cd }
   if (!R.act[g.a]) return;
+  if (CUSTO[tipo]) { P.mp -= CUSTO[tipo]; P.mpT = 0 }
   let mira = null, md = 4.5; for (const a of alvos()) { const d = Math.hypot(a.x - P.x, a.z - P.z) - a.r; if (d < md) { md = d; mira = a } }
   if (mira) P.face = Math.atan2(mira.x - P.x, mira.z - P.z); // mira no alvo mais perto
   P.atk = { tipo, g, t: 0, feitos: new Set() }; P.extra = null; P.land = 0; P.sp = 0; cur = null;
@@ -575,7 +685,8 @@ function ataquePasso(dt) {
     }
   });
   if (g.orbe && !A.orbeFeito && x >= g.orbe) { A.orbeFeito = true; orbe() }
-  if (A.t >= dur) { P.atk = null; comboT = 0; if (A.atkFila && A.tipo === 'combo') { P.atkFila = false; atacar('combo') } }
+  const corta = A.tipo === 'combo' && (A.atkFila || P.atkFila) && g.hits && x > g.hits[g.hits.length - 1] + 0.1;
+  if (A.t >= dur || corta) { P.atk = null; comboT = 0; if ((A.atkFila || P.atkFila) && A.tipo === 'combo') { P.atkFila = false; atacar('combo') } }
   if (P.atkFila) { A.atkFila = true; P.atkFila = false }
 }
 // rastro da lâmina: fita que segue a base e a ponta da espada e some rápido
@@ -663,6 +774,7 @@ function passoEspecial(dt, ix, iz) {
     if (m.t >= m.dur) { const f = m.depois; P.rm = null; f() }
     return;
   }
+  if (P.modo === 'caido') { caidoPasso(dt); return }
   const sobe = -iz, lado = ix; // joystick: pra cima sobe, pros lados anda de lado
   if (P.modo === 'parede') {
     const { s, nx, nz } = P.parede, v = velSubida('Wall_Up');
@@ -765,7 +877,8 @@ function anima(dt) {
   // escolhe a animação (mesma ordem do Quimera)
   const novoDuplo = ESTILO.duplo !== 'classico' && R.act[ESTILO.duplo], novoDash = P.dash > 0 && P.tipo !== 'voo';
   const novoPulo = ESTILO.pulo === 'mixamo' && R.act.Jump_Start;
-  if (P.modo === 'raiz') tocar(P.rm.nome, 1, 0.1);
+  if (P.modo === 'caido') tocar(R.act.Death_A ? 'Death_A' : 'Idle_A', 1, 0.1);
+  else if (P.modo === 'raiz') tocar(P.rm.nome, 1, 0.1);
   else if (P.modo === 'parede') {
     const v = P.inY > 0.3 ? ['Wall_Up', 1] : P.inY < -0.3 ? ['Wall_Down', 1] : Math.abs(P.inX) > 0.3 ? ['Wall_Up', 0.6] : [cur === 'Wall_Down' ? 'Wall_Down' : 'Wall_Up', 0];
     tocar(v[0], v[1], 0.2);
@@ -819,11 +932,11 @@ PERS.forEach(([, nome], i) => { const b = document.createElement('button'); b.te
 let ini = 0; try { ini = Math.min(PERS.length - 1, +localStorage.getItem('nga-pers') || 0) } catch (e) {}
 carregar(ini); document.getElementById('chars').children[ini].scrollIntoView({ inline: 'center' });
 yaw = P.face + Math.PI; // começa olhando por trás
-window.VILA = { P, get cur() { return cur }, get R() { return R }, get K() { return K }, set yaw(v) { yaw = v }, camDist: () => dist, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { passo(dt); anima(dt); boneco(dt); bichosPasso(dt); orbesPasso(dt) } }, atacar, BON, BICHOS, get espada() { return espada }, pular, TORRE, LAD, dash, esquiva, tecla, ESTILO }; // pra testes
+window.VILA = { P, get cur() { return cur }, get R() { return R }, get K() { return K }, set yaw(v) { yaw = v }, camDist: () => dist, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { passo(dt); anima(dt); boneco(dt); bichosPasso(dt); vidaPasso(dt); orbesPasso(dt) } }, atacar, hudEditar, get HUD() { return HUD }, levaDano, BON, BICHOS, get espada() { return espada }, pular, TORRE, LAD, dash, esquiva, tecla, ESTILO }; // pra testes
 
 setTimeout(() => { const h = document.getElementById('help'); if (h) h.style.opacity = 0 }, 12000); // a dica some sozinha
 r.setAnimationLoop(() => {
   const real = Math.min(0.05, relogio.getDelta()), dt = real * lento;
-  if (R) passo(dt); anima(dt); boneco(dt); bichosPasso(dt); faiscasPasso(dt); orbesPasso(dt); camera(real); numsPasso(dt); r.render(sc, cam);
+  if (R) passo(dt); anima(dt); boneco(dt); bichosPasso(dt); vidaPasso(dt); faiscasPasso(dt); orbesPasso(dt); camera(real); numsPasso(dt); r.render(sc, cam);
 });
 </script></body></html>
