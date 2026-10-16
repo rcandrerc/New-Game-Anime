@@ -355,6 +355,7 @@ const BON = { x: -3.2, z: 8.5, g: new THREE.Group(), corpo: new THREE.Group(), v
   BON.mats = [...new Set(BON.mats)].map(m => { m.emissive = new THREE.Color(0); return m });
   SOL.push({ x: BON.x, z: BON.z, hw: 0.38, hd: 0.38, top: 99 });
 }
+BON.r = 0.35;
 function boneco(dt) { // mola: volta pro lugar balançando
   pausa = Math.max(0, pausa - dt);
   BON.vx += (-BON.rx * 60 - BON.vx * 6) * dt; BON.vz += (-BON.rz * 60 - BON.vz * 6) * dt; BON.rx += BON.vx * dt; BON.rz += BON.vz * dt;
@@ -363,9 +364,9 @@ function boneco(dt) { // mola: volta pro lugar balançando
 }
 // números de dano
 const NUMS = [], numsEl = document.getElementById('nums'), _p = new THREE.Vector3();
-function dano(v, crit) {
+function dano(v, crit, x = BON.x, y = 1.9, z = BON.z) {
   const d = document.createElement('div'); d.textContent = v; if (crit) d.className = 'crit'; numsEl.append(d);
-  NUMS.push({ d, t: 0, x: BON.x + (Math.random() - 0.5) * 0.5, y: 1.9 + Math.random() * 0.3, z: BON.z + (Math.random() - 0.5) * 0.5 });
+  NUMS.push({ d, t: 0, x: x + (Math.random() - 0.5) * 0.5, y: y + Math.random() * 0.3, z: z + (Math.random() - 0.5) * 0.5 });
 }
 function numsPasso(dt) {
   for (let i = NUMS.length - 1; i >= 0; i--) {
@@ -396,16 +397,141 @@ function orbe() {
 function orbesPasso(dt) {
   for (let i = ORBES.length - 1; i >= 0; i--) {
     const b = ORBES[i]; b.t += dt; b.o.position.x += b.vx * dt; b.o.position.z += b.vz * dt; b.o.children[0].scale.setScalar(2 + Math.sin(b.t * 30) * 0.3);
-    const dx = b.o.position.x - BON.x, dz = b.o.position.z - BON.z, bate = Math.hypot(dx, dz) < 0.55;
-    if (bate) { acerta(150 + Math.random() * 60 | 0, Math.random() < 0.3, b.vx, b.vz, 0x9fdcff) }
+    const alvo = alvos().find(a => Math.hypot(b.o.position.x - a.x, b.o.position.z - a.z) < 0.25 + a.r), bate = !!alvo;
+    if (bate) { acerta(alvo, 150 + Math.random() * 60 | 0, Math.random() < 0.3, b.vx, b.vz, 0x9fdcff) }
     if (bate || b.t > 1.5) { sc.remove(b.o); ORBES.splice(i, 1) }
   }
 }
 let pausa = 0, tremor = 0;
-function acerta(v, crit, dx, dz, cor) { // o boneco recebe o golpe
+function acerta(alvo, v, crit, dx, dz, cor) { // um alvo (boneco ou bicho) recebe o golpe
   pausa = crit ? 0.09 : 0.055; tremor = crit ? 0.16 : 0.09;
+  if (alvo !== BON) { alvo.leva(v, crit, dx, dz); dano(v, crit, alvo.x, alvo.alt + 0.4, alvo.z); faiscas(alvo.x, alvo.alt * 0.6, alvo.z, crit ? 18 : 10, cor || alvo.cor); return }
   const l = Math.hypot(dx, dz) || 1; BON.vx += dz / l * (crit ? 5 : 3.2); BON.vz -= dx / l * (crit ? 5 : 3.2); BON.flash = 1;
   dano(v, crit); faiscas(BON.x, 1.35, BON.z, crit ? 18 : 10, cor || 0xfff1b0);
+}
+function alvos() { return [BON, ...BICHOS.filter(b => b.vivo)] }
+
+// ---------------- bichos (alvos que andam) ----------------
+// slimes que pulam e lobos que correm; vêm atrás de quem chega perto, recuam quando apanham, morrem com um "puf" e voltam depois
+const BICHOS = [];
+const olhoMat = new THREE.MeshBasicMaterial({ color: 0x1b1b24 }), brilhoMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const barraFundo = new THREE.MeshBasicMaterial({ color: 0x1a1a1a, depthTest: false, transparent: true, opacity: 0.7 }), barraGeo = new THREE.PlaneGeometry(1, 1);
+function livre(x, z, r) { // dá pra ficar ali? (não entra em casa, muro, árvore nem passa da cerca)
+  if (Math.abs(x) > LIM - 1 || Math.abs(z) > LIM - 1) return false;
+  for (const s of SOL) if (s.top > 0.35 && Math.abs(x - s.x) < s.hw + r && Math.abs(z - s.z) < s.hd + r) return false;
+  return true;
+}
+function barraHP(b, w, h) {
+  const g = new THREE.Group(), f = new THREE.Mesh(barraGeo, barraFundo), v = new THREE.Mesh(barraGeo, new THREE.MeshBasicMaterial({ color: 0xe8453c, depthTest: false }));
+  f.scale.set(w + 0.04, 0.11, 1); v.scale.set(w, 0.07, 1); v.position.z = 0.001; f.renderOrder = 10; v.renderOrder = 11; g.add(f, v); g.position.y = h; g.visible = false;
+  b.g.add(g); b.barra = g; b.barraV = v; b.barraW = w;
+}
+function novoBicho(tipo, x, z, cor) {
+  const b = { tipo, casa: [x, z], x, z, y: 0, vy: 0, face: Math.random() * 6.28, g: new THREE.Group(), corpo: new THREE.Group(), vivo: true, est: 'anda', t: Math.random() * 2,
+    kx: 0, kz: 0, flash: 0, morto: 0, mats: [], cor, alvoX: x, alvoZ: z, fase: 0, atkT: 0, cd: 0 };
+  b.g.add(b.corpo); sc.add(b.g);
+  const add = (geo, m, px, py, pz, par = b.corpo, sombra = true) => { const o = new THREE.Mesh(geo, m); o.position.set(px, py, pz); o.castShadow = sombra; par.add(o); return o };
+  if (tipo === 'slime') {
+    Object.assign(b, { hp: 420, max: 420, r: 0.42, alt: 0.75, vel: 1.4, veCaca: 2.6, peso: 1 });
+    const m = new THREE.MeshLambertMaterial({ color: new THREE.Color(cor).convertSRGBToLinear(), transparent: true, opacity: 0.88 }); m.emissive = new THREE.Color(0); b.mats.push(m);
+    const corpo = add(new THREE.SphereGeometry(0.45, 18, 12), m, 0, 0.36, 0); corpo.scale.set(1, 0.8, 1);
+    add(new THREE.SphereGeometry(0.07, 8, 6), olhoMat, -0.15, 0.48, 0.36, b.corpo, false); add(new THREE.SphereGeometry(0.07, 8, 6), olhoMat, 0.15, 0.48, 0.36, b.corpo, false);
+    add(new THREE.SphereGeometry(0.025, 6, 4), brilhoMat, -0.13, 0.51, 0.42, b.corpo, false); add(new THREE.SphereGeometry(0.025, 6, 4), brilhoMat, 0.17, 0.51, 0.42, b.corpo, false);
+    add(new THREE.SphereGeometry(0.08, 8, 6), brilhoMat, -0.18, 0.62, 0.18, b.corpo, false).scale.set(1, 0.6, 1);
+    barraHP(b, 0.7, 1.05);
+  } else { // lobo
+    Object.assign(b, { hp: 800, max: 800, r: 0.55, alt: 0.95, vel: 1.6, veCaca: 4.6, peso: 2.4 });
+    const pelo = M(cor), claro = M(0xd9d4cc), esc = M(0x2b2b30); pelo.emissive = new THREE.Color(0); claro.emissive = new THREE.Color(0); b.mats.push(pelo, claro);
+    add(new THREE.BoxGeometry(0.42, 0.4, 0.95), pelo, 0, 0.62, 0);                       // corpo
+    add(new THREE.BoxGeometry(0.34, 0.2, 0.7), claro, 0, 0.47, 0.05);                     // barriga
+    const cab = new THREE.Group(); cab.position.set(0, 0.82, 0.55); b.corpo.add(cab); b.cab = cab;
+    add(new THREE.BoxGeometry(0.34, 0.32, 0.34), pelo, 0, 0, 0, cab);                      // cabeça
+    add(new THREE.BoxGeometry(0.18, 0.15, 0.26), claro, 0, -0.06, 0.26, cab);              // focinho
+    add(new THREE.BoxGeometry(0.07, 0.06, 0.05), esc, 0, -0.01, 0.4, cab, false);          // nariz
+    add(new THREE.BoxGeometry(0.06, 0.05, 0.02), olhoMat, -0.1, 0.06, 0.17, cab, false); add(new THREE.BoxGeometry(0.06, 0.05, 0.02), olhoMat, 0.1, 0.06, 0.17, cab, false);
+    for (const sx of [-1, 1]) add(new THREE.ConeGeometry(0.07, 0.16, 4), pelo, sx * 0.1, 0.22, -0.05, cab);  // orelhas
+    const rabo = add(new THREE.BoxGeometry(0.1, 0.1, 0.45), pelo, 0, 0.72, -0.62); rabo.rotation.x = 0.6; b.rabo = rabo;
+    b.pernas = [];
+    for (const [px, pz] of [[-0.14, 0.33], [0.14, 0.33], [-0.14, -0.33], [0.14, -0.33]]) {
+      const pg = new THREE.Group(); pg.position.set(px, 0.5, pz); b.corpo.add(pg); add(new THREE.BoxGeometry(0.11, 0.5, 0.11), pelo, 0, -0.25, 0, pg); b.pernas.push(pg);
+    }
+    barraHP(b, 0.9, 1.35);
+  }
+  b.leva = (v, crit, dx, dz) => {
+    b.hp -= v; b.flash = 1; b.barra.visible = true; b.mostra = 4;
+    const l = Math.hypot(dx, dz) || 1, f = (crit ? 6 : 3.2) / b.peso; b.kx = dx / l * f; b.kz = dz / l * f; b.vy = (crit ? 4.5 : 2.6) / b.peso; b.est = 'leva'; b.t = 0;
+    b.face = Math.atan2(-dx, -dz);
+    if (b.hp <= 0) { b.vivo = false; b.est = 'morre'; b.morto = 0; b.vy = 3.2 / b.peso }
+  };
+  b.g.position.set(x, 0, z); BICHOS.push(b); return b;
+}
+for (const [x, z, c] of [[-2, 17, 0x6fd16a], [0.5, 18.5, 0x6fb8ff], [-4.5, 18.5, 0xff8fc8], [15, 8, 0x6fd16a], [17, 11, 0xffc65a], [14, 12, 0x6fb8ff]]) novoBicho('slime', x, z, c);
+for (const [x, z, c] of [[-15, -7, 0x8b8f99], [-16.5, -4.5, 0x6d5a4a]]) novoBicho('lobo', x, z, c);
+function bichosPasso(dt) {
+  for (const b of BICHOS) {
+    b.t += dt; b.cd = Math.max(0, b.cd - dt); b.flash = Math.max(0, b.flash - dt * 6); b.mostra = Math.max(0, (b.mostra || 0) - dt);
+    for (const m of b.mats) m.emissive.setRGB(b.flash, b.flash, b.flash);
+    const dxp = P.x - b.x, dzp = P.z - b.z, dp = Math.hypot(dxp, dzp), longeCasa = Math.hypot(b.x - b.casa[0], b.z - b.casa[1]);
+    let mx = 0, mz = 0, sq = 1; // movimento desejado e o "amassa" do slime
+    if (b.est === 'morre') {
+      b.morto += dt; b.x += b.kx * dt; b.z += b.kz * dt; b.kx *= 0.9; b.kz *= 0.9;
+      const k = Math.max(0, 1 - Math.max(0, b.morto - 0.25) / 0.3); b.g.scale.setScalar(k);
+      if (b.morto > 0.25 && !b.puf) { b.puf = true; faiscas(b.x, 0.4, b.z, 24, b.cor) }
+      if (b.morto > 6) { // volta pra casa
+        Object.assign(b, { vivo: true, est: 'anda', hp: b.max, x: b.casa[0], z: b.casa[1], y: 0, vy: 0, kx: 0, kz: 0, puf: false, nasce: 0 }); b.barra.visible = false;
+      }
+    } else if (b.est === 'leva') { // recuo do golpe
+      b.x += b.kx * dt; b.z += b.kz * dt; b.kx *= Math.pow(0.02, dt); b.kz *= Math.pow(0.02, dt);
+      if (b.t > 0.45 && b.y <= 0.001) { b.est = 'caca' }
+    } else if (b.est === 'ataca') { // bote: prepara, pula pra frente e volta
+      const u = b.t / 0.7;
+      if (u < 0.35) sq = 1 - u * 0.6; else if (u < 0.65) { const v = (b.tipo === 'lobo' ? 7 : 5); mx = Math.sin(b.face) * v; mz = Math.cos(b.face) * v; if (!b.pulou) { b.pulou = true; b.vy = b.tipo === 'lobo' ? 2.2 : 3.5 } }
+      if (u > 0.5 && !b.bateu && dp < b.r + 0.55) { b.bateu = true; P.empurra = [Math.sin(b.face) * 3.2, Math.cos(b.face) * 3.2, 0.25]; tremor = 0.08; faiscas(P.x, P.y + 0.9, P.z, 6, 0xff7a6a) }
+      if (u >= 1) { b.est = 'caca'; b.cd = 1.2 + Math.random() }
+    } else {
+      if (dp < 7 && longeCasa < 13 && P.modo === 'normal' && P.y < 1) b.est = 'caca'; else if (b.est === 'caca' && (dp > 10 || longeCasa > 14)) { b.est = 'anda'; b.alvoX = b.casa[0]; b.alvoZ = b.casa[1] }
+      let tx, tz, v;
+      if (b.est === 'caca') { tx = P.x; tz = P.z; v = b.veCaca; if (dp < b.r + 1.1 && b.cd <= 0 && P.y < 0.6) { b.est = 'ataca'; b.t = 0; b.pulou = b.bateu = false; b.face = Math.atan2(dxp, dzp) } }
+      else { if (b.t > 3 || Math.hypot(b.alvoX - b.x, b.alvoZ - b.z) < 0.3) { b.t = 0; const a = Math.random() * 6.28, r = Math.random() * 3.5; b.alvoX = b.casa[0] + Math.cos(a) * r; b.alvoZ = b.casa[1] + Math.sin(a) * r } tx = b.alvoX; tz = b.alvoZ; v = b.vel }
+      const dx = tx - b.x, dz = tz - b.z, d = Math.hypot(dx, dz), perto = b.est === 'caca' ? b.r + 0.7 : 0.2;
+      if (d > perto && b.est !== 'ataca') {
+        const alvoF = Math.atan2(dx, dz); let df = alvoF - b.face; df = Math.atan2(Math.sin(df), Math.cos(df)); b.face += df * Math.min(1, dt * 8);
+        if (b.tipo === 'slime') { const ph = (b.fase + dt * 2.2) % 1; b.fase = ph; if (ph < 0.5) { mx = Math.sin(b.face) * v * 1.7; mz = Math.cos(b.face) * v * 1.7; if (b.y <= 0.001 && ph < 0.1) b.vy = 2.6 } }
+        else { mx = Math.sin(b.face) * v; mz = Math.cos(b.face) * v }
+      } else if (b.est === 'caca') { b.face = Math.atan2(dxp, dzp) }
+    }
+    // anda sem atravessar nada e sem entrar no jogador
+    if (b.est !== 'morre') {
+      const nx = b.x + mx * dt, nz = b.z + mz * dt;
+      if (livre(nx, b.z, b.r)) b.x = nx; if (livre(b.x, nz, b.r)) b.z = nz;
+      if (!livre(b.x, b.z, b.r)) { b.x -= b.kx * dt; b.z -= b.kz * dt; b.kx = b.kz = 0 }
+      const ex = b.x - P.x, ez = b.z - P.z, ed = Math.hypot(ex, ez), min = b.r + RAD * 0.8;
+      if (ed < min && ed > 0.001 && P.y < 0.8) { b.x = P.x + ex / ed * min; b.z = P.z + ez / ed * min }
+      for (const o of BICHOS) if (o !== b && o.vivo) { const ox = b.x - o.x, oz = b.z - o.z, od = Math.hypot(ox, oz), m2 = b.r + o.r; if (od < m2 && od > 0.001) { b.x += ox / od * (m2 - od) * 0.5; b.z += oz / od * (m2 - od) * 0.5 } }
+    }
+    b.vy -= 14 * dt; b.y = Math.max(0, b.y + b.vy * dt); if (b.y === 0 && b.vy < 0) { if (b.vy < -3 && b.tipo === 'slime') b.amassa = 0.18; b.vy = 0 }
+    // pose
+    b.g.position.set(b.x, b.y, b.z); b.g.rotation.y = b.face;
+    if (b.est !== 'morre') { b.nasce = Math.min(1, (b.nasce ?? 1) + dt * 2.5); b.g.scale.setScalar(b.nasce) }
+    if (b.tipo === 'slime') {
+      b.amassa = Math.max(0, (b.amassa || 0) - dt); const am = b.amassa > 0 ? b.amassa / 0.18 : 0, no = b.y > 0.01 ? 0.15 : 0;
+      const sy = sq * (1 + no - am * 0.35 + Math.sin(b.t * 5) * 0.03); b.corpo.scale.set(1 / Math.sqrt(sy), sy, 1 / Math.sqrt(sy));
+      b.corpo.rotation.x = b.est === 'leva' ? -0.4 : 0;
+    } else {
+      const rapido = Math.hypot(mx, mz), ph = b.t * (rapido > 3 ? 14 : 8), am = rapido > 0.1 ? (rapido > 3 ? 0.75 : 0.45) : 0;
+      b.pernas[0].rotation.x = b.pernas[3].rotation.x = Math.sin(ph) * am; b.pernas[1].rotation.x = b.pernas[2].rotation.x = -Math.sin(ph) * am;
+      b.rabo.rotation.y = Math.sin(b.t * 6) * 0.3; b.cab.rotation.x = b.est === 'ataca' ? (b.t < 0.25 ? 0.3 : -0.4) : b.est === 'caca' ? 0.15 : 0;
+      b.corpo.rotation.x = b.est === 'leva' ? -0.3 : b.y > 0.05 ? -0.15 : 0; b.corpo.scale.set(1, sq, 1);
+    }
+    // barra de vida virada pra câmera
+    if (b.barra.visible) {
+      if (!b.vivo || (b.mostra <= 0 && b.hp >= b.max)) b.barra.visible = false;
+      b.barra.quaternion.copy(b.g.quaternion).invert().multiply(cam.quaternion);
+      const k = Math.max(0, b.hp / b.max); b.barraV.scale.x = b.barraW * k; b.barraV.position.x = -(1 - k) * b.barraW / 2;
+    }
+  }
+  // empurrão que o jogador leva do bote
+  if (P.empurra) { const e = P.empurra; e[2] -= dt; if (e[2] <= 0 || P.modo !== 'normal') P.empurra = null; else { const nx = P.x + e[0] * dt, nz = P.z + e[1] * dt; if (livre(nx, nz, RAD * 0.8)) { P.x = nx; P.z = nz } } }
 }
 // golpes: animação, momentos em que acertam (fração da duração), alcance e dano
 const GOLPES = {
@@ -431,7 +557,8 @@ function atacar(tipo) {
   if (tipo !== 'combo' && CD[tipo] > 0) return;
   const G = golpes(); let g; if (tipo === 'combo') { comboN = comboT < 0.6 ? (comboN + 1) % G.combo.length : 0; g = G.combo[comboN] } else { g = G[tipo]; CD[tipo] = g.cd }
   if (!R.act[g.a]) return;
-  const dx = BON.x - P.x, dz = BON.z - P.z, d = Math.hypot(dx, dz); if (d < 4.5) P.face = Math.atan2(dx, dz); // mira no boneco se estiver perto
+  let mira = null, md = 4.5; for (const a of alvos()) { const d = Math.hypot(a.x - P.x, a.z - P.z) - a.r; if (d < md) { md = d; mira = a } }
+  if (mira) P.face = Math.atan2(mira.x - P.x, mira.z - P.z); // mira no alvo mais perto
   P.atk = { tipo, g, t: 0, feitos: new Set() }; P.extra = null; P.land = 0; P.sp = 0; cur = null;
 }
 function ataquePasso(dt) {
@@ -442,8 +569,10 @@ function ataquePasso(dt) {
   if (g.anda && x > g.anda[0] && x < g.anda[1]) { const u = (x - g.anda[0]) / (g.anda[1] - g.anda[0]), v = g.anda[2] * K / 0.68 * dt * (g.anda[3] ? (1 - u) * (1 - u) : 1); P.x += Math.sin(P.face) * v; P.z += Math.cos(P.face) * v }
   (g.hits || []).forEach((h, i) => {
     if (A.feitos.has(i) || x < h) return; A.feitos.add(i);
-    const dx = BON.x - P.x, dz = BON.z - P.z, d = Math.hypot(dx, dz), frente = (dx * Math.sin(P.face) + dz * Math.cos(P.face)) / (d || 1);
-    if (d < g.alc * K / 0.68 + 0.4 && (g.roda || frente > 0.3)) { const ult = i === g.hits.length - 1; acerta(g.dano[0] + Math.random() * (g.dano[1] - g.dano[0]) | 0, g.crit && ult, dx, dz) }
+    for (const a of alvos()) {
+      const dx = a.x - P.x, dz = a.z - P.z, d = Math.hypot(dx, dz), frente = (dx * Math.sin(P.face) + dz * Math.cos(P.face)) / (d || 1);
+      if (d < g.alc * K / 0.68 + 0.05 + a.r && (g.roda || frente > 0.3 || d < a.r + 0.3)) { const ult = i === g.hits.length - 1; acerta(a, g.dano[0] + Math.random() * (g.dano[1] - g.dano[0]) | 0, g.crit && ult, dx, dz) }
+    }
   });
   if (g.orbe && !A.orbeFeito && x >= g.orbe) { A.orbeFeito = true; orbe() }
   if (A.t >= dur) { P.atk = null; comboT = 0; if (A.atkFila && A.tipo === 'combo') { P.atkFila = false; atacar('combo') } }
@@ -690,11 +819,11 @@ PERS.forEach(([, nome], i) => { const b = document.createElement('button'); b.te
 let ini = 0; try { ini = Math.min(PERS.length - 1, +localStorage.getItem('nga-pers') || 0) } catch (e) {}
 carregar(ini); document.getElementById('chars').children[ini].scrollIntoView({ inline: 'center' });
 yaw = P.face + Math.PI; // começa olhando por trás
-window.VILA = { P, get cur() { return cur }, get R() { return R }, get K() { return K }, set yaw(v) { yaw = v }, camDist: () => dist, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { passo(dt); anima(dt); boneco(dt); orbesPasso(dt) } }, atacar, BON, get espada() { return espada }, pular, TORRE, LAD, dash, esquiva, tecla, ESTILO }; // pra testes
+window.VILA = { P, get cur() { return cur }, get R() { return R }, get K() { return K }, set yaw(v) { yaw = v }, camDist: () => dist, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { passo(dt); anima(dt); boneco(dt); bichosPasso(dt); orbesPasso(dt) } }, atacar, BON, BICHOS, get espada() { return espada }, pular, TORRE, LAD, dash, esquiva, tecla, ESTILO }; // pra testes
 
 setTimeout(() => { const h = document.getElementById('help'); if (h) h.style.opacity = 0 }, 12000); // a dica some sozinha
 r.setAnimationLoop(() => {
   const real = Math.min(0.05, relogio.getDelta()), dt = real * lento;
-  if (R) passo(dt); anima(dt); boneco(dt); faiscasPasso(dt); orbesPasso(dt); camera(real); numsPasso(dt); r.render(sc, cam);
+  if (R) passo(dt); anima(dt); boneco(dt); bichosPasso(dt); faiscasPasso(dt); orbesPasso(dt); camera(real); numsPasso(dt); r.render(sc, cam);
 });
 </script></body></html>
