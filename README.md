@@ -3,7 +3,12 @@
 Base pra um jogo novo com visual anime: 12 personagens VRoid prontos pro celular, com física de cabelo, franja, saia e busto
 e as mesmas 23 animações (Mixamo + Quaternius). A preferida até agora é a **Shino**.
 
-**Página de teste:** https://rcandrerc.github.io/New-Game-Anime/ (escolhe o personagem em cima e a animação embaixo).
+**Vila de teste:** https://rcandrerc.github.io/New-Game-Anime/ — mini vila jogável pra testar os personagens como num jogo:
+joystick virtual (ou WASD), arrastar a tela gira a câmera, botões Correr, Pular (2x = cambalhota), Dash e ⋯ (outras animações);
+casinhas, árvores, fonte, caixotes e uma escadinha pra testar pulo e degrau. Os números de velocidade, pulo, cambalhota e dash
+são os mesmos do Quimera Sandbox.
+
+**Galeria:** https://rcandrerc.github.io/New-Game-Anime/galeria.html — personagem parado no centro, um botão por animação.
 
 ## O que tem aqui
 
@@ -11,7 +16,8 @@ e as mesmas 23 animações (Mixamo + Quaternius). A preferida até agora é a **
 |---|---|
 | `personagens/*.glb` | Os personagens prontos pro jogo (4 a 5,5 MB cada): texturas até 1024 px, partes juntadas por material (poucas draw calls), ossos com nomes simples (`hips`, `spine`, `head`, `upperarm.l`...), 23 animações e os dados da física dentro do arquivo |
 | `js/vrm_char.js` | Código (Three.js) que prepara o modelo (material com luz e sombra no estilo anime) e roda a física do cabelo/roupa a cada quadro (`VRMC.prep`, `VRMC.tick`) |
-| `index.html` | A página de teste |
+| `index.html` | A vila de teste (jogável) |
+| `galeria.html` | A galeria (ver cada animação parado) |
 | `tools/` | Ferramentas pra refazer a personagem ou trocar animações (`build_vrm.py`, leitor de FBX do Mixamo `fbxio.py`) |
 
 ## Personagens

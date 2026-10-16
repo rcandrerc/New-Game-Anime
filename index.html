@@ -1,101 +1,307 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>New Game Anime — personagens</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>New Game Anime — vila de teste</title>
 <style>
-  :root{--bg:#1b2030;--fg:#eceef4;--dim:#9aa3b8;--btn:#2a3145;--line:#465170;--accent:#e8a33a;--ink:#16130e;color-scheme:dark}
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:14px system-ui,sans-serif;overflow:hidden}
-  canvas{display:block;touch-action:none}
-  button{font:inherit;cursor:pointer;color:var(--fg);background:var(--btn);border:1px solid var(--line);border-radius:8px;padding:8px 11px;white-space:nowrap}
+  :root{--bg:#9fc7e8;--fg:#f4f6fb;--glass:rgba(20,26,40,.55);--line:rgba(255,255,255,.28);--accent:#f0a83a;--ink:#16130e;color-scheme:dark}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:14px system-ui,sans-serif;overflow:hidden;
+    user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none}
+  canvas{display:block}
+  button{font:inherit;cursor:pointer;color:var(--fg);background:var(--glass);border:1px solid var(--line);border-radius:10px;padding:7px 10px;white-space:nowrap;
+    -webkit-tap-highlight-color:transparent;backdrop-filter:blur(4px)}
   button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   button.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
-  #top{position:fixed;left:0;right:0;top:0;padding:calc(8px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 18px max(12px,env(safe-area-inset-left,0px));
-    background:linear-gradient(var(--bg) 65%,transparent)}
-  #chars{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  #top{position:fixed;left:0;right:0;top:0;display:flex;gap:6px;align-items:center;
+    padding:calc(6px + env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 6px max(10px,env(safe-area-inset-left,0px))}
+  #chars{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
   #chars::-webkit-scrollbar{display:none}
-  #info{margin-top:6px;color:var(--dim);font-size:12px}
-  #anims{position:fixed;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;
-    padding:18px max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));
-    background:linear-gradient(transparent,var(--bg) 30%)}
-  #anims button{padding:7px 10px;font-size:13px}
+  #chars button{font-size:12px;padding:6px 9px}
+  #info{position:fixed;left:max(12px,env(safe-area-inset-left,0px));top:calc(46px + env(safe-area-inset-top,0px));font-size:12px;opacity:.85;text-shadow:0 1px 2px #0008}
+  /* joystick */
+  #stick{position:fixed;left:calc(28px + env(safe-area-inset-left,0px));bottom:calc(28px + env(safe-area-inset-bottom,0px));width:128px;height:128px;border-radius:50%;
+    background:var(--glass);border:1px solid var(--line);pointer-events:none}
+  #knob{position:absolute;left:39px;top:39px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.75)}
+  /* botões de ação */
+  #acts{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(22px + env(safe-area-inset-bottom,0px));width:190px;height:190px}
+  #acts button{position:absolute;border-radius:50%;padding:0;display:grid;place-items:center;font-weight:600;font-size:12px}
+  #bJump{right:0;bottom:0;width:82px;height:82px;font-size:14px!important}
+  #bDash{right:92px;bottom:4px;width:62px;height:62px}
+  #bRun{right:4px;bottom:92px;width:62px;height:62px}
+  #bMenu{right:88px;bottom:80px;width:52px;height:52px;font-size:20px!important}
+  #menu{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(220px + env(safe-area-inset-bottom,0px));max-width:min(320px,calc(100vw - 36px));
+    display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+  #menu button{font-size:12px}
+  #menu[hidden]{display:none}
+  #help{position:fixed;left:0;right:0;bottom:calc(6px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;opacity:.7;text-shadow:0 1px 2px #0008;pointer-events:none}
+  @media (hover:hover) and (pointer:fine){ #help{opacity:.85} }
 </style></head>
 <body>
-<div id="top"><div id="chars"></div><div id="info">carregando…</div></div>
-<div id="anims"></div>
+<div id="top"><div id="chars"></div><button id="bGal" title="Galeria de animações">Galeria</button></div>
+<div id="info">carregando…</div>
+<div id="stick"><div id="knob"></div></div>
+<div id="acts">
+  <button id="bMenu" aria-label="Outras animações">⋯</button>
+  <button id="bRun">Correr</button>
+  <button id="bDash">Dash</button>
+  <button id="bJump">Pular</button>
+</div>
+<div id="menu" hidden></div>
+<div id="help">arraste a tela pra girar a câmera · pule 2x pra cambalhota · PC: WASD, Espaço, Shift, C</div>
 <script src="js/three.min.js"></script>
 <script src="js/GLTFLoader.js"></script>
 <script src="js/vrm_char.js"></script>
 <script>
-// Página de teste dos personagens do New Game Anime: escolha o personagem em cima e a animação embaixo.
-// Arraste pra girar a câmera; pinça ou rodinha pra aproximar. A física de cabelo/roupa roda em todos (js/vrm_char.js).
+// Vila de teste do New Game Anime: anda, corre, pula, cambalhota, dash e animações, com a física de cabelo/roupa.
+// Só pra testar personagens e movimentos; não tem NPC nem missão.
 const PERS = [
-  ['sendagaya_shino', 'Shino', 'CC0'], ['sendagaya_shibu', 'Shibu', 'CC0'], ['darkness_shibu', 'Darkness Shibu', 'CC0'],
-  ['sakurada_fumiriya', 'Fumiriya', 'CC0'], ['victoria_rubin', 'Victoria Rubin', 'CC0'], ['vita', 'Vita', 'CC0'], ['vivi', 'Vivi', 'CC0'],
-  ['hairsample_female', 'Amostra de cabelo (moça)', 'CC0'], ['hairsample_male', 'Amostra de cabelo (rapaz)', 'CC0'],
-  ['avatarsample_a', 'AvatarSample A', 'licença VRoid'], ['avatarsample_b', 'AvatarSample B', 'licença VRoid'], ['avatarsample_c', 'AvatarSample C', 'licença VRoid'],
+  ['sendagaya_shino', 'Shino'], ['sendagaya_shibu', 'Shibu'], ['darkness_shibu', 'Darkness Shibu'], ['sakurada_fumiriya', 'Fumiriya'],
+  ['victoria_rubin', 'Victoria Rubin'], ['vita', 'Vita'], ['vivi', 'Vivi'], ['hairsample_female', 'Cabelo (moça)'], ['hairsample_male', 'Cabelo (rapaz)'],
+  ['avatarsample_a', 'Avatar A'], ['avatarsample_b', 'Avatar B'], ['avatarsample_c', 'Avatar C'],
 ];
-const NOMES = { Idle_A: 'Parada', Walking_A: 'Andar', Running_A: 'Correr', Jump_Idle: 'No ar', Fall_Idle: 'Queda',
-  Jump_Full_Short: 'Cambalhota', Dodge_Forward: 'Dash', Melee_1H_Attack_Slice_Diagonal: 'Ataque', Melee_2H_Attack_Spin: 'Giro',
-  Melee_Block: 'Defesa', Ranged_Magic_Shoot: 'Magia', Ranged_Magic_Spellcasting: 'Conjurar', Ranged_Magic_Spellcasting_Long: 'Conjurar longo',
-  Ranged_Magic_Summon: 'Invocar', Ranged_Magic_Raise: 'Curar', Interact: 'Interagir', PickUp: 'Pegar', Chopping: 'Machado', Pickaxing: 'Picareta',
-  Sit_Floor_Idle: 'Sentar no chão', Sit_Chair_Idle: 'Sentar na cadeira', Hit_A: 'Dano', Death_A: 'Morte' };
-const ORDEM = Object.keys(NOMES);
+const EXTRAS = [['Melee_1H_Attack_Slice_Diagonal', 'Ataque'], ['Melee_2H_Attack_Spin', 'Giro'], ['Melee_Block', 'Defesa'], ['Ranged_Magic_Shoot', 'Magia'],
+  ['Ranged_Magic_Summon', 'Invocar'], ['Ranged_Magic_Raise', 'Curar'], ['Interact', 'Interagir'], ['PickUp', 'Pegar'], ['Chopping', 'Machado'],
+  ['Pickaxing', 'Picareta'], ['Hit_A', 'Dano'], ['Death_A', 'Morte'], ['Sit_Floor_Idle', 'Sentar'], ['Sit_Chair_Idle', 'Sentar (cadeira)']];
+const LOOP_EXTRA = new Set(['Sit_Floor_Idle', 'Sit_Chair_Idle', 'Melee_Block']);
+// mesmos números do Quimera Sandbox
+const WALK = 2.2, RUN = 4.6, GRAV = 17, JUMPV = 7.2, FLIP_T = 0.56, DASH_T = 0.2, DASH_V = 15, RAD = 0.32, STEP = 0.45;
 
+// ---------------- cena ----------------
 const r = new THREE.WebGLRenderer({ antialias: true }); r.setPixelRatio(Math.min(2, devicePixelRatio)); r.outputEncoding = THREE.sRGBEncoding;
-document.body.prepend(r.domElement);
-const sc = new THREE.Scene(); sc.background = new THREE.Color(0x1b2030);
-sc.add(new THREE.HemisphereLight(0xfff4e8, 0x40485a, 1.1)); const sol = new THREE.DirectionalLight(0xffffff, 0.9); sol.position.set(2, 4, 3); sc.add(sol);
-const chao = new THREE.Mesh(new THREE.CircleGeometry(1.6, 48), new THREE.MeshStandardMaterial({ color: 0x262d3c })); chao.rotation.x = -Math.PI / 2; sc.add(chao);
-const cam = new THREE.PerspectiveCamera(35, 1, 0.05, 50); let ang = 0.5, dist = 5;
+r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; document.body.prepend(r.domElement);
+const sc = new THREE.Scene(); sc.background = new THREE.Color(0x9fc7e8); sc.fog = new THREE.Fog(0x9fc7e8, 30, 70);
+sc.add(new THREE.HemisphereLight(0xeef3ff, 0x4a6a38, 0.75));
+const sol = new THREE.DirectionalLight(0xfff1d6, 0.85); sol.castShadow = true; sol.shadow.mapSize.set(1024, 1024);
+Object.assign(sol.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 40 }); sol.shadow.bias = -0.0005; sc.add(sol, sol.target);
+const cam = new THREE.PerspectiveCamera(50, 1, 0.1, 120);
 function tam() { r.setSize(innerWidth, innerHeight); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix() } addEventListener('resize', tam); tam();
-// girar com um dedo, aproximar com dois (ou rodinha)
-const toques = new Map(); let pin = 0;
-r.domElement.addEventListener('pointerdown', e => { toques.set(e.pointerId, e.clientX + ',' + e.clientY); r.domElement.setPointerCapture(e.pointerId) });
-r.domElement.addEventListener('pointermove', e => {
-  if (!toques.has(e.pointerId)) return; const [x0] = toques.get(e.pointerId).split(',').map(Number);
-  toques.set(e.pointerId, e.clientX + ',' + e.clientY);
-  if (toques.size === 1) ang -= (e.clientX - x0) * 0.01;
-  else { const p = [...toques.values()].map(v => v.split(',').map(Number)), d = Math.hypot(p[0][0] - p[1][0], p[0][1] - p[1][1]); if (pin) dist = Math.min(8, Math.max(1.6, dist * pin / d)); pin = d }
-});
-const solta = e => { toques.delete(e.pointerId); pin = 0 }; r.domElement.addEventListener('pointerup', solta); r.domElement.addEventListener('pointercancel', solta);
-addEventListener('wheel', e => dist = Math.min(8, Math.max(1.6, dist + e.deltaY * 0.003)));
 
-const info = document.getElementById('info'), boxC = document.getElementById('chars'), boxA = document.getElementById('anims');
-let mix = null, R = null, atual = 'Idle_A', pedido = 0;
-const cache = {};
+const M = c => new THREE.MeshLambertMaterial({ color: new THREE.Color(c).convertSRGBToLinear() });
+const mat = { grama: M(0x7fb35a), terra: M(0xc9a978), pedra: M(0xb9b4ac), parede: M(0xf1e6d2), madeira: M(0x8a5a36), telhaV: M(0xc4553e),
+  telhaA: M(0x4f78b8), telhaT: M(0x3f8a6a), porta: M(0x6b4226), tronco: M(0x7a5233), folha: M(0x4f9a4a), folha2: M(0x6bb04f), agua: M(0x5aa7d8), caixa: M(0xb98a52), cerca: M(0xa77b4f) };
+function malha(g, m, x, y, z, sombra = true) { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); o.castShadow = sombra; o.receiveShadow = true; sc.add(o); return o }
+
+// chão e caminhos
+const chao = malha(new THREE.PlaneGeometry(80, 80), mat.grama, 0, 0, 0, false); chao.rotation.x = -Math.PI / 2;
+for (const [w, d] of [[3, 56], [56, 3]]) { const p = malha(new THREE.PlaneGeometry(w, d), mat.terra, 0, 0.01, 0, false); p.rotation.x = -Math.PI / 2 }
+const praca = malha(new THREE.CircleGeometry(5.5, 40), mat.pedra, 0, 0.015, 0, false); praca.rotation.x = -Math.PI / 2;
+
+// colisão: caixas no plano (x, z, meia-largura, meia-profundidade, topo). topo baixo = dá pra subir/pular em cima
+const SOL = [];
+function bloco(x, z, w, d, h, m, y0 = 0) { const o = malha(new THREE.BoxGeometry(w, h, d), m, x, y0 + h / 2, z); SOL.push({ x, z, hw: w / 2, hd: d / 2, top: y0 + h }); return o }
+
+// casinhas
+function casa(x, z, w, d, rot, telha) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot; sc.add(g);
+  const add = (geo, m, px, py, pz) => { const o = new THREE.Mesh(geo, m); o.position.set(px, py, pz); o.castShadow = o.receiveShadow = true; g.add(o); return o };
+  add(new THREE.BoxGeometry(w, 2.6, d), mat.parede, 0, 1.3, 0);
+  const tel = add(new THREE.CylinderGeometry(0.01, Math.max(w, d) * 0.78, 1.8, 4, 1), telha, 0, 3.5, 0); tel.rotation.y = Math.PI / 4; tel.scale.set(w / Math.max(w, d), 1, d / Math.max(w, d));
+  add(new THREE.BoxGeometry(1, 1.7, 0.08), mat.porta, 0, 0.85, d / 2 + 0.04);
+  for (const s of [-1, 1]) add(new THREE.BoxGeometry(0.7, 0.6, 0.08), mat.agua, s * w * 0.3, 1.6, d / 2 + 0.04);
+  const c = Math.abs(Math.cos(rot)) > 0.5; SOL.push({ x, z, hw: (c ? w : d) / 2, hd: (c ? d : w) / 2, top: 99 });
+}
+casa(-9, -9, 5, 4, 0, mat.telhaV); casa(9, -9, 4.5, 4.5, 0, mat.telhaA); casa(-10, 9, 4, 5, Math.PI, mat.telhaT);
+casa(10, 10, 5, 4, Math.PI, mat.telhaV); casa(-20, -2, 4, 4, Math.PI / 2, mat.telhaA); casa(20, 3, 4.5, 4, -Math.PI / 2, mat.telhaT);
+
+// fonte na praça
+bloco(0, 0, 2.6, 2.6, 0.55, mat.pedra); malha(new THREE.BoxGeometry(2.1, 0.05, 2.1), mat.agua, 0, 0.56, 0, false);
+bloco(0, 0, 0.5, 0.5, 1.5, mat.pedra, 0.55);
+
+// caixotes e escadinha pra testar pulo e degrau
+bloco(5, 4, 0.9, 0.9, 0.8, mat.caixa); bloco(6.1, 4, 0.9, 0.9, 1.6, mat.caixa); bloco(6.1, 5.1, 0.9, 0.9, 0.8, mat.caixa);
+for (let i = 0; i < 4; i++) bloco(-5 - i * 0.7, 5, 0.7, 2, 0.35 * (i + 1), mat.madeira);
+bloco(-8.6, 5, 1.8, 2.6, 1.4, mat.madeira);
+bloco(4.5, -5.5, 3, 0.4, 0.5, mat.madeira); // banco
+
+// árvores (instanciadas) e cerca em volta
+const posArv = [];
+for (let i = 0; i < 46; i++) { const a = i / 46 * Math.PI * 2 + (i % 3) * 0.05, rr = 24 + (i % 4) * 1.4; posArv.push([Math.cos(a) * rr, Math.sin(a) * rr]) }
+for (const p of [[-15, -14], [15, -15], [-15, 15], [16, 15], [-4, -15], [5, 15], [-14, 4], [14, -4]]) posArv.push(p);
+const tronco = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.22, 0.3, 1.6, 7), mat.tronco, posArv.length);
+const copa = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1.4, 0), mat.folha, posArv.length);
+const copa2 = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1.0, 0), mat.folha2, posArv.length);
+const _m = new THREE.Matrix4(), _q0 = new THREE.Quaternion(), _s0 = new THREE.Vector3();
+posArv.forEach(([x, z], i) => {
+  const k = 0.85 + ((i * 37) % 10) / 25; _s0.set(k, k, k);
+  tronco.setMatrixAt(i, _m.compose(new THREE.Vector3(x, 0.8 * k, z), _q0, _s0));
+  copa.setMatrixAt(i, _m.compose(new THREE.Vector3(x, 2.3 * k, z), _q0, _s0));
+  copa2.setMatrixAt(i, _m.compose(new THREE.Vector3(x + 0.3, 3.1 * k, z - 0.2), _q0, _s0));
+  SOL.push({ x, z, hw: 0.3, hd: 0.3, top: 99 });
+});
+for (const o of [tronco, copa, copa2]) { o.castShadow = o.receiveShadow = true; sc.add(o) }
+const LIM = 22; // cerca
+for (const [x, z, w, d] of [[0, -LIM, LIM * 2, 0.15], [0, LIM, LIM * 2, 0.15], [-LIM, 0, 0.15, LIM * 2], [LIM, 0, 0.15, LIM * 2]]) {
+  malha(new THREE.BoxGeometry(w, 0.12, d), mat.cerca, x, 0.75, z); malha(new THREE.BoxGeometry(w, 0.12, d), mat.cerca, x, 0.4, z);
+}
+const postes = new THREE.InstancedMesh(new THREE.BoxGeometry(0.16, 1, 0.16), mat.cerca, 88); let np = 0;
+for (let i = -LIM; i <= LIM; i += 2) for (const [x, z] of [[i, -LIM], [i, LIM], [-LIM, i], [LIM, i]]) if (np < 88) postes.setMatrixAt(np++, _m.makeTranslation(x, 0.5, z));
+postes.count = np; postes.castShadow = true; sc.add(postes);
+
+// ---------------- personagem ----------------
+const P = { x: 0, z: 3.2, y: 0, vy: 0, face: Math.PI, sp: 0, chao: true, pulos: 0, flip: 0, dash: 0, dashX: 0, ddx: 0, ddz: 0, run: true, extra: null, extraT: 0 };
+const player = new THREE.Group(), corpo = new THREE.Group(); player.add(corpo); sc.add(player);
+let R = null, mix = null, cur = null, pedido = 0; const cache = {};
+const info = document.getElementById('info');
 function carregar(i) {
-  const [arq, nome, lic] = PERS[i], meu = ++pedido;
-  [...boxC.children].forEach((b, k) => b.classList.toggle('on', k === i));
-  info.textContent = 'carregando ' + nome + '…';
+  const [arq, nome] = PERS[i], meu = ++pedido; info.textContent = 'carregando ' + nome + '…';
+  [...document.getElementById('chars').children].forEach((b, k) => b.classList.toggle('on', k === i));
   (cache[arq] || (cache[arq] = new Promise((ok, erro) => new THREE.GLTFLoader().load('personagens/' + arq + '.glb', ok, undefined, erro)))).then(gl => {
     if (meu !== pedido) return;
-    if (R) { sc.remove(R.root); mix.stopAllAction() }
+    if (R) { corpo.remove(R.root); mix.stopAllAction() }
     if (!gl.__A) gl.__A = VRMC.prep(gl);
-    const A = gl.__A, root = A.gl.scene; sc.add(root); root.userData.vrm.J = null;
-    root.traverse(o => { if (o.isMesh && o.material.userData.side != null) o.material.side = o.material.userData.side });
-    mix = new THREE.AnimationMixer(root); R = { root, act: {} };
-    for (const c of A.an.animations) R.act[c.name] = mix.clipAction(c);
-    montarBotoes(A.an.animations.map(c => c.name)); tocar(R.act[atual] ? atual : 'Idle_A');
-    info.textContent = nome + ' · ' + lic + ' · arraste pra girar';
-  }).catch(() => { if (meu === pedido) info.textContent = 'Não consegui carregar ' + nome + '. Toque de novo pra tentar.'; delete cache[arq] });
+    const A = gl.__A, root = A.gl.scene; corpo.add(root); root.userData.vrm.J = null;
+    root.traverse(o => { if (o.isMesh) { o.castShadow = !o.material.transparent; o.receiveShadow = true } });
+    mix = new THREE.AnimationMixer(root); R = { root, act: {} }; cur = null;
+    for (const c of A.an.animations) R.act[c.name] = mix.clipAction(c.clone());
+    VRMC.fix(R); // passada casada com a velocidade (corrida 4,6 e caminhada 2,2 por segundo)
+    info.textContent = nome; P.extra = null; menuMontar();
+  }).catch(() => { if (meu === pedido) info.textContent = 'Não consegui carregar ' + nome + '. Toque de novo.'; delete cache[arq] });
   try { localStorage.setItem('nga-pers', i) } catch (e) {}
 }
-function montarBotoes(nomes) {
-  boxA.textContent = '';
-  for (const n of ORDEM.filter(n => nomes.includes(n))) { const b = document.createElement('button'); b.textContent = NOMES[n]; b.dataset.n = n; b.onclick = () => tocar(n); boxA.append(b) }
+const ONCE = new Set(['Jump_Full_Short', 'Dodge_Forward', 'Death_A', 'Hit_A', 'Melee_1H_Attack_Slice_Diagonal', 'Melee_2H_Attack_Spin', 'Ranged_Magic_Shoot',
+  'Ranged_Magic_Summon', 'Ranged_Magic_Raise', 'Interact', 'PickUp']);
+function tocar(n, rate = 1, fade = 0.15) {
+  const a = R && R.act[n]; if (!a) return;
+  if (cur !== n) {
+    const prev = R.act[cur]; a.reset(); a.setLoop(ONCE.has(n) ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = true; a.play();
+    if (prev) a.crossFadeFrom(prev, fade, false); cur = n;
+  }
+  a.timeScale = rate;
 }
-function tocar(n) {
-  const a = R.act[n], prev = R.act[atual]; a.reset().play(); if (prev && prev !== a) a.crossFadeFrom(prev, 0.2, false); atual = n;
-  [...boxA.children].forEach(b => b.classList.toggle('on', b.dataset.n === n));
-}
-PERS.forEach(([, nome], i) => { const b = document.createElement('button'); b.textContent = nome; b.onclick = () => carregar(i); boxC.append(b) });
-let ini = 0; try { ini = Math.min(PERS.length - 1, +localStorage.getItem('nga-pers') || 0) } catch (e) {}
-carregar(ini); boxC.children[ini].scrollIntoView({ inline: 'center' });
 
-const relogio = new THREE.Clock();
+// ---------------- controles ----------------
+const tecla = new Set(), stick = { id: null, x0: 0, y0: 0, dx: 0, dy: 0 }, camT = new Map();
+let yaw = 0, pitch = 0.32, dist = 5.2, pinch = 0;
+const knob = document.getElementById('knob'), stickEl = document.getElementById('stick');
+addEventListener('keydown', e => {
+  const k = e.key.toLowerCase(); if (e.repeat) return; tecla.add(k);
+  if (k === ' ') pular(); if (k === 'c') dash(); if (k === 'shift') P.run = !P.run, atualRun();
+});
+addEventListener('keyup', e => tecla.delete(e.key.toLowerCase()));
+const cv = r.domElement;
+cv.addEventListener('pointerdown', e => {
+  cv.setPointerCapture(e.pointerId);
+  if (stick.id == null && e.clientX < innerWidth * 0.45 && e.clientY > innerHeight * 0.35) {
+    Object.assign(stick, { id: e.pointerId, x0: e.clientX, y0: e.clientY, dx: 0, dy: 0 });
+    stickEl.style.left = (e.clientX - 64) + 'px'; stickEl.style.top = (e.clientY - 64) + 'px'; stickEl.style.bottom = 'auto';
+  } else camT.set(e.pointerId, [e.clientX, e.clientY]);
+});
+cv.addEventListener('pointermove', e => {
+  if (e.pointerId === stick.id) {
+    let dx = e.clientX - stick.x0, dy = e.clientY - stick.y0; const l = Math.hypot(dx, dy), max = 52; if (l > max) dx *= max / l, dy *= max / l;
+    stick.dx = dx / max; stick.dy = dy / max; knob.style.transform = `translate(${dx}px,${dy}px)`; return;
+  }
+  if (!camT.has(e.pointerId)) return; const [x0, y0] = camT.get(e.pointerId); camT.set(e.pointerId, [e.clientX, e.clientY]);
+  if (camT.size === 1) { yaw -= (e.clientX - x0) * 0.008; pitch = Math.min(1.25, Math.max(-0.15, pitch + (e.clientY - y0) * 0.005)) }
+  else { const p = [...camT.values()], d = Math.hypot(p[0][0] - p[1][0], p[0][1] - p[1][1]); if (pinch) dist = Math.min(11, Math.max(2.2, dist * pinch / d)); pinch = d }
+});
+const solta = e => {
+  if (e.pointerId === stick.id) { stick.id = null; stick.dx = stick.dy = 0; knob.style.transform = ''; stickEl.style.left = ''; stickEl.style.top = ''; stickEl.style.bottom = '' }
+  camT.delete(e.pointerId); pinch = 0;
+};
+cv.addEventListener('pointerup', solta); cv.addEventListener('pointercancel', solta);
+addEventListener('wheel', e => dist = Math.min(11, Math.max(2.2, dist + e.deltaY * 0.004)), { passive: true });
+const botao = (id, f) => document.getElementById(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); f() });
+botao('bJump', pular); botao('bDash', dash); botao('bRun', () => { P.run = !P.run; atualRun() });
+botao('bMenu', () => { const m = document.getElementById('menu'); m.hidden = !m.hidden });
+document.getElementById('bGal').onclick = () => location.href = 'galeria.html';
+function atualRun() { document.getElementById('bRun').classList.toggle('on', P.run) } atualRun();
+function menuMontar() {
+  const m = document.getElementById('menu'); m.textContent = '';
+  for (const [n, t] of EXTRAS) if (R.act[n]) { const b = document.createElement('button'); b.textContent = t; b.onclick = () => { P.extra = n; P.extraT = 0; m.hidden = true }; m.append(b) }
+}
+
+function pular() {
+  if (!R || P.dash > 0) return; P.extra = null;
+  if (P.chao) { P.vy = JUMPV; P.chao = false; P.pulos = 1 }
+  else if (P.pulos < 2) { P.vy = Math.max(P.vy, JUMPV * 0.9); P.pulos = 2; P.flip = 0.001 }
+}
+function dash() {
+  if (!R || P.dash > 0 || P.dashCd > 0) return; P.extra = null; P.flip = 0;
+  P.ddx = Math.sin(P.face); P.ddz = Math.cos(P.face); P.dash = DASH_T; P.dashCd = 0.6; if (!P.chao) P.vy = Math.max(0, P.vy);
+}
+
+// ---------------- física simples ----------------
+function chaoEm(x, z, y) { // altura do que está embaixo (só o que dá pra pisar: topo abaixo dos pés + degrau)
+  let h = 0; for (const s of SOL) if (s.top < 50 && Math.abs(x - s.x) < s.hw + RAD * 0.6 && Math.abs(z - s.z) < s.hd + RAD * 0.6 && s.top <= y + STEP) h = Math.max(h, s.top);
+  return h;
+}
+function empurra() { // não atravessa paredes, troncos e caixas altas demais
+  for (const s of SOL) {
+    if (s.top <= P.y + STEP && s.top < 50) continue;
+    const dx = P.x - s.x, dz = P.z - s.z, ox = s.hw + RAD - Math.abs(dx), oz = s.hd + RAD - Math.abs(dz);
+    if (ox > 0 && oz > 0) { if (ox < oz) P.x += Math.sign(dx) * ox; else P.z += Math.sign(dz) * oz }
+  }
+  const L = LIM - 0.5; P.x = Math.max(-L, Math.min(L, P.x)); P.z = Math.max(-L, Math.min(L, P.z));
+}
+
+const oq = x => x * x * (3 - 2 * x), ma = (x, a, b) => Math.min(b, Math.max(a, x));
+const relogio = new THREE.Clock(), _v = new THREE.Vector3();
+function passo(dt) {
+  // direção do movimento relativa à câmera
+  let ix = stick.dx, iz = stick.dy;
+  if (tecla.has('a') || tecla.has('arrowleft')) ix -= 1; if (tecla.has('d') || tecla.has('arrowright')) ix += 1;
+  if (tecla.has('w') || tecla.has('arrowup')) iz -= 1; if (tecla.has('s') || tecla.has('arrowdown')) iz += 1;
+  let mag = Math.min(1, Math.hypot(ix, iz)); if (mag < 0.12) mag = 0;
+  const alvo = mag ? (P.run && mag > 0.6 ? RUN : WALK) * (mag > 0.6 ? 1 : 0.5 + mag * 0.8) : 0;
+  P.sp += (alvo - P.sp) * Math.min(1, dt * 10);
+  if (mag) {
+    const a = Math.atan2(ix, iz) + yaw, dir = Math.atan2(Math.sin(a), Math.cos(a));
+    let d = dir - P.face; d = Math.atan2(Math.sin(d), Math.cos(d)); if (P.dash <= 0) P.face += d * Math.min(1, dt * 12);
+    P.extra = LOOP_EXTRA.has(P.extra) ? null : P.extra;
+  }
+  if (P.dash > 0) { P.dash -= dt; P.x += P.ddx * DASH_V * dt; P.z += P.ddz * DASH_V * dt; if (P.dash <= 0) P.dashX = 0.4 }
+  else if (P.sp > 0.01) { P.x += Math.sin(P.face) * P.sp * dt; P.z += Math.cos(P.face) * P.sp * dt }
+  P.dashCd = Math.max(0, (P.dashCd || 0) - dt); P.dashX = Math.max(0, P.dashX - dt);
+  empurra();
+  // gravidade e chão
+  if (P.dash <= 0) P.vy -= GRAV * dt; else P.vy = 0;
+  P.y += P.vy * dt; const g = chaoEm(P.x, P.z, P.y);
+  if (P.y <= g) { if (!P.chao && P.vy < -4) P.landT = 0.3; P.y = g; P.vy = 0; P.chao = true; P.pulos = 0; P.flip = 0 }
+  else if (P.y - g > 0.08 || P.vy > 0) P.chao = false;
+  else P.y = g; // descendo degrau
+  if (P.flip > 0) { P.flip += dt; if (P.flip > FLIP_T) P.flip = 0 }
+  if (P.extra) P.extraT += dt;
+}
+
+function anima(dt) {
+  if (!R) return;
+  // escolhe a animação (mesma ordem do Quimera)
+  if (P.flip > 0) tocar('Jump_Full_Short', 1, 0.08);
+  else if (P.dash > 0) tocar('Dodge_Forward', 1, 0.06);
+  else if (!P.chao) tocar(P.vy < -2.5 ? 'Fall_Idle' : 'Jump_Idle', 1, 0.18);
+  else if (P.extra) { tocar(P.extra); const a = R.act[P.extra]; if (!LOOP_EXTRA.has(P.extra) && P.extraT > a.getClip().duration + 0.05) P.extra = null }
+  else if (P.sp > 2.6) tocar('Running_A', Math.min(1.5, Math.max(0.75, P.sp / RUN)));
+  else if (P.sp > 0.25) tocar('Walking_A', Math.max(0.7, P.sp / WALK));
+  else tocar('Idle_A');
+  mix.update(dt);
+  // o corpo gira na cambalhota e inclina no dash (igual ao Quimera)
+  corpo.rotation.set(0, 0, 0); corpo.position.set(0, 0, 0);
+  if (P.flip > 0) { const t = ma(P.flip / FLIP_T, 0, 1), C = 6.2832 * oq(ma((t - 0.04) / 0.8, 0, 1)), D = 1.02; corpo.rotation.x = C; corpo.position.y = D - D * Math.cos(C); corpo.position.z = -D * Math.sin(C) }
+  if (P.dash > 0) { const x = 1 - P.dash / DASH_T; if (x < 0.16) corpo.rotation.x = 0.38 * oq(x / 0.16); else { const y = oq(ma((x - 0.16) / 0.18, 0, 1)) * (x > 0.82 ? 1 - oq((x - 0.82) / 0.18) * 0.5 : 1); corpo.rotation.x = 0.38 + 0.82 * y; corpo.position.y = 0.55 * y } }
+  else if (P.dashX > 0) corpo.rotation.x = 0.42 * Math.pow(P.dashX / 0.4, 1.4);
+  player.position.set(P.x, P.y, P.z); player.rotation.y = P.face;
+  player.updateMatrixWorld(true); VRMC.tick(R, dt);
+}
+
+const alvoCam = new THREE.Vector3(P.x, 1.2, P.z);
+function camera(dt) {
+  _v.set(P.x, P.y + 1.25, P.z); alvoCam.lerp(_v, Math.min(1, dt * 8));
+  const cp = Math.cos(pitch);
+  cam.position.set(alvoCam.x + Math.sin(yaw) * cp * dist, alvoCam.y + Math.sin(pitch) * dist, alvoCam.z + Math.cos(yaw) * cp * dist);
+  if (cam.position.y < 0.3) cam.position.y = 0.3;
+  cam.lookAt(alvoCam);
+  sol.position.set(P.x + 6, 14, P.z + 5); sol.target.position.set(P.x, 0, P.z);
+}
+
+// botões de personagem
+PERS.forEach(([, nome], i) => { const b = document.createElement('button'); b.textContent = nome; b.onclick = () => carregar(i); document.getElementById('chars').append(b) });
+let ini = 0; try { ini = Math.min(PERS.length - 1, +localStorage.getItem('nga-pers') || 0) } catch (e) {}
+carregar(ini); document.getElementById('chars').children[ini].scrollIntoView({ inline: 'center' });
+yaw = P.face + Math.PI; // começa olhando por trás
+window.VILA = { P, get cur() { return cur }, set yaw(v) { yaw = v }, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { passo(dt); anima(dt) } }, pular, dash, tecla }; // pra testes
+
 r.setAnimationLoop(() => {
   const dt = Math.min(0.05, relogio.getDelta());
-  if (mix) { mix.update(dt); R.root.updateMatrixWorld(true); VRMC.tick(R, dt) }
-  cam.position.set(Math.sin(ang) * dist, 1.15, Math.cos(ang) * dist); cam.lookAt(0, 0.68, 0); r.render(sc, cam);
+  if (R) passo(dt); anima(dt); camera(dt); r.render(sc, cam);
 });
 </script></body></html>
