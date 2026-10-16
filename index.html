@@ -50,7 +50,8 @@
   body.edit [data-hud].sel{outline:3px solid #7fdc68}
   #acts .sk{background:rgba(60,40,110,.6);font-size:10px!important;line-height:1.05;text-align:center}
   #acts .sk[data-cd]::after{content:attr(data-cd);position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;font-size:15px;font-weight:700}
-  #top #bSlow,#top #bRun,#top #bMenu{font-size:12px;padding:6px 10px;flex:none}
+  #top #bSlow,#top #bRun,#top #bMenu,#top #bFull{font-size:12px;padding:6px 10px;flex:none}
+  #top #bFull{font-size:15px;padding:4px 10px}
   #top #bMenu{font-size:16px;padding:3px 12px}
   #top #bGal{flex:none}
   #menu{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(48px + env(safe-area-inset-top,0px));max-width:min(320px,calc(100vw - 36px));
@@ -68,7 +69,7 @@
   @media (hover:hover) and (pointer:fine){ #help{opacity:.85} }
 </style></head>
 <body>
-<div id="top"><div id="chars"></div><button id="bSlow" aria-label="Câmera lenta">1x</button><button id="bRun">Correr</button><button id="bMenu" aria-label="Estilos e animações">⋯</button><button id="bGal" title="Galeria de animações">Galeria</button></div>
+<div id="top"><div id="chars"></div><button id="bSlow" aria-label="Câmera lenta">1x</button><button id="bRun">Correr</button><button id="bFull" aria-label="Tela cheia">⛶</button><button id="bMenu" aria-label="Estilos e animações">⋯</button><button id="bGal" title="Galeria de animações">Galeria</button></div>
 <div id="info">carregando…</div>
 <div id="vida" data-hud="vida"><div class="bar" id="hpB"><i></i><span>HP 100/100</span></div><div class="bar" id="mpB"><i></i><span>MP 100/100</span></div></div>
 <div id="dor"></div><div id="caiu">Você caiu…</div>
@@ -296,6 +297,22 @@ const botao = (id, f) => document.getElementById(id).addEventListener('pointerdo
 botao('bJump', pular); botao('bDash', dash); botao('bEsq', esquiva); botao('bAtk', () => atacar('combo')); botao('bS1', () => atacar('giro')); botao('bS2', () => atacar('investida')); botao('bS3', () => atacar('magia')); botao('bRun', () => { P.run = !P.run; atualRun() });
 botao('bMenu', () => { const m = document.getElementById('menu'); m.hidden = !m.hidden });
 document.getElementById('bGal').onclick = () => location.href = 'galeria.html';
+// tela cheia: entra sozinha no primeiro toque (o navegador só deixa depois de um toque) e o botão ⛶ sai e volta
+const emTelaCheia = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+function telaCheia(on) {
+  try {
+    if (on && !emTelaCheia()) {
+      const el = document.documentElement, f = el.requestFullscreen || el.webkitRequestFullscreen; if (!f) return;
+      const pr = f.call(el, { navigationUI: 'hide' }); const trava = () => { try { screen.orientation.lock('landscape').catch(() => {}) } catch (e) {} };
+      if (pr && pr.then) pr.then(trava).catch(() => {}); else trava();
+    } else if (!on && emTelaCheia()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  } catch (e) {}
+}
+addEventListener('pointerup', () => telaCheia(true), { once: true, capture: true });
+const bFull = document.getElementById('bFull');
+bFull.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation() });
+bFull.addEventListener('click', e => { e.stopPropagation(); telaCheia(!emTelaCheia()) });
+for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(ev, () => bFull.classList.toggle('on', emTelaCheia()));
 function atualRun() { document.getElementById('bRun').classList.toggle('on', P.run) } atualRun();
 function menuMontar() {
   const m = document.getElementById('menu'); m.textContent = '';
