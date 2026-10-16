@@ -61,7 +61,7 @@
         const n = new THREE.MeshStandardMaterial({ map: m.map, color: m.color, roughness: 1, metalness: 0, skinning: true,
           alphaTest: m.alphaTest, transparent: m.transparent, depthWrite: m.depthWrite, side: m.side });
         if (m.map) { n.emissiveMap = m.map; n.emissive = new THREE.Color(0.09, 0.085, 0.085) } // um pouco de luz própria: anime não fica escuro demais na sombra
-        n.userData.side = m.side; o.material = n; m.dispose();
+        n.name = m.name; n.userData.side = m.side; o.material = n; m.dispose();
       });
       const ex = (gl.parser && gl.parser.json && gl.parser.json.extras) || {};
       wrap.userData.vrm = { model: gl.scene, spring: ex.spring, stride: ex.stride || {}, root: ex.root || {} };

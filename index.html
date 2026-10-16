@@ -45,15 +45,40 @@
     border-radius:14px;padding:8px 12px;flex-direction:column;gap:6px;align-items:center;box-shadow:0 6px 24px #0008;max-width:calc(100vw - 20px)}
   #hudp b{font-size:14px;color:#ffe7a8} #hudp small{font-size:11.5px;opacity:.8;text-align:center}
   #hudp .hrow{display:flex;gap:6px;flex-wrap:wrap;justify-content:center} #hudp button{font-size:12px;padding:6px 10px}
-  body.edit #hudp{display:flex} body.edit #top,body.edit #menu,body.edit #info,body.edit #help,body.edit #nums{display:none!important}
+  body.edit #hudp{display:flex} body.edit #top,body.edit #menu,body.edit #cfg,body.edit #info,body.edit #help,body.edit #nums{display:none!important}
   body.edit [data-hud]{pointer-events:auto!important;outline:2px dashed rgba(255,231,168,.75);outline-offset:3px;cursor:grab;touch-action:none}
   body.edit [data-hud].sel{outline:3px solid #7fdc68}
   #acts .sk{background:rgba(60,40,110,.6);font-size:10px!important;line-height:1.05;text-align:center}
   #acts .sk[data-cd]::after{content:attr(data-cd);position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;font-size:15px;font-weight:700}
   #top #bSlow,#top #bRun,#top #bMenu,#top #bFull{font-size:12px;padding:6px 10px;flex:none}
   #top #bFull{font-size:15px;padding:4px 10px}
-  #top #bMenu{font-size:16px;padding:3px 12px}
+  #top #esp{flex:1} #top #bMenu{font-size:13px;padding:6px 12px}
   #top #bGal{flex:none}
+  #cfg{position:fixed;inset:0;z-index:15;background:rgba(5,8,16,.45);display:grid;place-items:center}
+  #cfg[hidden]{display:none}
+  #cfg .caixa{width:min(860px,calc(100vw - 24px));height:calc(100vh - 20px);max-height:520px;display:flex;flex-direction:column;background:rgba(20,26,40,.94);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 40px #000a;overflow:hidden}
+  #cfg .cab{display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--line)}
+  #cfg .cab b{font-size:15px;color:#ffe7a8;flex:none}
+  #cfg .abas{display:flex;gap:6px;overflow-x:auto;flex:1;scrollbar-width:none} #cfg .abas::-webkit-scrollbar{display:none}
+  #cfg .abas button,#cfg .cab #cfgX{font-size:12.5px;padding:6px 11px;flex:none}
+  #cfg .corpo{flex:1;overflow-y:auto;padding:10px 12px;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+  #cfg .apar{display:flex;gap:14px;height:100%} #cfg .apar .lado{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+  #cfg .seg{display:flex;gap:6px} #cfg .seg button{flex:1}
+  #grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:8px;overflow-y:auto;padding:2px}
+  #grade button{padding:0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;background:rgba(60,72,100,.55)}
+  #grade button img{width:100%;aspect-ratio:4/5;object-fit:cover;display:block;background:linear-gradient(#3a4a6a,#24304a)}
+  #grade button span{font-size:11px;padding:3px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #grade button.on{outline:3px solid var(--accent);outline-offset:-1px;background:rgba(240,168,58,.35)}
+  #cores{overflow-y:auto} #cores h4{margin:4px 0 4px;font-size:12.5px;font-weight:700;opacity:.9}
+  #cores .sw{display:flex;flex-wrap:wrap;gap:6px}
+  #cores .sw button{width:30px;height:30px;border-radius:50%;padding:0;border:2px solid rgba(255,255,255,.35)}
+  #cores .sw button.on{border-color:#fff;box-shadow:0 0 0 2px var(--accent)}
+  #cores .sw button.orig{width:auto;border-radius:15px;padding:0 10px;font-size:11px}
+  #cfg .lin{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+  #cfg .lin>span{font-size:12px;opacity:.85;min-width:92px}
+  #cfg .lin button{font-size:12.5px}
+  #cfg h3{font-size:13px;margin:6px 0 8px;color:#ffe7a8}
+  #cfg p.dica{font-size:11.5px;opacity:.75;margin:0 0 10px}
   #menu{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(48px + env(safe-area-inset-top,0px));max-width:min(320px,calc(100vw - 36px));
     display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
   #menu button{font-size:12px}
@@ -69,7 +94,7 @@
   @media (hover:hover) and (pointer:fine){ #help{opacity:.85} }
 </style></head>
 <body>
-<div id="top"><div id="chars"></div><button id="bSlow" aria-label="Câmera lenta">1x</button><button id="bRun">Correr</button><button id="bFull" aria-label="Tela cheia">⛶</button><button id="bMenu" aria-label="Estilos e animações">⋯</button><button id="bGal" title="Galeria de animações">Galeria</button></div>
+<div id="top"><button id="bMenu" aria-label="Menu">☰ Menu</button><span id="esp"></span><button id="bSlow" aria-label="Câmera lenta">1x</button><button id="bRun">Correr</button><button id="bFull" aria-label="Tela cheia">⛶</button></div>
 <div id="info">carregando…</div>
 <div id="vida" data-hud="vida"><div class="bar" id="hpB"><i></i><span>HP 100/100</span></div><div class="bar" id="mpB"><i></i><span>MP 100/100</span></div></div>
 <div id="dor"></div><div id="caiu">Você caiu…</div>
@@ -87,7 +112,12 @@
 <div id="hudp"><b>✥ Ajustar botões</b><div class="hrow" id="hudesq"></div><small id="hudsel">Toque num botão pra escolher e arraste pra mover</small>
 <div class="hrow"><button id="hudm">− Menor</button><button id="hudpl">+ Maior</button></div>
 <div class="hrow"><button id="hudr">Restaurar este esquema</button><button id="hudok" class="on">Pronto</button></div></div>
-<div id="menu" hidden></div>
+<div id="cfg" hidden><div class="caixa">
+  <div class="cab"><b>Configurações</b><div class="abas"><button data-aba="apar" class="on">Aparência</button><button data-aba="skills">Skills e botões</button><button data-aba="mov">Movimentos</button><button data-aba="anim">Animações</button><button id="cfgGal">Galeria</button></div><button id="cfgX" aria-label="Fechar">✕</button></div>
+  <div class="corpo">
+    <div data-pag="apar"><div class="apar"><div class="lado"><div class="seg"><button data-sexo="F" class="on">Femininos</button><button data-sexo="M">Masculinos</button></div><div id="grade"></div></div><div class="lado" id="cores"></div></div></div>
+    <div data-pag="skills" hidden></div><div data-pag="mov" hidden></div><div data-pag="anim" hidden></div>
+  </div></div></div>
 <div id="help">arraste: câmera · pinça: zoom · ande contra paredes de pedra pra escalar · pule 2x: mortal</div>
 <script src="js/three.min.js"></script>
 <script src="js/GLTFLoader.js"></script>
@@ -95,10 +125,10 @@
 <script>
 // Vila de teste do New Game Anime: anda, corre, pula, cambalhota, dash e animações, com a física de cabelo/roupa.
 // Só pra testar personagens e movimentos; não tem NPC nem missão.
-const PERS = [
-  ['sendagaya_shino', 'Shino'], ['sendagaya_shibu', 'Shibu'], ['darkness_shibu', 'Darkness Shibu'], ['sakurada_fumiriya', 'Fumiriya'],
-  ['victoria_rubin', 'Victoria Rubin'], ['vita', 'Vita'], ['vivi', 'Vivi'], ['hairsample_female', 'Cabelo (moça)'], ['hairsample_male', 'Cabelo (rapaz)'],
-  ['avatarsample_a', 'Avatar A'], ['avatarsample_b', 'Avatar B'], ['avatarsample_c', 'Avatar C'],
+const PERS = [ // arquivo, nome, F/M
+  ['sendagaya_shino', 'Shino', 'F'], ['sendagaya_shibu', 'Shibu', 'F'], ['darkness_shibu', 'Darkness Shibu', 'F'], ['sakurada_fumiriya', 'Fumiriya', 'M'],
+  ['victoria_rubin', 'Victoria Rubin', 'F'], ['vita', 'Vita', 'F'], ['vivi', 'Vivi', 'F'], ['hairsample_female', 'Moça (moletom)', 'F'], ['hairsample_male', 'Rapaz (moletom)', 'M'],
+  ['avatarsample_a', 'Avatar A', 'F'], ['avatarsample_b', 'Avatar B', 'F'], ['avatarsample_c', 'Avatar C', 'M'],
 ];
 const EXTRAS = [['Melee_1H_Attack_Slice_Diagonal', 'Ataque'], ['Melee_2H_Attack_Spin', 'Giro'], ['Melee_Block', 'Defesa'], ['Ranged_Magic_Shoot', 'Magia'],
   ['Ranged_Magic_Summon', 'Invocar'], ['Ranged_Magic_Raise', 'Curar'], ['Interact', 'Interagir'], ['PickUp', 'Pegar'], ['Chopping', 'Machado'],
@@ -219,7 +249,7 @@ let R = null, mix = null, cur = null, pedido = 0; const cache = {};
 const info = document.getElementById('info');
 function carregar(i) {
   const [arq, nome] = PERS[i], meu = ++pedido; info.textContent = 'carregando ' + nome + '…';
-  [...document.getElementById('chars').children].forEach((b, k) => b.classList.toggle('on', k === i));
+  persAtual = i; if (!document.getElementById('cfg').hidden) gradeMontar();
   (cache[arq] || (cache[arq] = new Promise((ok, erro) => new THREE.GLTFLoader().load('personagens/' + arq + '.glb', ok, undefined, erro)))).then(gl => {
     if (meu !== pedido) return;
     if (R) { corpo.remove(R.root); mix.stopAllAction() }
@@ -231,8 +261,7 @@ function carregar(i) {
     root.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(root), alt = Math.max(0.8, bb.max.y - bb.min.y);
     escala(alt / ALT_Q);
     VRMC.fix(R, RUN, WALK); // passada casada com a velocidade, igual ao Quimera
-    info.textContent = nome; P.extra = null; P.atk = null; menuMontar(); poeEspada();
-    document.getElementById('bS1').innerHTML = R.act.EspCombo ? 'Fúria' : 'Salto<br>giratório';
+    info.textContent = nome; P.extra = null; P.atk = null; poeEspada(); coresPrep(); coresAplica(); skillsRotulos(); if (!document.getElementById('cfg').hidden) cfgMontar();
   }).catch(() => { if (meu === pedido) info.textContent = 'Não consegui carregar ' + nome + '. Toque de novo.'; delete cache[arq] });
   try { localStorage.setItem('nga-pers', i) } catch (e) {}
 }
@@ -294,9 +323,9 @@ document.getElementById('bSlow').addEventListener('pointerdown', e => {
   const b = document.getElementById('bSlow'); b.textContent = lento === 1 ? '1x' : lento === 0.5 ? '½x' : '¼x'; b.classList.toggle('on', lento !== 1);
 });
 const botao = (id, f) => document.getElementById(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (!document.body.classList.contains('edit') && P.modo !== 'caido') f() });
-botao('bJump', pular); botao('bDash', dash); botao('bEsq', esquiva); botao('bAtk', () => atacar('combo')); botao('bS1', () => atacar('giro')); botao('bS2', () => atacar('investida')); botao('bS3', () => atacar('magia')); botao('bRun', () => { P.run = !P.run; atualRun() });
-botao('bMenu', () => { const m = document.getElementById('menu'); m.hidden = !m.hidden });
-document.getElementById('bGal').onclick = () => location.href = 'galeria.html';
+botao('bJump', pular); botao('bDash', dash); botao('bEsq', esquiva); botao('bAtk', () => atacar('combo')); botao('bS1', () => atacar(SLOT[0])); botao('bS2', () => atacar(SLOT[1])); botao('bS3', () => atacar(SLOT[2])); botao('bRun', () => { P.run = !P.run; atualRun() });
+botao('bMenu', () => cfgAbre(!(document.getElementById('cfg').hidden)));
+document.getElementById('cfgGal').onclick = () => location.href = 'galeria.html';
 // tela cheia: entra sozinha no primeiro toque (o navegador só deixa depois de um toque) e o botão ⛶ sai e volta
 const emTelaCheia = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
 function telaCheia(on) {
@@ -314,22 +343,105 @@ bFull.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagati
 bFull.addEventListener('click', e => { e.stopPropagation(); telaCheia(!emTelaCheia()) });
 for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(ev, () => bFull.classList.toggle('on', emTelaCheia()));
 function atualRun() { document.getElementById('bRun').classList.toggle('on', P.run) } atualRun();
-function menuMontar() {
-  const m = document.getElementById('menu'); m.textContent = '';
-  for (const [k, titulo] of [['pulo', 'Pulo'], ['duplo', 'Pulo duplo'], ['dash', 'Dash'], ['esq', 'Esquiva']]) {
-    const lin = document.createElement('div'); lin.className = 'lin'; const t = document.createElement('span'); t.textContent = titulo; lin.append(t);
-    for (const [v, nome] of OPC[k]) {
-      if (!['antigo', 'classico', 'voo', 'mixamo', 'rapido'].includes(v) && !R.act[v === 'Slide' ? 'Slide_Start' : v]) continue;
-      const b = document.createElement('button'); b.textContent = nome; b.classList.toggle('on', ESTILO[k] === v);
-      b.onclick = () => { ESTILO[k] = v; try { localStorage.setItem('nga-estilo', JSON.stringify(ESTILO)) } catch (e) {} menuMontar() }; lin.append(b);
-    }
-    m.append(lin);
+// ---------------- menu de configurações ----------------
+let persAtual = 0, sexoVer = null, abaAtual = 'apar';
+const SKILLS = { giro: () => R && R.act.EspCombo ? 'Fúria' : 'Salto giratório', investida: () => 'Investida', magia: () => 'Magia' };
+const SKILL_DESC = { giro: 'gira a espada várias vezes · 30 MP', investida: 'avança cortando · 20 MP', magia: 'bola de energia · 15 MP' };
+let SLOT = ['giro', 'investida', 'magia'];
+try { const sl = JSON.parse(localStorage.getItem('nga-skills')); if (Array.isArray(sl) && sl.length === 3 && sl.every(k => SKILLS[k]) && new Set(sl).size === 3) SLOT = sl } catch (e) {}
+function skillsRotulos() { SLOT.forEach((k, i) => { document.getElementById('bS' + (i + 1)).innerHTML = SKILLS[k]().replace(' ', '<br>') }) }
+const el = (tag, txt, cls) => { const e = document.createElement(tag); if (txt != null) e.textContent = txt; if (cls) e.className = cls; return e };
+function cfgAbre(fechar) {
+  const c = document.getElementById('cfg'); c.hidden = !!fechar; if (fechar) return;
+  stick.id = null; stick.dx = stick.dy = 0; knob.style.transform = ''; hudAplica('stick'); tecla.clear(); cfgMontar();
+}
+document.getElementById('cfgX').onclick = () => cfgAbre(true);
+document.getElementById('cfg').addEventListener('pointerdown', e => { e.stopPropagation(); if (e.target.id === 'cfg') cfgAbre(true) });
+document.querySelectorAll('#cfg [data-aba]').forEach(b => b.onclick = () => { abaAtual = b.dataset.aba; cfgMontar() });
+document.querySelectorAll('#cfg [data-sexo]').forEach(b => b.onclick = () => { sexoVer = b.dataset.sexo; gradeMontar() });
+function cfgMontar() {
+  document.querySelectorAll('#cfg [data-aba]').forEach(b => b.classList.toggle('on', b.dataset.aba === abaAtual));
+  document.querySelectorAll('#cfg [data-pag]').forEach(p => p.hidden = p.dataset.pag !== abaAtual);
+  if (abaAtual === 'apar') { gradeMontar(); coresMontar() } else if (abaAtual === 'skills') skillsMontar(); else if (abaAtual === 'mov') movMontar(); else animMontar();
+}
+function gradeMontar() {
+  if (!sexoVer) sexoVer = PERS[persAtual][2];
+  document.querySelectorAll('#cfg [data-sexo]').forEach(b => b.classList.toggle('on', b.dataset.sexo === sexoVer));
+  const g = document.getElementById('grade'); g.textContent = '';
+  PERS.forEach(([arq, nome, sx], i) => {
+    if (sx !== sexoVer) return; const b = el('button'); b.classList.toggle('on', i === persAtual);
+    const im = el('img'); im.src = 'personagens/fotos/' + arq + '.png'; im.alt = ''; im.loading = 'lazy'; b.append(im, el('span', nome));
+    b.onclick = () => { if (i !== persAtual) carregar(i); persAtual = i; gradeMontar() }; g.append(b);
+  });
+}
+// cores: cabelo, olhos e roupa pintados por cima da textura (mantém o desenho e o sombreado)
+const PARTES = [['cabelo', 'Cabelo', /HAIR/i], ['olhos', 'Olhos', /EyeIris/i], ['cima', 'Roupa (parte de cima)', /Tops|Accessory/i], ['baixo', 'Roupa (parte de baixo)', /Bottoms/i], ['sapato', 'Sapatos', /Shoes/i]];
+const PALETA = ['#2b2b33', '#f4f4f4', '#b8c0cc', '#d23a3a', '#ff8fc0', '#f08a3a', '#f2d04a', '#4fb36a', '#3fc4d0', '#3f6fe0', '#8a55d6', '#7a5233'];
+let CORES = {}; try { CORES = JSON.parse(localStorage.getItem('nga-cores')) || {} } catch (e) {}
+let partesMats = {};
+function coresPrep() {
+  partesMats = {}; if (!R) return;
+  R.root.traverse(o => {
+    if (!o.isMesh) return; const m = o.material, pt = PARTES.find(p => p[2].test(m.name || '')); if (!pt) return;
+    (partesMats[pt[0]] = partesMats[pt[0]] || new Set()).add(m);
+    if (m.userData.tinta) return;
+    const u = m.userData.tinta = { uT: { value: new THREE.Color(1, 1, 1) }, uA: { value: 0 } };
+    m.onBeforeCompile = sh => {
+      sh.uniforms.uT = u.uT; sh.uniforms.uA = u.uA;
+      sh.fragmentShader = 'uniform vec3 uT; uniform float uA;\n' + sh.fragmentShader.replace('#include <map_fragment>',
+        '#include <map_fragment>\n{ float l = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114)); diffuseColor.rgb = mix(diffuseColor.rgb, uT * (0.28 + 1.5 * l), uA); }');
+    };
+    m.customProgramCacheKey = () => 'tinta'; m.needsUpdate = true;
+  });
+}
+function coresAplica() {
+  const arq = PERS[persAtual][0], c = CORES[arq] || {};
+  for (const [k] of PARTES) for (const m of partesMats[k] || []) { const u = m.userData.tinta; if (c[k]) { u.uT.value.set(c[k]).convertSRGBToLinear(); u.uA.value = 0.85 } else u.uA.value = 0 }
+}
+function coresMontar() {
+  const box = document.getElementById('cores'); box.textContent = ''; const arq = PERS[persAtual][0], c = CORES[arq] || {};
+  box.append(el('h3', 'Cores de ' + PERS[persAtual][1]));
+  for (const [k, titulo] of PARTES) {
+    if (!partesMats[k]) continue; box.append(el('h4', titulo)); const sw = el('div', null, 'sw');
+    const o = el('button', 'Original', 'orig'); o.classList.toggle('on', !c[k]); sw.append(o); o.onclick = () => pinta(k, null);
+    for (const cor of PALETA) { const b = el('button'); b.style.background = cor; b.setAttribute('aria-label', cor); b.classList.toggle('on', c[k] === cor); b.onclick = () => pinta(k, cor); sw.append(b) }
+    box.append(sw);
   }
-  { const lin = document.createElement('div'); lin.className = 'lin'; lin.innerHTML = '<span>Botões</span>';
-    HUD.L.forEach((_, i) => { const b = document.createElement('button'); b.textContent = (i + 1) + ' ' + PRESET_NOME[i]; b.classList.toggle('on', HUD.e === i); b.onclick = () => { HUD.e = i; hudSalva(); hudAplicaTudo(); menuMontar() }; lin.append(b) });
-    const ed = document.createElement('button'); ed.textContent = '✥ Editar'; ed.onclick = () => { m.hidden = true; hudEditar(true) }; lin.append(ed); m.append(lin) }
-  const sep = document.createElement('div'); sep.className = 'lin'; sep.innerHTML = '<span>Animações</span>'; m.append(sep);
-  for (const [n, t] of EXTRAS) if (R.act[n]) { const b = document.createElement('button'); b.textContent = t; b.onclick = () => { P.extra = n; P.extraT = 0; m.hidden = true }; m.append(b) }
+  const z = el('button', 'Voltar tudo ao original'); z.style.marginTop = '10px'; z.onclick = () => { delete CORES[arq]; salvaCores(); coresAplica(); coresMontar() }; box.append(z);
+}
+function pinta(k, cor) { const arq = PERS[persAtual][0]; const c = CORES[arq] = CORES[arq] || {}; if (cor) c[k] = cor; else delete c[k]; salvaCores(); coresAplica(); coresMontar() }
+function salvaCores() { try { localStorage.setItem('nga-cores', JSON.stringify(CORES)) } catch (e) {} }
+function skillsMontar() {
+  const p = document.querySelector('#cfg [data-pag="skills"]'); p.textContent = '';
+  p.append(el('h3', 'Qual skill fica em cada botão'), el('p', 'Escolha a skill de cada botão. Se escolher uma que já está em outro botão, as duas trocam de lugar.', 'dica'));
+  SLOT.forEach((atual, i) => {
+    const lin = el('div', null, 'lin'); lin.append(el('span', 'Botão de skill ' + (i + 1)));
+    for (const k in SKILLS) { const b = el('button', SKILLS[k]()); b.title = SKILL_DESC[k]; b.classList.toggle('on', atual === k); b.onclick = () => { const j = SLOT.indexOf(k); SLOT[j] = SLOT[i]; SLOT[i] = k; try { localStorage.setItem('nga-skills', JSON.stringify(SLOT)) } catch (e) {} skillsRotulos(); skillsMontar() }; lin.append(b) }
+    p.append(lin);
+  });
+  p.append(el('p', 'Fúria / Salto giratório: ' + SKILL_DESC.giro + ' · Investida: ' + SKILL_DESC.investida + ' · Magia: ' + SKILL_DESC.magia, 'dica'));
+  p.append(el('h3', 'Posição dos botões'), el('p', 'São 3 esquemas, cada um com seu próprio arranjo. Escolha um e, se quiser, edite: arraste os botões, o joystick e as barras, e mude o tamanho.', 'dica'));
+  const lin = el('div', null, 'lin'); lin.append(el('span', 'Esquema'));
+  HUD.L.forEach((_, i) => { const b = el('button', (i + 1) + ' · ' + PRESET_NOME[i]); b.classList.toggle('on', HUD.e === i); b.onclick = () => { HUD.e = i; hudSalva(); hudAplicaTudo(); skillsMontar() }; lin.append(b) });
+  p.append(lin);
+  const ed = el('button', '✥ Editar posição e tamanho dos botões'); ed.className = 'on'; ed.onclick = () => { cfgAbre(true); hudEditar(true) }; p.append(ed);
+}
+function movMontar() {
+  const p = document.querySelector('#cfg [data-pag="mov"]'); p.textContent = ''; p.append(el('h3', 'Jeito de cada movimento'));
+  for (const [k, titulo] of [['pulo', 'Pulo'], ['duplo', 'Pulo duplo'], ['dash', 'Dash'], ['esq', 'Esquiva']]) {
+    const lin = el('div', null, 'lin'); lin.append(el('span', titulo));
+    for (const [v, nome] of OPC[k]) {
+      if (R && !['antigo', 'classico', 'voo', 'mixamo', 'rapido'].includes(v) && !R.act[v === 'Slide' ? 'Slide_Start' : v]) continue;
+      const b = el('button', nome); b.classList.toggle('on', ESTILO[k] === v);
+      b.onclick = () => { ESTILO[k] = v; try { localStorage.setItem('nga-estilo', JSON.stringify(ESTILO)) } catch (e) {} movMontar() }; lin.append(b);
+    }
+    p.append(lin);
+  }
+}
+function animMontar() {
+  const p = document.querySelector('#cfg [data-pag="anim"]'); p.textContent = ''; p.append(el('h3', 'Tocar uma animação'));
+  const lin = el('div', null, 'lin'); p.append(lin);
+  for (const [n, t] of EXTRAS) if (R && R.act[n]) { const b = el('button', t); b.onclick = () => { P.extra = n; P.extraT = 0; cfgAbre(true) }; lin.append(b) }
 }
 
 function pular() {
@@ -487,7 +599,7 @@ const PRESETS = [
   { ...BASE, bAtk: rb(29, 29, 1.25), bJump: rb(116, 24, 0.9), bDash: rb(103, 101), bEsq: rb(36, 128), bS1: rb(196, 80), bS2: rb(143, 163), bS3: rb(51, 201) },
   { ...BASE, bJump: rb(14, 16), bAtk: rb(104, 20), bDash: rb(186, 26), bEsq: rb(252, 25), bS1: rb(20, 112), bS2: rb(84, 112), bS3: rb(148, 112) },
 ];
-const HUD_NOME = { bJump: 'Pular', bAtk: 'Atacar', bDash: 'Dash', bEsq: 'Esquiva', bS1: 'Fúria', bS2: 'Investida', bS3: 'Magia', stick: 'Joystick', vida: 'Vida e mana' };
+const HUD_NOME = { bJump: 'Pular', bAtk: 'Atacar', bDash: 'Dash', bEsq: 'Esquiva', bS1: 'Skill 1', bS2: 'Skill 2', bS3: 'Skill 3', stick: 'Joystick', vida: 'Vida e mana' };
 let HUD = { e: 0, L: [{}, {}, {}] };
 try { const h = JSON.parse(localStorage.getItem('nga-hud')); if (h && h.L && h.L.length === 3) HUD = h } catch (e) {}
 function hudSalva() { try { localStorage.setItem('nga-hud', JSON.stringify(HUD)) } catch (e) {} }
@@ -672,7 +784,7 @@ function g0vel(g) { return pausa > 0 ? 0 : (g.vel || 1) }
 function golpes() { return R && R.act.Esp1 ? Object.assign({}, GOLPES, GOLPES_MX) : GOLPES }
 const CD = { giro: 0, investida: 0, magia: 0 }, CUSTO = { giro: 30, investida: 20, magia: 15 };
 function semMana(tipo) {
-  const b = document.getElementById({ giro: 'bS1', investida: 'bS2', magia: 'bS3' }[tipo]), mb = document.getElementById('mpB');
+  const b = document.getElementById('bS' + (SLOT.indexOf(tipo) + 1)) || document.body, mb = document.getElementById('mpB');
   for (const e of [b, mb]) { e.classList.remove('semmana', 'pisca'); void e.offsetWidth } b.classList.add('semmana'); mb.classList.add('pisca');
 }
 let comboN = 0, comboT = 9;
@@ -932,7 +1044,7 @@ function anima(dt) {
   player.position.set(P.x, P.y, P.z); player.rotation.y = P.face;
   player.updateMatrixWorld(true); VRMC.tick(R, dt); rastroPasso(dt); laminaPasso(dt);
   if (espada) { espadaT = P.atk && P.atk.tipo !== 'magia' ? 0.12 : Math.max(0, espadaT - dt); espada.visible = espadaT > 0 }
-  for (const k of ['giro', 'investida', 'magia']) { const b = document.getElementById({ giro: 'bS1', investida: 'bS2', magia: 'bS3' }[k]); if (CD[k] > 0) b.dataset.cd = Math.ceil(CD[k]); else delete b.dataset.cd }
+  SLOT.forEach((k, i) => { const b = document.getElementById('bS' + (i + 1)); if (CD[k] > 0) b.dataset.cd = Math.ceil(CD[k]); else delete b.dataset.cd });
 }
 
 const alvoCam = new THREE.Vector3(P.x, 1.2, P.z);
@@ -947,9 +1059,8 @@ function camera(dt) {
 }
 
 // botões de personagem
-PERS.forEach(([, nome], i) => { const b = document.createElement('button'); b.textContent = nome; b.onclick = () => carregar(i); document.getElementById('chars').append(b) });
 let ini = 0; try { ini = Math.min(PERS.length - 1, +localStorage.getItem('nga-pers') || 0) } catch (e) {}
-carregar(ini); document.getElementById('chars').children[ini].scrollIntoView({ inline: 'center' });
+carregar(ini);
 yaw = P.face + Math.PI; // começa olhando por trás
 window.VILA = { P, get cur() { return cur }, get R() { return R }, get K() { return K }, set yaw(v) { yaw = v }, camDist: () => dist, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { passo(dt); anima(dt); boneco(dt); bichosPasso(dt); vidaPasso(dt); orbesPasso(dt) } }, atacar, hudEditar, get HUD() { return HUD }, levaDano, BON, BICHOS, get espada() { return espada }, pular, TORRE, LAD, dash, esquiva, tecla, ESTILO }; // pra testes
 
