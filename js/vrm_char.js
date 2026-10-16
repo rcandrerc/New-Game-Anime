@@ -67,13 +67,13 @@
       wrap.userData.vrm = { model: gl.scene, spring: ex.spring, stride: ex.stride || {} };
       return { gl: { scene: wrap }, an: { animations: gl.animations } };
     },
-    fix(R) {
+    fix(R, run = 4.6, walk = 2.2) { // velocidades (por segundo, em unidades do mundo) em que a passada toca no ritmo 1
       const root = R.root;
       root.traverse(o => { if (o.isMesh && o.material.userData.side != null) { o.material.side = o.material.userData.side; if (o.material.transparent) o.castShadow = false } });
       // passada casada com a velocidade do jogo: corrida a 4,6 e caminhada a 2,2 por segundo tocam no ritmo 1
       const V = root.userData.vrm; if (!V) return; root.updateMatrixWorld(true); V.model.getWorldScale(_s); const ws = _s.x;
       const act = R.act || {};
-      for (const [name, base] of [['Running_A', 4.6], ['Walking_A', 2.2]]) {
+      for (const [name, base] of [['Running_A', run], ['Walking_A', walk]]) {
         const D = V.stride[name], clip = (act[name] && act[name].getClip()) || null; if (!D || !clip) continue;
         const f = (D * ws / base) / clip.duration;
         for (const t of clip.tracks) for (let i = 0; i < t.times.length; i++) t.times[i] *= f;

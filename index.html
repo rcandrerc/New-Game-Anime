@@ -66,8 +66,13 @@ const EXTRAS = [['Melee_1H_Attack_Slice_Diagonal', 'Ataque'], ['Melee_2H_Attack_
   ['Ranged_Magic_Summon', 'Invocar'], ['Ranged_Magic_Raise', 'Curar'], ['Interact', 'Interagir'], ['PickUp', 'Pegar'], ['Chopping', 'Machado'],
   ['Pickaxing', 'Picareta'], ['Hit_A', 'Dano'], ['Death_A', 'Morte'], ['Sit_Floor_Idle', 'Sentar'], ['Sit_Chair_Idle', 'Sentar (cadeira)']];
 const LOOP_EXTRA = new Set(['Sit_Floor_Idle', 'Sit_Chair_Idle', 'Melee_Block']);
-// mesmos números do Quimera Sandbox
-const WALK = 2.2, RUN = 4.6, GRAV = 17, JUMPV = 7.2, FLIP_T = 0.56, DASH_T = 0.2, DASH_V = 15, RAD = 0.32, STEP = 0.45;
+// números do Quimera Sandbox, onde o personagem tem 2,42 de altura; aqui tudo é multiplicado por K = altura real / 2,42,
+// pra o movimento ter o mesmo ritmo (passada, pulo, dash e cambalhota na mesma proporção do corpo)
+const Q = { WALK: 2.2, RUN: 4.6, GRAV: 17, JUMPV: 7.2, DASH_V: 15, FLIP_D: 1.02, DASH_UP: 0.55 }, ALT_Q = 2.42;
+let K = 0.64, WALK, RUN, GRAV, JUMPV, DASH_V, FLIP_D, DASH_UP;
+function escala(k) { K = k; WALK = Q.WALK * k; RUN = Q.RUN * k; GRAV = Q.GRAV * k; JUMPV = Q.JUMPV * k; DASH_V = Q.DASH_V * k; FLIP_D = Q.FLIP_D * k; DASH_UP = Q.DASH_UP * k }
+escala(K);
+const FLIP_T = 0.56, DASH_T = 0.2, RAD = 0.32, STEP = 0.45;
 
 // ---------------- cena ----------------
 const r = new THREE.WebGLRenderer({ antialias: true }); r.setPixelRatio(Math.min(2, devicePixelRatio)); r.outputEncoding = THREE.sRGBEncoding;
@@ -156,7 +161,9 @@ function carregar(i) {
     root.traverse(o => { if (o.isMesh) { o.castShadow = !o.material.transparent; o.receiveShadow = true } });
     mix = new THREE.AnimationMixer(root); R = { root, act: {} }; cur = null;
     for (const c of A.an.animations) R.act[c.name] = mix.clipAction(c.clone());
-    VRMC.fix(R); // passada casada com a velocidade (corrida 4,6 e caminhada 2,2 por segundo)
+    root.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(root), alt = Math.max(0.8, bb.max.y - bb.min.y);
+    escala(alt / ALT_Q);
+    VRMC.fix(R, RUN, WALK); // passada casada com a velocidade, igual ao Quimera
     info.textContent = nome; P.extra = null; menuMontar();
   }).catch(() => { if (meu === pedido) info.textContent = 'Não consegui carregar ' + nome + '. Toque de novo.'; delete cache[arq] });
   try { localStorage.setItem('nga-pers', i) } catch (e) {}
@@ -271,7 +278,7 @@ function passo(dt) {
   // gravidade e chão
   if (P.dash <= 0) P.vy -= GRAV * dt; else P.vy = 0;
   P.y += P.vy * dt; const g = chaoEm(P.x, P.z, P.y);
-  if (P.y <= g) { if (!P.chao && P.vy < -4) P.landT = 0.3; P.y = g; P.vy = 0; P.chao = true; P.pulos = 0; P.flip = 0 }
+  if (P.y <= g) { if (!P.chao && P.vy < -4 * K) P.landT = 0.3; P.y = g; P.vy = 0; P.chao = true; P.pulos = 0; P.flip = 0 }
   else if (P.y - g > 0.08 || P.vy > 0) P.chao = false;
   else P.y = g; // descendo degrau
   if (P.flip > 0) { P.flip += dt; if (P.flip > FLIP_T) P.flip = 0 }
@@ -283,16 +290,16 @@ function anima(dt) {
   // escolhe a animação (mesma ordem do Quimera)
   if (P.flip > 0) tocar('Jump_Full_Short', 1, 0.08);
   else if (P.dash > 0) tocar('Dodge_Forward', 1, 0.06);
-  else if (!P.chao) tocar(P.vy < -2.5 ? 'Fall_Idle' : 'Jump_Idle', 1, 0.18);
+  else if (!P.chao) tocar(P.vy < -2.5 * K ? 'Fall_Idle' : 'Jump_Idle', 1, 0.18);
   else if (P.extra) { tocar(P.extra); const a = R.act[P.extra]; if (!LOOP_EXTRA.has(P.extra) && P.extraT > a.getClip().duration + 0.05) P.extra = null }
-  else if (P.sp > 2.6) tocar('Running_A', Math.min(1.5, Math.max(0.75, P.sp / RUN)));
-  else if (P.sp > 0.25) tocar('Walking_A', Math.max(0.7, P.sp / WALK));
+  else if (P.sp > 2.6 * K) tocar('Running_A', Math.min(1.5, Math.max(0.75, P.sp / RUN)));
+  else if (P.sp > 0.25 * K) tocar('Walking_A', Math.max(0.7, P.sp / WALK));
   else tocar('Idle_A');
   mix.update(dt);
   // o corpo gira na cambalhota e inclina no dash (igual ao Quimera)
   corpo.rotation.set(0, 0, 0); corpo.position.set(0, 0, 0);
-  if (P.flip > 0) { const t = ma(P.flip / FLIP_T, 0, 1), C = 6.2832 * oq(ma((t - 0.04) / 0.8, 0, 1)), D = 1.02; corpo.rotation.x = C; corpo.position.y = D - D * Math.cos(C); corpo.position.z = -D * Math.sin(C) }
-  if (P.dash > 0) { const x = 1 - P.dash / DASH_T; if (x < 0.16) corpo.rotation.x = 0.38 * oq(x / 0.16); else { const y = oq(ma((x - 0.16) / 0.18, 0, 1)) * (x > 0.82 ? 1 - oq((x - 0.82) / 0.18) * 0.5 : 1); corpo.rotation.x = 0.38 + 0.82 * y; corpo.position.y = 0.55 * y } }
+  if (P.flip > 0) { const t = ma(P.flip / FLIP_T, 0, 1), C = 6.2832 * oq(ma((t - 0.04) / 0.8, 0, 1)), D = FLIP_D; corpo.rotation.x = C; corpo.position.y = D - D * Math.cos(C); corpo.position.z = -D * Math.sin(C) }
+  if (P.dash > 0) { const x = 1 - P.dash / DASH_T; if (x < 0.16) corpo.rotation.x = 0.38 * oq(x / 0.16); else { const y = oq(ma((x - 0.16) / 0.18, 0, 1)) * (x > 0.82 ? 1 - oq((x - 0.82) / 0.18) * 0.5 : 1); corpo.rotation.x = 0.38 + 0.82 * y; corpo.position.y = DASH_UP * y } }
   else if (P.dashX > 0) corpo.rotation.x = 0.42 * Math.pow(P.dashX / 0.4, 1.4);
   player.position.set(P.x, P.y, P.z); player.rotation.y = P.face;
   player.updateMatrixWorld(true); VRMC.tick(R, dt);
@@ -313,7 +320,7 @@ PERS.forEach(([, nome], i) => { const b = document.createElement('button'); b.te
 let ini = 0; try { ini = Math.min(PERS.length - 1, +localStorage.getItem('nga-pers') || 0) } catch (e) {}
 carregar(ini); document.getElementById('chars').children[ini].scrollIntoView({ inline: 'center' });
 yaw = P.face + Math.PI; // começa olhando por trás
-window.VILA = { P, get cur() { return cur }, set yaw(v) { yaw = v }, camDist: () => dist, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { passo(dt); anima(dt) } }, pular, dash, tecla }; // pra testes
+window.VILA = { P, get cur() { return cur }, get R() { return R }, get K() { return K }, set yaw(v) { yaw = v }, camDist: () => dist, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { passo(dt); anima(dt) } }, pular, dash, tecla }; // pra testes
 
 r.setAnimationLoop(() => {
   const real = Math.min(0.05, relogio.getDelta()), dt = real * lento;
