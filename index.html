@@ -22,21 +22,22 @@
     background:var(--glass);border:1px solid var(--line);pointer-events:none}
   #knob{position:absolute;left:39px;top:39px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.75)}
   /* botões de ação */
-  #acts{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:250px;height:230px;pointer-events:none}
+  #acts{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:230px;height:220px;pointer-events:none}
   #acts button{pointer-events:auto}
   #acts button{position:absolute;border-radius:50%;padding:0;display:grid;place-items:center;font-weight:600;font-size:12px}
-  #bJump{right:0;bottom:0;width:78px;height:78px;font-size:14px!important}
-  #bAtk{right:88px;bottom:2px;width:72px;height:72px;font-size:13px!important;background:rgba(150,40,40,.6)!important}
-  #bDash{right:170px;bottom:6px;width:54px;height:54px}
-  #bEsq{right:6px;bottom:88px;width:56px;height:56px}
-  #bS1{right:96px;bottom:84px;width:52px;height:52px}
-  #bS2{right:150px;bottom:66px;width:52px;height:52px}
-  #bS3{right:62px;bottom:150px;width:52px;height:52px}
+  #bJump{right:0;bottom:0;width:80px;height:80px;font-size:14px!important}
+  #bAtk{right:92px;bottom:8px;width:70px;height:70px;font-size:13px!important;background:rgba(150,40,40,.6)!important}
+  #bDash{right:174px;bottom:8px;width:54px;height:54px}
+  #bEsq{right:6px;bottom:94px;width:56px;height:56px}
+  #bS1{right:100px;bottom:92px;width:54px;height:54px}
+  #bS2{right:168px;bottom:76px;width:54px;height:54px}
+  #bS3{right:66px;bottom:162px;width:54px;height:54px}
   #acts .sk{background:rgba(60,40,110,.6);font-size:10px!important;line-height:1.05;text-align:center}
   #acts .sk[data-cd]::after{content:attr(data-cd);position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;font-size:15px;font-weight:700}
-  #zoom #bRun{font-size:11px;font-weight:600}
-  #zoom #bMenu{font-size:20px}
-  #menu{position:fixed;right:calc(70px + env(safe-area-inset-right,0px));top:calc(84px + env(safe-area-inset-top,0px));max-width:min(320px,calc(100vw - 36px));
+  #top #bSlow,#top #bRun,#top #bMenu{font-size:12px;padding:6px 10px;flex:none}
+  #top #bMenu{font-size:16px;padding:3px 12px}
+  #top #bGal{flex:none}
+  #menu{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(48px + env(safe-area-inset-top,0px));max-width:min(320px,calc(100vw - 36px));
     display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
   #menu button{font-size:12px}
   #menu[hidden]{display:none}
@@ -51,7 +52,7 @@
   @media (hover:hover) and (pointer:fine){ #help{opacity:.85} }
 </style></head>
 <body>
-<div id="top"><div id="chars"></div><button id="bGal" title="Galeria de animações">Galeria</button></div>
+<div id="top"><div id="chars"></div><button id="bSlow" aria-label="Câmera lenta">1x</button><button id="bRun">Correr</button><button id="bMenu" aria-label="Estilos e animações">⋯</button><button id="bGal" title="Galeria de animações">Galeria</button></div>
 <div id="info">carregando…</div>
 <div id="stick"><div id="knob"></div></div>
 <div id="acts">
@@ -63,10 +64,9 @@
   <button id="bAtk">Atacar</button>
   <button id="bJump">Pular</button>
 </div>
-<div id="zoom"><button id="bSlow" aria-label="Câmera lenta">1x</button><button id="bRun">Correr</button><button id="bMenu" aria-label="Estilos e animações">⋯</button></div>
 <div id="nums"></div>
 <div id="menu" hidden></div>
-<div id="help">arraste pra girar a câmera · pinça pra aproximar/afastar · ande contra a torre pra escalar (pular solta) · 1x/½x/¼x câmera lenta · pule 2x pra cambalhota · PC: WASD, Espaço, J (atacar), 1-2-3 (skills), C (dash), Q (esquiva), Shift, roda do mouse</div>
+<div id="help">arraste: câmera · pinça: zoom · ande contra a torre pra escalar · pule 2x: mortal</div>
 <script src="js/three.min.js"></script>
 <script src="js/GLTFLoader.js"></script>
 <script src="js/vrm_char.js"></script>
@@ -411,7 +411,7 @@ function atacar(tipo) {
   let g; if (tipo === 'combo') { comboN = comboT < 0.6 ? (comboN + 1) % 3 : 0; g = GOLPES.combo[comboN] } else { g = GOLPES[tipo]; CD[tipo] = g.cd }
   if (!R.act[g.a]) return;
   const dx = BON.x - P.x, dz = BON.z - P.z, d = Math.hypot(dx, dz); if (d < 4.5) P.face = Math.atan2(dx, dz); // mira no boneco se estiver perto
-  P.atk = { tipo, g, t: 0, feitos: new Set() }; P.extra = null; P.land = 0; P.sp = 0; espadaT = 4; cur = null;
+  P.atk = { tipo, g, t: 0, feitos: new Set() }; P.extra = null; P.land = 0; P.sp = 0; cur = null;
 }
 function ataquePasso(dt) {
   for (const k in CD) CD[k] = Math.max(0, CD[k] - dt);
@@ -620,7 +620,7 @@ function anima(dt) {
   else if (P.dashX > 0) corpo.rotation.x = 0.42 * Math.pow(P.dashX / 0.4, 1.4);
   player.position.set(P.x, P.y, P.z); player.rotation.y = P.face;
   player.updateMatrixWorld(true); VRMC.tick(R, dt); rastroPasso(dt);
-  if (espada) { espadaT = P.atk ? 4 : Math.max(0, espadaT - dt); espada.visible = espadaT > 0 }
+  if (espada) { espadaT = P.atk && P.atk.tipo !== 'magia' ? 0.12 : Math.max(0, espadaT - dt); espada.visible = espadaT > 0 }
   for (const k of ['giro', 'investida', 'magia']) { const b = document.getElementById({ giro: 'bS1', investida: 'bS2', magia: 'bS3' }[k]); if (CD[k] > 0) b.dataset.cd = Math.ceil(CD[k]); else delete b.dataset.cd }
 }
 
