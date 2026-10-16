@@ -72,6 +72,7 @@ CLIPS = {
     'Melee_2H_Attack_Spin': 'Sword_Regular_Combo', 'Melee_Block': 'Sword_Block', 'Ranged_Magic_Shoot': 'Spell_Simple_Shoot',
     'Ranged_Magic_Spellcasting': 'Spell_Simple_Idle_Loop', 'Ranged_Magic_Spellcasting_Long': 'Spell_Simple_Idle_Loop',
     'Ranged_Magic_Summon': 'Spell_Simple_Shoot', 'Ranged_Magic_Raise': 'Spell_Simple_Enter', 'Interact': 'Interact', 'PickUp': 'Farm_Harvest',
+    'Climb_Up': 'ClimbUp_1m', 'Slide_Start': 'Slide_Start', 'Slide_Loop': 'Slide_Loop', 'Slide_Exit': 'Slide_Exit', 'Crouch_Idle': 'Crouch_Idle_Loop', 'Crouch_Walk': 'Crouch_Fwd_Loop',
     'Chopping': 'TreeChopping_Loop', 'Pickaxing': 'TreeChopping_Loop', 'Sit_Chair_Idle': 'Sitting_Idle_Loop', 'Sit_Floor_Idle': 'Sitting_Idle_Loop',
 }
 

@@ -4,7 +4,7 @@ Base pra um jogo novo com visual anime: 12 personagens VRoid prontos pro celular
 e as mesmas 23 animações (Mixamo + Quaternius). A preferida até agora é a **Shino**.
 
 **Vila de teste:** https://rcandrerc.github.io/New-Game-Anime/ — mini vila jogável pra testar os personagens como num jogo:
-joystick virtual (ou WASD), arrastar a tela gira a câmera, pinça aproxima/afasta, botão de câmera lenta (1x, ½x, ¼x), botões Correr, Pular (2x = cambalhota), Dash e ⋯ (outras animações);
+joystick virtual (ou WASD), arrastar a tela gira a câmera, pinça aproxima/afasta, botão de câmera lenta (1x, ½x, ¼x), botões Correr, Pular (2x = mortal), Dash (arrancada com rastro), Esquiva (rolamento, mergulho ou deslizar) e ⋯ (estilos e outras animações); correndo contra algo de até ~1 m ela sobe apoiando as mãos;
 casinhas, árvores, fonte, caixotes e uma escadinha pra testar pulo e degrau. Os números de velocidade, pulo, cambalhota e dash
 são os mesmos do Quimera Sandbox.
 
@@ -53,7 +53,9 @@ Pra abrir a página no próprio PC: `python3 -m http.server 8000` na pasta do re
 | Jump_Start / Jump_Run | impulso do pulo (parado / correndo) | Mixamo: Jumping Up, Jumping While Running |
 | Land_A / Land_B | aterrissagem (normal / queda alta) | Mixamo: Landing From Falling Idle, Landing From Jump |
 | Flip_Front / Flip_Back | mortal pra frente / pra trás (gira sozinho) | Mixamo: Doing A Forward Flip While Running, Standing Backflip |
-| Roll_Quick / Roll_Dive / Roll_Sprint | dash: rolamento / mergulho / arrancada | Mixamo: Quick Roll, Dive Roll From Standing, Sprint To Forward Roll |
+| Roll_Quick / Roll_Dive / Roll_Sprint | esquiva: rolamento / mergulho / arrancada rolando | Mixamo: Quick Roll, Dive Roll From Standing, Sprint To Forward Roll |
+| Slide_Start / Slide_Loop / Slide_Exit | esquiva: deslizar no chão | Quaternius UAL |
+| Climb_Up | subir em obstáculo de ~1 m | Quaternius UAL: ClimbUp_1m |
 
 Na vila, o menu ⋯ escolhe o estilo do pulo, do pulo duplo e do dash (os antigos, no jeito do Quimera, continuam como opção).
 
