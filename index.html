@@ -22,14 +22,21 @@
     background:var(--glass);border:1px solid var(--line);pointer-events:none}
   #knob{position:absolute;left:39px;top:39px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.75)}
   /* botões de ação */
-  #acts{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(22px + env(safe-area-inset-bottom,0px));width:200px;height:200px}
+  #acts{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:250px;height:230px;pointer-events:none}
+  #acts button{pointer-events:auto}
   #acts button{position:absolute;border-radius:50%;padding:0;display:grid;place-items:center;font-weight:600;font-size:12px}
-  #bJump{right:0;bottom:0;width:82px;height:82px;font-size:14px!important}
-  #bDash{right:92px;bottom:4px;width:62px;height:62px}
-  #bEsq{right:78px;bottom:76px;width:58px;height:58px}
-  #bRun{right:4px;bottom:92px;width:62px;height:62px}
-  #bMenu{right:140px;bottom:140px;width:46px;height:46px;font-size:20px!important}
-  #menu{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(220px + env(safe-area-inset-bottom,0px));max-width:min(320px,calc(100vw - 36px));
+  #bJump{right:0;bottom:0;width:78px;height:78px;font-size:14px!important}
+  #bAtk{right:88px;bottom:2px;width:72px;height:72px;font-size:13px!important;background:rgba(150,40,40,.6)!important}
+  #bDash{right:170px;bottom:6px;width:54px;height:54px}
+  #bEsq{right:6px;bottom:88px;width:56px;height:56px}
+  #bS1{right:96px;bottom:84px;width:52px;height:52px}
+  #bS2{right:150px;bottom:66px;width:52px;height:52px}
+  #bS3{right:62px;bottom:150px;width:52px;height:52px}
+  #acts .sk{background:rgba(60,40,110,.6);font-size:10px!important;line-height:1.05;text-align:center}
+  #acts .sk[data-cd]::after{content:attr(data-cd);position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;font-size:15px;font-weight:700}
+  #zoom #bRun{font-size:11px;font-weight:600}
+  #zoom #bMenu{font-size:20px}
+  #menu{position:fixed;right:calc(70px + env(safe-area-inset-right,0px));top:calc(84px + env(safe-area-inset-top,0px));max-width:min(320px,calc(100vw - 36px));
     display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
   #menu button{font-size:12px}
   #menu[hidden]{display:none}
@@ -38,7 +45,9 @@
   #zoom{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(84px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px}
   #zoom button{width:46px;height:46px;border-radius:50%;padding:0;font-size:24px;line-height:1;display:grid;place-items:center}
   #zoom #bSlow{font-size:13px;font-weight:700}
-  #help{position:fixed;left:0;right:0;bottom:calc(6px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;opacity:.7;text-shadow:0 1px 2px #0008;pointer-events:none}
+  #nums div{position:fixed;left:0;top:0;font:800 20px system-ui,sans-serif;color:#fff;text-shadow:0 2px 0 #b2321f,0 0 6px #000a;pointer-events:none;will-change:transform}
+  #nums div.crit{color:#ffd23a;font-size:28px}
+  #help{transition:opacity 1s;position:fixed;left:0;right:0;bottom:calc(6px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;opacity:.7;text-shadow:0 1px 2px #0008;pointer-events:none}
   @media (hover:hover) and (pointer:fine){ #help{opacity:.85} }
 </style></head>
 <body>
@@ -46,15 +55,18 @@
 <div id="info">carregando…</div>
 <div id="stick"><div id="knob"></div></div>
 <div id="acts">
-  <button id="bMenu" aria-label="Outras animações">⋯</button>
-  <button id="bRun">Correr</button>
+  <button id="bS3" class="sk">Magia</button>
+  <button id="bS2" class="sk">Investida</button>
+  <button id="bS1" class="sk">Salto<br>giratório</button>
   <button id="bEsq">Esquiva</button>
   <button id="bDash">Dash</button>
+  <button id="bAtk">Atacar</button>
   <button id="bJump">Pular</button>
 </div>
-<div id="zoom"><button id="bSlow" aria-label="Câmera lenta">1x</button></div>
+<div id="zoom"><button id="bSlow" aria-label="Câmera lenta">1x</button><button id="bRun">Correr</button><button id="bMenu" aria-label="Estilos e animações">⋯</button></div>
+<div id="nums"></div>
 <div id="menu" hidden></div>
-<div id="help">arraste pra girar a câmera · pinça pra aproximar/afastar · ande contra a torre pra escalar (pular solta) · 1x/½x/¼x câmera lenta · pule 2x pra cambalhota · PC: WASD, Espaço, C (dash), Q (esquiva), Shift, roda do mouse</div>
+<div id="help">arraste pra girar a câmera · pinça pra aproximar/afastar · ande contra a torre pra escalar (pular solta) · 1x/½x/¼x câmera lenta · pule 2x pra cambalhota · PC: WASD, Espaço, J (atacar), 1-2-3 (skills), C (dash), Q (esquiva), Shift, roda do mouse</div>
 <script src="js/three.min.js"></script>
 <script src="js/GLTFLoader.js"></script>
 <script src="js/vrm_char.js"></script>
@@ -161,7 +173,7 @@ for (let i = -LIM; i <= LIM; i += 2) for (const [x, z] of [[i, -LIM], [i, LIM], 
 postes.count = np; postes.castShadow = true; sc.add(postes);
 
 // ---------------- personagem ----------------
-const P = { x: 0, z: 3.2, y: 0, vy: 0, face: Math.PI, sp: 0, chao: true, pulos: 0, flip: 0, dash: 0, dashX: 0, ddx: 0, ddz: 0, run: true, extra: null, extraT: 0,
+const P = { x: -3.2, z: 11, y: 0, vy: 0, face: Math.PI, sp: 0, chao: true, pulos: 0, flip: 0, dash: 0, dashX: 0, ddx: 0, ddz: 0, run: true, extra: null, extraT: 0,
   jt: 9, land: 0, landN: null, flipT: FLIP_T, dashT: DASH_T, dashV: 0, tipo: 'rapido', climb: 0, climbT: 1, cy0: 0, cy1: 0, climbV: 0, modo: 'normal', parede: null, rm: null };
 // estilos escolhidos no menu ⋯ (lembra no aparelho)
 const ESTILO = { pulo: 'mixamo', duplo: 'Flip_Front', dash: 'rapido', esq: 'Roll_Quick' };
@@ -191,11 +203,11 @@ function carregar(i) {
     root.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(root), alt = Math.max(0.8, bb.max.y - bb.min.y);
     escala(alt / ALT_Q);
     VRMC.fix(R, RUN, WALK); // passada casada com a velocidade, igual ao Quimera
-    info.textContent = nome; P.extra = null; menuMontar();
+    info.textContent = nome; P.extra = null; P.atk = null; menuMontar(); poeEspada();
   }).catch(() => { if (meu === pedido) info.textContent = 'Não consegui carregar ' + nome + '. Toque de novo.'; delete cache[arq] });
   try { localStorage.setItem('nga-pers', i) } catch (e) {}
 }
-const ONCE = new Set(['Ledge_Up', 'Ladder_Start', 'Ladder_Top', 'Wall_Climb_Run', 'Wall_Run', 'Wall_Run_Diag', 'Climb_Up', 'Slide_Start', 'Slide_Exit', 'Jump_Full_Short', 'Dodge_Forward', 'Jump_Start', 'Jump_Run', 'Land_A', 'Land_B', 'Flip_Front', 'Flip_Back', 'Roll_Quick', 'Roll_Dive', 'Roll_Sprint', 'Death_A', 'Hit_A', 'Melee_1H_Attack_Slice_Diagonal', 'Melee_2H_Attack_Spin', 'Ranged_Magic_Shoot',
+const ONCE = new Set(['Sword_A', 'Sword_B', 'Sword_C', 'Sword_Dash_Full', 'Spell_Shoot', 'Hit_Knock', 'Ledge_Up', 'Ladder_Start', 'Ladder_Top', 'Wall_Climb_Run', 'Wall_Run', 'Wall_Run_Diag', 'Climb_Up', 'Slide_Start', 'Slide_Exit', 'Jump_Full_Short', 'Dodge_Forward', 'Jump_Start', 'Jump_Run', 'Land_A', 'Land_B', 'Flip_Front', 'Flip_Back', 'Roll_Quick', 'Roll_Dive', 'Roll_Sprint', 'Death_A', 'Hit_A', 'Melee_1H_Attack_Slice_Diagonal', 'Melee_2H_Attack_Spin', 'Ranged_Magic_Shoot',
   'Ranged_Magic_Summon', 'Ranged_Magic_Raise', 'Interact', 'PickUp']);
 function tocar(n, rate = 1, fade = 0.15) {
   const a = R && R.act[n]; if (!a) return;
@@ -213,7 +225,7 @@ const ZMIN = 0.9, ZMAX = 22;
 const knob = document.getElementById('knob'), stickEl = document.getElementById('stick');
 addEventListener('keydown', e => {
   const k = e.key.toLowerCase(); if (e.repeat) return; tecla.add(k);
-  if (k === ' ') pular(); if (k === 'c') dash(); if (k === 'q' || k === 'e') esquiva(); if (k === 'shift') P.run = !P.run, atualRun(); if (k === '+' || k === '=') dist = Math.max(ZMIN, dist / 1.2); if (k === '-') dist = Math.min(ZMAX, dist * 1.2);
+  if (k === ' ') pular(); if (k === 'c') dash(); if (k === 'q' || k === 'e') esquiva(); if (k === 'j' || k === 'f') atacar('combo'); if (k === '1') atacar('giro'); if (k === '2') atacar('investida'); if (k === '3') atacar('magia'); if (k === 'shift') P.run = !P.run, atualRun(); if (k === '+' || k === '=') dist = Math.max(ZMIN, dist / 1.2); if (k === '-') dist = Math.min(ZMAX, dist * 1.2);
 });
 addEventListener('keyup', e => tecla.delete(e.key.toLowerCase()));
 const cv = r.domElement;
@@ -250,7 +262,7 @@ document.getElementById('bSlow').addEventListener('pointerdown', e => {
   const b = document.getElementById('bSlow'); b.textContent = lento === 1 ? '1x' : lento === 0.5 ? '½x' : '¼x'; b.classList.toggle('on', lento !== 1);
 });
 const botao = (id, f) => document.getElementById(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); f() });
-botao('bJump', pular); botao('bDash', dash); botao('bEsq', esquiva); botao('bRun', () => { P.run = !P.run; atualRun() });
+botao('bJump', pular); botao('bDash', dash); botao('bEsq', esquiva); botao('bAtk', () => atacar('combo')); botao('bS1', () => atacar('giro')); botao('bS2', () => atacar('investida')); botao('bS3', () => atacar('magia')); botao('bRun', () => { P.run = !P.run; atualRun() });
 botao('bMenu', () => { const m = document.getElementById('menu'); m.hidden = !m.hidden });
 document.getElementById('bGal').onclick = () => location.href = 'galeria.html';
 function atualRun() { document.getElementById('bRun').classList.toggle('on', P.run) } atualRun();
@@ -315,6 +327,117 @@ function rastroPasso(dt) {
     for (let j = 0; j < RV; j++) { const k = i * RV + j; pos[k * 3] = p.x; pos[k * 3 + 1] = p.y + H * (0.12 + 0.78 * j / (RV - 1)); pos[k * 3 + 2] = p.z; al[k] = f * PERFIL[j] }
   }
   rastroGeo.attributes.position.needsUpdate = rastroGeo.attributes.a.needsUpdate = true;
+}
+
+// ---------------- combate ----------------
+// boneco de treino de palha no meio da vila: balança quando apanha e mostra o dano
+const BON = { x: -3.2, z: 8.5, g: new THREE.Group(), corpo: new THREE.Group(), vx: 0, vz: 0, rx: 0, rz: 0, flash: 0, mats: [] };
+{
+  const palha = M(0xd9b45a), madeira = mat.madeira, pano = M(0xb54a3c), add = (geo, m, x, y, z, par = BON.corpo) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; par.add(o); return o };
+  BON.g.position.set(BON.x, 0, BON.z); sc.add(BON.g); BON.g.add(BON.corpo);
+  add(new THREE.CylinderGeometry(0.07, 0.09, 1.0, 8), madeira, 0, 0.5, 0, BON.g);           // poste (fica parado)
+  add(new THREE.CylinderGeometry(0.42, 0.5, 0.12, 16), madeira, 0, 0.06, 0, BON.g);        // base
+  add(new THREE.CylinderGeometry(0.26, 0.3, 0.75, 12), palha, 0, 1.25, 0);                 // tronco
+  add(new THREE.SphereGeometry(0.2, 14, 10), palha, 0, 1.82, 0);                           // cabeça
+  add(new THREE.CylinderGeometry(0.06, 0.06, 1.15, 8), madeira, 0, 1.4, 0).rotation.z = Math.PI / 2; // braços
+  add(new THREE.CylinderGeometry(0.29, 0.29, 0.12, 12), pano, 0, 1.15, 0);                 // faixa
+  BON.corpo.position.y = 0.0; BON.corpo.traverse(o => { if (o.isMesh) BON.mats.push(o.material) });
+  BON.mats = [...new Set(BON.mats)].map(m => { m.emissive = new THREE.Color(0); return m });
+  SOL.push({ x: BON.x, z: BON.z, hw: 0.38, hd: 0.38, top: 99 });
+}
+function boneco(dt) { // mola: volta pro lugar balançando
+  BON.vx += (-BON.rx * 60 - BON.vx * 6) * dt; BON.vz += (-BON.rz * 60 - BON.vz * 6) * dt; BON.rx += BON.vx * dt; BON.rz += BON.vz * dt;
+  BON.corpo.rotation.set(BON.rx, 0, BON.rz); BON.flash = Math.max(0, BON.flash - dt * 6);
+  for (const m of BON.mats) m.emissive.setRGB(BON.flash, BON.flash * 0.9, BON.flash * 0.8);
+}
+// números de dano
+const NUMS = [], numsEl = document.getElementById('nums'), _p = new THREE.Vector3();
+function dano(v, crit) {
+  const d = document.createElement('div'); d.textContent = v; if (crit) d.className = 'crit'; numsEl.append(d);
+  NUMS.push({ d, t: 0, x: BON.x + (Math.random() - 0.5) * 0.5, y: 1.9 + Math.random() * 0.3, z: BON.z + (Math.random() - 0.5) * 0.5 });
+}
+function numsPasso(dt) {
+  for (let i = NUMS.length - 1; i >= 0; i--) {
+    const n = NUMS[i]; n.t += dt; if (n.t > 0.9) { n.d.remove(); NUMS.splice(i, 1); continue }
+    _p.set(n.x, n.y + n.t * 0.9, n.z).project(cam);
+    const sx = (_p.x * 0.5 + 0.5) * innerWidth, sy = (-_p.y * 0.5 + 0.5) * innerHeight, s = n.t < 0.12 ? 1.6 - n.t * 5 : 1;
+    n.d.style.transform = `translate(${sx}px,${sy}px) translate(-50%,-50%) scale(${s})`; n.d.style.opacity = n.t > 0.6 ? (0.9 - n.t) / 0.3 : 1;
+  }
+}
+// faíscas do golpe (lote único, sem uma malha por partícula)
+const FN = 60, fais = new THREE.InstancedMesh(new THREE.BoxGeometry(0.05, 0.05, 0.05), new THREE.MeshBasicMaterial({ color: 0xfff1b0 }), FN), FP = [];
+fais.frustumCulled = false; fais.count = 0; sc.add(fais);
+function faiscas(x, y, z, n, cor) { for (let i = 0; i < n; i++) FP.push({ x, y, z, vx: (Math.random() - 0.5) * 6, vy: Math.random() * 4 + 1, vz: (Math.random() - 0.5) * 6, t: 0 }); if (cor) fais.material.color.set(cor) }
+function faiscasPasso(dt) {
+  for (let i = FP.length - 1; i >= 0; i--) { const f = FP[i]; f.t += dt; if (f.t > 0.35) { FP.splice(i, 1); continue } f.vy -= 12 * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.z += f.vz * dt }
+  while (FP.length > FN) FP.shift();
+  FP.forEach((f, i) => { const k = 1 - f.t / 0.35; fais.setMatrixAt(i, _m.compose(_p.set(f.x, f.y, f.z), _q0, _s0.set(k, k, k))) });
+  fais.count = FP.length; fais.instanceMatrix.needsUpdate = true;
+}
+// bola de energia da magia
+const ORBES = [], orbeGeo = new THREE.SphereGeometry(0.16, 14, 10), orbeMat = new THREE.MeshBasicMaterial({ color: 0x8fd8ff });
+const auraMat = new THREE.MeshBasicMaterial({ color: 0x4aa8ff, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false });
+function orbe() {
+  const o = new THREE.Mesh(orbeGeo, orbeMat), a = new THREE.Mesh(orbeGeo, auraMat); a.scale.setScalar(2); o.add(a);
+  const fx = Math.sin(P.face), fz = Math.cos(P.face); o.position.set(P.x + fx * 0.5, P.y + 1.15 * K / 0.68, P.z + fz * 0.5); sc.add(o);
+  ORBES.push({ o, vx: fx * 13, vz: fz * 13, t: 0 });
+}
+function orbesPasso(dt) {
+  for (let i = ORBES.length - 1; i >= 0; i--) {
+    const b = ORBES[i]; b.t += dt; b.o.position.x += b.vx * dt; b.o.position.z += b.vz * dt; b.o.children[0].scale.setScalar(2 + Math.sin(b.t * 30) * 0.3);
+    const dx = b.o.position.x - BON.x, dz = b.o.position.z - BON.z, bate = Math.hypot(dx, dz) < 0.55;
+    if (bate) { acerta(150 + Math.random() * 60 | 0, Math.random() < 0.3, b.vx, b.vz, 0x9fdcff) }
+    if (bate || b.t > 1.5) { sc.remove(b.o); ORBES.splice(i, 1) }
+  }
+}
+function acerta(v, crit, dx, dz, cor) { // o boneco recebe o golpe
+  const l = Math.hypot(dx, dz) || 1; BON.vx += dz / l * (crit ? 5 : 3.2); BON.vz -= dx / l * (crit ? 5 : 3.2); BON.flash = 1;
+  dano(v, crit); faiscas(BON.x, 1.35, BON.z, crit ? 18 : 10, cor || 0xfff1b0);
+}
+// golpes: animação, momentos em que acertam (fração da duração), alcance e dano
+const GOLPES = {
+  combo: [{ a: 'Sword_A', dur: 0.43, hits: [0.45], alc: 1.5, dano: [60, 90] }, { a: 'Sword_B', dur: 0.53, hits: [0.5], alc: 1.6, dano: [70, 100] },
+          { a: 'Sword_C', dur: 1.0, hits: [0.3, 0.55], alc: 1.8, dano: [90, 140], crit: true, ate: 0.5 }],
+  giro: { a: 'Sword_C', dur: 2.0, hits: [0.18, 0.3, 0.45], alc: 2.3, roda: true, dano: [110, 160], cd: 3, crit: true },
+  investida: { a: 'Sword_Dash_Full', dur: 1.57, hits: [0.25, 0.4, 0.55], alc: 1.5, dano: [90, 130], cd: 4, anda: [0.12, 0.6, 5.5] },
+  magia: { a: 'Spell_Shoot', dur: 0.5, orbe: 0.3, cd: 1.5 },
+};
+const CD = { giro: 0, investida: 0, magia: 0 };
+let comboN = 0, comboT = 9;
+function atacar(tipo) {
+  if (!R || P.modo !== 'normal' || P.dash > 0 || P.climb > 0) return;
+  if (P.atk) { if (tipo === 'combo' && P.atk.tipo === 'combo' && P.atk.t > P.atk.g.dur * 0.45) P.atkFila = true; return }
+  if (tipo !== 'combo' && CD[tipo] > 0) return;
+  let g; if (tipo === 'combo') { comboN = comboT < 0.6 ? (comboN + 1) % 3 : 0; g = GOLPES.combo[comboN] } else { g = GOLPES[tipo]; CD[tipo] = g.cd }
+  if (!R.act[g.a]) return;
+  const dx = BON.x - P.x, dz = BON.z - P.z, d = Math.hypot(dx, dz); if (d < 4.5) P.face = Math.atan2(dx, dz); // mira no boneco se estiver perto
+  P.atk = { tipo, g, t: 0, feitos: new Set() }; P.extra = null; P.land = 0; P.sp = 0; espadaT = 4; cur = null;
+}
+function ataquePasso(dt) {
+  for (const k in CD) CD[k] = Math.max(0, CD[k] - dt);
+  comboT += dt; const A = P.atk; if (!A) return;
+  const g = A.g, dur = g.ate ? g.dur * g.ate * 2 : g.dur, x = A.t / g.dur; A.t += dt;
+  if (g.anda && x > g.anda[0] && x < g.anda[1]) { P.x += Math.sin(P.face) * g.anda[2] * K / 0.68 * dt; P.z += Math.cos(P.face) * g.anda[2] * K / 0.68 * dt }
+  (g.hits || []).forEach((h, i) => {
+    if (A.feitos.has(i) || x < h) return; A.feitos.add(i);
+    const dx = BON.x - P.x, dz = BON.z - P.z, d = Math.hypot(dx, dz), frente = (dx * Math.sin(P.face) + dz * Math.cos(P.face)) / (d || 1);
+    if (d < g.alc * K / 0.68 + 0.4 && (g.roda || frente > 0.3)) { const ult = i === g.hits.length - 1; acerta(g.dano[0] + Math.random() * (g.dano[1] - g.dano[0]) | 0, g.crit && ult, dx, dz) }
+  });
+  if (g.orbe && !A.orbeFeito && x >= g.orbe) { A.orbeFeito = true; orbe() }
+  if (A.t >= dur) { P.atk = null; comboT = 0; if (A.atkFila && A.tipo === 'combo') { P.atkFila = false; atacar('combo') } }
+  if (P.atkFila) { A.atkFila = true; P.atkFila = false }
+}
+// espada na mão direita (aparece ao atacar e some depois de uns segundos parada)
+let espada = null, espadaT = 0;
+function poeEspada() {
+  if (espada) espada.parent && espada.parent.remove(espada);
+  espada = new THREE.Group(); const aco = new THREE.MeshStandardMaterial({ color: 0xdfe6ee, metalness: 0.6, roughness: 0.25, emissive: 0x223344 }), cabo = M(0x3b2a1e), ouro = M(0xd4a640);
+  const L = 0.95 * K / 0.68, add = (geo, m, y) => { const o = new THREE.Mesh(geo, m); o.position.y = y; o.castShadow = true; espada.add(o); return o };
+  add(new THREE.BoxGeometry(0.055, L, 0.012), aco, 0.12 + L / 2); add(new THREE.ConeGeometry(0.04, 0.12, 4), aco, 0.12 + L + 0.05).rotation.y = Math.PI / 4;
+  add(new THREE.BoxGeometry(0.22, 0.035, 0.05), ouro, 0.1); add(new THREE.CylinderGeometry(0.02, 0.022, 0.2, 8), cabo, 0); add(new THREE.SphereGeometry(0.032, 8, 6), ouro, -0.11);
+  let mao = null; R.root.traverse(o => { if (o.name === 'handslotr' || o.name === 'handslot.r') mao = o }); if (!mao) R.root.traverse(o => { if (!mao && /^handr$|^hand\.?r$/.test(o.name)) mao = o });
+  if (mao) { const ws = new THREE.Vector3(); mao.parent.updateWorldMatrix(true, false); mao.getWorldScale(ws); espada.scale.setScalar(1 / ws.x); espada.rotation.set(Math.PI / 2, 0, 0); mao.add(espada) }
+  espada.visible = false;
 }
 
 // ---------------- escalada ----------------
@@ -413,12 +536,13 @@ function passo(dt) {
   if (tecla.has('w') || tecla.has('arrowup')) iz -= 1; if (tecla.has('s') || tecla.has('arrowdown')) iz += 1;
   let mag = Math.min(1, Math.hypot(ix, iz)); if (mag < 0.12) mag = 0;
   P.inX = ix; P.inY = -iz;
+  ataquePasso(dt);
   if (P.modo !== 'normal') { passoEspecial(dt, ix, iz); P.jt += dt; return }
-  const alvo = mag ? (P.run && mag > 0.6 ? RUN : WALK) * (mag > 0.6 ? 1 : 0.5 + mag * 0.8) : 0;
+  const alvo = mag && !P.atk ? (P.run && mag > 0.6 ? RUN : WALK) * (mag > 0.6 ? 1 : 0.5 + mag * 0.8) : 0;
   P.sp += (alvo - P.sp) * Math.min(1, dt * 10);
   if (mag) {
     const a = Math.atan2(ix, iz) + yaw, dir = Math.atan2(Math.sin(a), Math.cos(a));
-    let d = dir - P.face; d = Math.atan2(Math.sin(d), Math.cos(d)); if (P.dash <= 0) P.face += d * Math.min(1, dt * 12);
+    let d = dir - P.face; d = Math.atan2(Math.sin(d), Math.cos(d)); if (P.dash <= 0 && !P.atk) P.face += d * Math.min(1, dt * 12);
     P.extra = LOOP_EXTRA.has(P.extra) ? null : P.extra;
   }
   if (P.dash > 0) {
@@ -468,6 +592,7 @@ function anima(dt) {
     tocar(v[0], v[1], 0.2);
   }
   else if (P.modo === 'escada') tocar('Ladder_Loop', P.inY > 0.3 ? 1 : P.inY < -0.3 ? -1 : 0, 0.15);
+  else if (P.atk) tocar(P.atk.g.a, P.atk.g.ate ? 1 : 1, 0.08);
   else if (P.flip > 0) tocar(novoDuplo ? ESTILO.duplo : 'Jump_Full_Short', 1, 0.08);
   else if (P.climb > 0) tocar('Climb_Up', 1, 0.06);
   else if (P.dash > 0) {
@@ -495,6 +620,8 @@ function anima(dt) {
   else if (P.dashX > 0) corpo.rotation.x = 0.42 * Math.pow(P.dashX / 0.4, 1.4);
   player.position.set(P.x, P.y, P.z); player.rotation.y = P.face;
   player.updateMatrixWorld(true); VRMC.tick(R, dt); rastroPasso(dt);
+  if (espada) { espadaT = P.atk ? 4 : Math.max(0, espadaT - dt); espada.visible = espadaT > 0 }
+  for (const k of ['giro', 'investida', 'magia']) { const b = document.getElementById({ giro: 'bS1', investida: 'bS2', magia: 'bS3' }[k]); if (CD[k] > 0) b.dataset.cd = Math.ceil(CD[k]); else delete b.dataset.cd }
 }
 
 const alvoCam = new THREE.Vector3(P.x, 1.2, P.z);
@@ -512,10 +639,11 @@ PERS.forEach(([, nome], i) => { const b = document.createElement('button'); b.te
 let ini = 0; try { ini = Math.min(PERS.length - 1, +localStorage.getItem('nga-pers') || 0) } catch (e) {}
 carregar(ini); document.getElementById('chars').children[ini].scrollIntoView({ inline: 'center' });
 yaw = P.face + Math.PI; // começa olhando por trás
-window.VILA = { P, get cur() { return cur }, get R() { return R }, get K() { return K }, set yaw(v) { yaw = v }, camDist: () => dist, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { passo(dt); anima(dt) } }, pular, TORRE, LAD, dash, esquiva, tecla, ESTILO }; // pra testes
+window.VILA = { P, get cur() { return cur }, get R() { return R }, get K() { return K }, set yaw(v) { yaw = v }, camDist: () => dist, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { passo(dt); anima(dt); boneco(dt); orbesPasso(dt) } }, atacar, BON, get espada() { return espada }, pular, TORRE, LAD, dash, esquiva, tecla, ESTILO }; // pra testes
 
+setTimeout(() => { const h = document.getElementById('help'); if (h) h.style.opacity = 0 }, 12000); // a dica some sozinha
 r.setAnimationLoop(() => {
   const real = Math.min(0.05, relogio.getDelta()), dt = real * lento;
-  if (R) passo(dt); anima(dt); camera(real); r.render(sc, cam);
+  if (R) passo(dt); anima(dt); boneco(dt); faiscasPasso(dt); orbesPasso(dt); camera(real); numsPasso(dt); r.render(sc, cam);
 });
 </script></body></html>
