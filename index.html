@@ -647,9 +647,9 @@ const GOLPES = {
 };
 // golpes do Mixamo (One Hand Sword Combo): 4 cortes e o combo inteiro; se o personagem não tiver, fica o da Quaternius
 const GOLPES_MX = {
-  combo: [{ a: 'Esp1', dur: 0.89, hits: [0.5], alc: 1.7, dano: [70, 100], raiz: 1, vel: 1.85, anda: [0.3, 0.55, 3.2] }, { a: 'Esp2', dur: 0.95, hits: [0.53], alc: 1.8, dano: [80, 110], raiz: 1, vel: 1.85, anda: [0.32, 0.58, 3.2] },
-          { a: 'Esp3', dur: 0.93, hits: [0.58], alc: 1.8, dano: [90, 120], raiz: 1, vel: 1.85, anda: [0.36, 0.62, 3.4] }, { a: 'Esp4', dur: 0.85, hits: [0.41], alc: 2.0, dano: [120, 170], crit: true, raiz: 1, vel: 1.7, anda: [0.2, 0.45, 4.5] }],
-  giro: { a: 'EspCombo', dur: 3.66, hits: [0.12, 0.38, 0.66, 0.86], alc: 2.0, dano: [100, 150], cd: 5, crit: true, raiz: 1, vel: 1.75, anda: [0.08, 0.9, 1.6] },
+  combo: [{ a: 'Esp1', dur: 0.89, hits: [0.5], alc: 1.7, dano: [70, 100], raiz: 1, vel: 1.85 }, { a: 'Esp2', dur: 0.95, hits: [0.53], alc: 1.8, dano: [80, 110], raiz: 1, vel: 1.85 },
+          { a: 'Esp3', dur: 0.93, hits: [0.58], alc: 1.8, dano: [90, 120], raiz: 1, vel: 1.85 }, { a: 'Esp4', dur: 0.85, hits: [0.41], alc: 2.0, dano: [120, 170], crit: true, raiz: 1, vel: 1.7 }],
+  giro: { a: 'EspCombo', dur: 3.66, hits: [0.12, 0.38, 0.66, 0.86], alc: 2.0, dano: [100, 150], cd: 5, crit: true, raiz: 1, vel: 1.75 },
 };
 function g0vel(g) { return pausa > 0 ? 0 : (g.vel || 1) }
 function golpes() { return R && R.act.Esp1 ? Object.assign({}, GOLPES, GOLPES_MX) : GOLPES }
@@ -675,8 +675,10 @@ function ataquePasso(dt) {
   for (const k in CD) CD[k] = Math.max(0, CD[k] - dt);
   comboT += dt; const A = P.atk; if (!A) return;
   dt *= g0vel(A.g); const g = A.g, dur = g.ate ? g.dur * g.ate * 2 : g.dur, x = A.t / g.dur; A.t += dt;
-  if (g.raiz) { const c = curva(g.a); if (c) { const z1 = naCurva(c, A.t)[1], z0 = naCurva(c, A.t - dt)[1]; P.x += Math.sin(P.face) * (z1 - z0); P.z += Math.cos(P.face) * (z1 - z0) } }
-  if (g.anda && x > g.anda[0] && x < g.anda[1]) { const u = (x - g.anda[0]) / (g.anda[1] - g.anda[0]), v = g.anda[2] * K / 0.68 * dt * (g.anda[3] ? (1 - u) * (1 - u) : 1); P.x += Math.sin(P.face) * v; P.z += Math.cos(P.face) * v }
+  // colado no alvo da frente: não avança mais (não empurra o bicho nem passa por ele)
+  const colado = alvos().some(a => { const dx = a.x - P.x, dz = a.z - P.z, d = Math.hypot(dx, dz); return d < a.r + 0.75 * K / 0.68 && (dx * Math.sin(P.face) + dz * Math.cos(P.face)) > 0 });
+  if (g.raiz) { const c = curva(g.a); if (c) { const z1 = naCurva(c, A.t)[1], z0 = naCurva(c, A.t - dt)[1], dz = z1 - z0; if (!(colado && dz > 0)) { P.x += Math.sin(P.face) * dz; P.z += Math.cos(P.face) * dz } } }
+  if (g.anda && !colado && x > g.anda[0] && x < g.anda[1]) { const u = (x - g.anda[0]) / (g.anda[1] - g.anda[0]), v = g.anda[2] * K / 0.68 * dt * (g.anda[3] ? (1 - u) * (1 - u) : 1); P.x += Math.sin(P.face) * v; P.z += Math.cos(P.face) * v }
   (g.hits || []).forEach((h, i) => {
     if (A.feitos.has(i) || x < h) return; A.feitos.add(i);
     for (const a of alvos()) {
