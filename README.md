@@ -50,6 +50,12 @@ Pra abrir a página no próprio PC: `python3 -m http.server 8000` na pasta do re
 | Dodge_Forward | dash (pose de voo; o jogo inclina o corpo) | Mixamo: Front Flip (começo) |
 | Jump_Full_Short | cambalhota encolhida (o jogo gira o corpo) | Quaternius UAL: NinjaJump |
 | ataques, magias, defesa, dano, morte, sentar, interagir, pegar, machado, picareta | | Quaternius UAL |
+| Jump_Start / Jump_Run | impulso do pulo (parado / correndo) | Mixamo: Jumping Up, Jumping While Running |
+| Land_A / Land_B | aterrissagem (normal / queda alta) | Mixamo: Landing From Falling Idle, Landing From Jump |
+| Flip_Front / Flip_Back | mortal pra frente / pra trás (gira sozinho) | Mixamo: Doing A Forward Flip While Running, Standing Backflip |
+| Roll_Quick / Roll_Dive / Roll_Sprint | dash: rolamento / mergulho / arrancada | Mixamo: Quick Roll, Dive Roll From Standing, Sprint To Forward Roll |
+
+Na vila, o menu ⋯ escolhe o estilo do pulo, do pulo duplo e do dash (os antigos, no jeito do Quimera, continuam como opção).
 
 O jogo é quem move a personagem (as animações ficam no lugar). No Quimera Sandbox, o pulo, a cambalhota e o dash
 recebem altura, giro e inclinação feitos no código; num jogo novo dá pra fazer igual ou baixar versões com movimento.
@@ -62,7 +68,8 @@ python3 tools/build_vrm.py Sendagaya_Shino.vrm UAL1_Standard.glb UAL2_Standard.g
 
 - os .vrm: github.com/madjin/vrm-samples (vroid/beta e vroid/stable)
 - `UAL1_Standard.glb`, `UAL2_Standard.glb`: github.com/adharshsivan/animationlibrary
-- Os .fbx do Mixamo ficam no PC do André (pasta Downloads/mixamo): corrida, andar, parada, pulo, queda, cambalhota.
+- Os .fbx do Mixamo ficam no PC do André (pasta Downloads): corrida, andar, parada, pulo, queda, cambalhota, pulo_impulso,
+  pulo_correndo, aterrissa_queda, aterrissa_pulo, mortal_frente, mortal_tras, rolamento, mergulho, arrancada_rola.
   Baixados em mixamo.com com o personagem padrão, FBX Binary, Without Skin, 30 FPS, In Place.
 - Os cortes e tempos de cada animação ficam na tabela `MIX` do `build_vrm.py`. Detalhes em `tools/LEIAME.md`.
 

@@ -32,6 +32,8 @@
     display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
   #menu button{font-size:12px}
   #menu[hidden]{display:none}
+  #menu .lin{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;align-items:center;width:100%}
+  #menu .lin span{font-size:11px;opacity:.85;text-shadow:0 1px 2px #0008;margin-right:2px}
   #zoom{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(84px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px}
   #zoom button{width:46px;height:46px;border-radius:50%;padding:0;font-size:24px;line-height:1;display:grid;place-items:center}
   #zoom #bSlow{font-size:13px;font-weight:700}
@@ -146,7 +148,17 @@ for (let i = -LIM; i <= LIM; i += 2) for (const [x, z] of [[i, -LIM], [i, LIM], 
 postes.count = np; postes.castShadow = true; sc.add(postes);
 
 // ---------------- personagem ----------------
-const P = { x: 0, z: 3.2, y: 0, vy: 0, face: Math.PI, sp: 0, chao: true, pulos: 0, flip: 0, dash: 0, dashX: 0, ddx: 0, ddz: 0, run: true, extra: null, extraT: 0 };
+const P = { x: 0, z: 3.2, y: 0, vy: 0, face: Math.PI, sp: 0, chao: true, pulos: 0, flip: 0, dash: 0, dashX: 0, ddx: 0, ddz: 0, run: true, extra: null, extraT: 0,
+  jt: 9, land: 0, landN: null, flipT: FLIP_T, dashT: DASH_T, dashV: 0 };
+// estilos escolhidos no menu ⋯ (lembra no aparelho)
+const ESTILO = { pulo: 'mixamo', duplo: 'Flip_Front', dash: 'Roll_Quick' };
+try { Object.assign(ESTILO, JSON.parse(localStorage.getItem('nga-estilo') || '{}')) } catch (e) {}
+const OPC = {
+  pulo: [['mixamo', 'Pulo novo'], ['antigo', 'Pulo antigo']],
+  duplo: [['Flip_Front', 'Mortal pra frente'], ['Flip_Back', 'Mortal pra trás'], ['classico', 'Cambalhota antiga']],
+  dash: [['Roll_Quick', 'Rolamento'], ['Roll_Dive', 'Mergulho'], ['Roll_Sprint', 'Arrancada'], ['voo', 'Voo antigo']],
+};
+const DASH_DIST = { Roll_Quick: 4.2, Roll_Dive: 4.6, Roll_Sprint: 3.8 }; // distância do rolamento em "metros do Quimera" (vezes K)
 const player = new THREE.Group(), corpo = new THREE.Group(); player.add(corpo); sc.add(player);
 let R = null, mix = null, cur = null, pedido = 0; const cache = {};
 const info = document.getElementById('info');
@@ -168,7 +180,7 @@ function carregar(i) {
   }).catch(() => { if (meu === pedido) info.textContent = 'Não consegui carregar ' + nome + '. Toque de novo.'; delete cache[arq] });
   try { localStorage.setItem('nga-pers', i) } catch (e) {}
 }
-const ONCE = new Set(['Jump_Full_Short', 'Dodge_Forward', 'Death_A', 'Hit_A', 'Melee_1H_Attack_Slice_Diagonal', 'Melee_2H_Attack_Spin', 'Ranged_Magic_Shoot',
+const ONCE = new Set(['Jump_Full_Short', 'Dodge_Forward', 'Jump_Start', 'Jump_Run', 'Land_A', 'Land_B', 'Flip_Front', 'Flip_Back', 'Roll_Quick', 'Roll_Dive', 'Roll_Sprint', 'Death_A', 'Hit_A', 'Melee_1H_Attack_Slice_Diagonal', 'Melee_2H_Attack_Spin', 'Ranged_Magic_Shoot',
   'Ranged_Magic_Summon', 'Ranged_Magic_Raise', 'Interact', 'PickUp']);
 function tocar(n, rate = 1, fade = 0.15) {
   const a = R && R.act[n]; if (!a) return;
@@ -229,17 +241,33 @@ document.getElementById('bGal').onclick = () => location.href = 'galeria.html';
 function atualRun() { document.getElementById('bRun').classList.toggle('on', P.run) } atualRun();
 function menuMontar() {
   const m = document.getElementById('menu'); m.textContent = '';
+  for (const [k, titulo] of [['pulo', 'Pulo'], ['duplo', 'Pulo duplo'], ['dash', 'Dash']]) {
+    const lin = document.createElement('div'); lin.className = 'lin'; const t = document.createElement('span'); t.textContent = titulo; lin.append(t);
+    for (const [v, nome] of OPC[k]) {
+      if (v !== 'antigo' && v !== 'classico' && v !== 'voo' && v !== 'mixamo' && !R.act[v]) continue;
+      const b = document.createElement('button'); b.textContent = nome; b.classList.toggle('on', ESTILO[k] === v);
+      b.onclick = () => { ESTILO[k] = v; try { localStorage.setItem('nga-estilo', JSON.stringify(ESTILO)) } catch (e) {} menuMontar() }; lin.append(b);
+    }
+    m.append(lin);
+  }
+  const sep = document.createElement('div'); sep.className = 'lin'; sep.innerHTML = '<span>Animações</span>'; m.append(sep);
   for (const [n, t] of EXTRAS) if (R.act[n]) { const b = document.createElement('button'); b.textContent = t; b.onclick = () => { P.extra = n; P.extraT = 0; m.hidden = true }; m.append(b) }
 }
 
 function pular() {
   if (!R || P.dash > 0) return; P.extra = null;
-  if (P.chao) { P.vy = JUMPV; P.chao = false; P.pulos = 1 }
-  else if (P.pulos < 2) { P.vy = Math.max(P.vy, JUMPV * 0.9); P.pulos = 2; P.flip = 0.001 }
+  if (P.chao) { P.vy = JUMPV; P.chao = false; P.pulos = 1; P.jt = 0; P.land = 0 }
+  else if (P.pulos < 2) {
+    P.vy = Math.max(P.vy, JUMPV * 0.9); P.pulos = 2; P.flip = 0.001;
+    P.flipT = ESTILO.duplo !== 'classico' && R.act[ESTILO.duplo] ? R.act[ESTILO.duplo].getClip().duration : FLIP_T;
+  }
 }
 function dash() {
   if (!R || P.dash > 0 || P.dashCd > 0) return; P.extra = null; P.flip = 0;
-  P.ddx = Math.sin(P.face); P.ddz = Math.cos(P.face); P.dash = DASH_T; P.dashCd = 0.6; if (!P.chao) P.vy = Math.max(0, P.vy);
+  P.ddx = Math.sin(P.face); P.ddz = Math.cos(P.face); P.land = 0;
+  const rolo = ESTILO.dash !== 'voo' && R.act[ESTILO.dash];
+  if (rolo) { P.dashT = rolo.getClip().duration; P.dashV = DASH_DIST[ESTILO.dash] * K / P.dashT } else { P.dashT = DASH_T; P.dashV = DASH_V }
+  P.dash = P.dashT; P.dashCd = 0.3; if (!P.chao) P.vy = Math.max(0, P.vy);
 }
 
 // ---------------- física simples ----------------
@@ -271,26 +299,40 @@ function passo(dt) {
     let d = dir - P.face; d = Math.atan2(Math.sin(d), Math.cos(d)); if (P.dash <= 0) P.face += d * Math.min(1, dt * 12);
     P.extra = LOOP_EXTRA.has(P.extra) ? null : P.extra;
   }
-  if (P.dash > 0) { P.dash -= dt; P.x += P.ddx * DASH_V * dt; P.z += P.ddz * DASH_V * dt; if (P.dash <= 0) P.dashX = 0.4 }
+  if (P.dash > 0) {
+    const x = 1 - P.dash / P.dashT, f = ESTILO.dash === 'voo' ? 1 : 1.5 * Math.sin(Math.PI * Math.min(1, x * 1.05)) ** 0.6; // rolamento: acelera e freia
+    P.dash -= dt; P.x += P.ddx * P.dashV * f * dt; P.z += P.ddz * P.dashV * f * dt; if (P.dash <= 0) P.dashX = ESTILO.dash === 'voo' ? 0.4 : 0;
+  }
   else if (P.sp > 0.01) { P.x += Math.sin(P.face) * P.sp * dt; P.z += Math.cos(P.face) * P.sp * dt }
   P.dashCd = Math.max(0, (P.dashCd || 0) - dt); P.dashX = Math.max(0, P.dashX - dt);
   empurra();
   // gravidade e chão
-  if (P.dash <= 0) P.vy -= GRAV * dt; else P.vy = 0;
+  if (P.dash <= 0 || (ESTILO.dash !== 'voo' && !P.chao)) P.vy -= GRAV * dt; else P.vy = 0;
   P.y += P.vy * dt; const g = chaoEm(P.x, P.z, P.y);
-  if (P.y <= g) { if (!P.chao && P.vy < -4 * K) P.landT = 0.3; P.y = g; P.vy = 0; P.chao = true; P.pulos = 0; P.flip = 0 }
+  if (P.y <= g) {
+    if (!P.chao && ESTILO.pulo === 'mixamo' && P.dash <= 0 && P.vy < -3 * K) { P.landN = P.vy < -11 * K && R.act.Land_B ? 'Land_B' : 'Land_A'; P.land = R.act[P.landN] ? R.act[P.landN].getClip().duration : 0 }
+    P.y = g; P.vy = 0; P.chao = true; P.pulos = 0; P.flip = 0;
+  }
   else if (P.y - g > 0.08 || P.vy > 0) P.chao = false;
   else P.y = g; // descendo degrau
-  if (P.flip > 0) { P.flip += dt; if (P.flip > FLIP_T) P.flip = 0 }
+  if (P.flip > 0) { P.flip += dt; if (P.flip > P.flipT) P.flip = 0 }
   if (P.extra) P.extraT += dt;
+  P.jt += dt; if (P.land > 0) { P.land -= dt; if (P.sp > 2.6 * K && P.land < (R.act[P.landN] ? R.act[P.landN].getClip().duration : 0) - 0.15) P.land = 0 }
 }
 
 function anima(dt) {
   if (!R) return;
   // escolhe a animação (mesma ordem do Quimera)
-  if (P.flip > 0) tocar('Jump_Full_Short', 1, 0.08);
-  else if (P.dash > 0) tocar('Dodge_Forward', 1, 0.06);
-  else if (!P.chao) tocar(P.vy < -2.5 * K ? 'Fall_Idle' : 'Jump_Idle', 1, 0.18);
+  const novoDuplo = ESTILO.duplo !== 'classico' && R.act[ESTILO.duplo], novoDash = ESTILO.dash !== 'voo' && R.act[ESTILO.dash];
+  const novoPulo = ESTILO.pulo === 'mixamo' && R.act.Jump_Start;
+  if (P.flip > 0) tocar(novoDuplo ? ESTILO.duplo : 'Jump_Full_Short', 1, 0.08);
+  else if (P.dash > 0) tocar(novoDash ? ESTILO.dash : 'Dodge_Forward', 1, 0.06);
+  else if (!P.chao) {
+    if (novoPulo && P.pulos === 1 && P.vy > 0 && P.jt < 0.45) tocar(P.sp > 2.6 * K && R.act.Jump_Run ? 'Jump_Run' : 'Jump_Start', 1, 0.08);
+    else if (novoPulo) tocar('Fall_Idle', 1, 0.25);
+    else tocar(P.vy < -2.5 * K ? 'Fall_Idle' : 'Jump_Idle', 1, 0.18);
+  }
+  else if (P.land > 0 && P.landN && R.act[P.landN]) tocar(P.landN, 1, 0.06);
   else if (P.extra) { tocar(P.extra); const a = R.act[P.extra]; if (!LOOP_EXTRA.has(P.extra) && P.extraT > a.getClip().duration + 0.05) P.extra = null }
   else if (P.sp > 2.6 * K) tocar('Running_A', Math.min(1.5, Math.max(0.75, P.sp / RUN)));
   else if (P.sp > 0.25 * K) tocar('Walking_A', Math.max(0.7, P.sp / WALK));
@@ -298,8 +340,8 @@ function anima(dt) {
   mix.update(dt);
   // o corpo gira na cambalhota e inclina no dash (igual ao Quimera)
   corpo.rotation.set(0, 0, 0); corpo.position.set(0, 0, 0);
-  if (P.flip > 0) { const t = ma(P.flip / FLIP_T, 0, 1), C = 6.2832 * oq(ma((t - 0.04) / 0.8, 0, 1)), D = FLIP_D; corpo.rotation.x = C; corpo.position.y = D - D * Math.cos(C); corpo.position.z = -D * Math.sin(C) }
-  if (P.dash > 0) { const x = 1 - P.dash / DASH_T; if (x < 0.16) corpo.rotation.x = 0.38 * oq(x / 0.16); else { const y = oq(ma((x - 0.16) / 0.18, 0, 1)) * (x > 0.82 ? 1 - oq((x - 0.82) / 0.18) * 0.5 : 1); corpo.rotation.x = 0.38 + 0.82 * y; corpo.position.y = DASH_UP * y } }
+  if (P.flip > 0 && !novoDuplo) { const t = ma(P.flip / FLIP_T, 0, 1), C = 6.2832 * oq(ma((t - 0.04) / 0.8, 0, 1)), D = FLIP_D; corpo.rotation.x = C; corpo.position.y = D - D * Math.cos(C); corpo.position.z = -D * Math.sin(C) }
+  if (P.dash > 0 && !novoDash) { const x = 1 - P.dash / DASH_T; if (x < 0.16) corpo.rotation.x = 0.38 * oq(x / 0.16); else { const y = oq(ma((x - 0.16) / 0.18, 0, 1)) * (x > 0.82 ? 1 - oq((x - 0.82) / 0.18) * 0.5 : 1); corpo.rotation.x = 0.38 + 0.82 * y; corpo.position.y = DASH_UP * y } }
   else if (P.dashX > 0) corpo.rotation.x = 0.42 * Math.pow(P.dashX / 0.4, 1.4);
   player.position.set(P.x, P.y, P.z); player.rotation.y = P.face;
   player.updateMatrixWorld(true); VRMC.tick(R, dt);

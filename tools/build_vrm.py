@@ -51,8 +51,18 @@ MIX = {
     'Dodge_Forward': ('cambalhota', [(0, 0.20), (0.45, 0.30), (1, 0.32)], 0.2),
     # cambalhota (Jump_Full_Short): fica a da UAL, encolhida em bola, que casa com o giro de 360° que o jogo faz
     # (o mortal do Mixamo estica as pernas e fica feio girando)
+    # --- animações completas pra vila de teste (o próprio clipe gira/abaixa; o jogo só dá altura e deslocamento) ---
+    'Jump_Start': ('pulo_impulso', 0.42, 1.0, 0.4),       # sai do chão (sem o agachamento, o pulo já começa no toque)
+    'Jump_Run': ('pulo_correndo', 0.72, 1.0, 0.3),        # saída de pulo correndo
+    'Land_A': ('aterrissa_queda', 0.28, 0.85, 0.5),       # aterrissagem normal
+    'Land_B': ('aterrissa_pulo', 0.22, 0.62, 0.7),        # aterrissagem de queda alta
+    'Flip_Front': ('mortal_frente', 0.33, 0.92, 0.6),     # mortal pra frente encolhido (gira sozinho)
+    'Flip_Back': ('mortal_tras', 0.28, 0.67, 0.75),       # mortal pra trás
+    'Roll_Quick': ('rolamento', 0.15, 0.95, 0.8),         # dash: rolamento rápido
+    'Roll_Dive': ('mergulho', 0.2, 0.85, 1.0),            # dash: mergulho com rolamento
+    'Roll_Sprint': ('arrancada_rola', 0.0, 1.0, 0.85),    # dash: arrancada com rolamento
 }
-NOY = {'Jump_Idle', 'Jump_Full_Short'}                   # quadril sem subir/descer: a altura do pulo é do jogo
+NOY = {'Jump_Idle', 'Jump_Full_Short', 'Jump_Start', 'Jump_Run', 'Flip_Front', 'Flip_Back'}                   # quadril sem subir/descer: a altura do pulo é do jogo
 PING = {'Jump_Idle'}                                     # em loop vai e volta (sem salto de pose quando recomeça)
 NOPITCH = {'Jump_Full_Short', 'Dodge_Forward'}           # o jogo já gira/inclina o corpo: tira o giro do quadril (fica só a pose)
 # animação do jogo (nome KayKit) <- clipe UAL
