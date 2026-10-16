@@ -412,7 +412,7 @@ const GOLPES = {
   combo: [{ a: 'Sword_A', dur: 0.43, hits: [0.45], alc: 1.5, dano: [60, 90] }, { a: 'Sword_B', dur: 0.53, hits: [0.5], alc: 1.6, dano: [70, 100] },
           { a: 'Sword_C', dur: 1.0, hits: [0.3, 0.55], alc: 1.8, dano: [90, 140], crit: true, ate: 0.5 }],
   giro: { a: 'Sword_C', dur: 2.0, hits: [0.18, 0.3, 0.45], alc: 2.3, roda: true, dano: [110, 160], cd: 3, crit: true },
-  investida: { a: 'Sword_Dash_Full', dur: 1.57, hits: [0.25, 0.4, 0.55], alc: 1.5, dano: [90, 130], cd: 4, anda: [0.12, 0.6, 5.5] },
+  investida: { a: 'Sword_Dash_Full', dur: 1.57, hits: [0.25, 0.4, 0.55], alc: 1.5, dano: [90, 130], cd: 4, vel: 1.3, anda: [0.13, 0.42, 16, 1] },
   magia: { a: 'Spell_Shoot', dur: 0.5, orbe: 0.3, cd: 1.5 },
 };
 // golpes do Mixamo (One Hand Sword Combo): 4 cortes e o combo inteiro; se o personagem não tiver, fica o da Quaternius
@@ -439,7 +439,7 @@ function ataquePasso(dt) {
   comboT += dt; const A = P.atk; if (!A) return;
   dt *= g0vel(A.g); const g = A.g, dur = g.ate ? g.dur * g.ate * 2 : g.dur, x = A.t / g.dur; A.t += dt;
   if (g.raiz) { const c = curva(g.a); if (c) { const z1 = naCurva(c, A.t)[1], z0 = naCurva(c, A.t - dt)[1]; P.x += Math.sin(P.face) * (z1 - z0); P.z += Math.cos(P.face) * (z1 - z0) } }
-  if (g.anda && x > g.anda[0] && x < g.anda[1]) { P.x += Math.sin(P.face) * g.anda[2] * K / 0.68 * dt; P.z += Math.cos(P.face) * g.anda[2] * K / 0.68 * dt }
+  if (g.anda && x > g.anda[0] && x < g.anda[1]) { const u = (x - g.anda[0]) / (g.anda[1] - g.anda[0]), v = g.anda[2] * K / 0.68 * dt * (g.anda[3] ? (1 - u) * (1 - u) : 1); P.x += Math.sin(P.face) * v; P.z += Math.cos(P.face) * v }
   (g.hits || []).forEach((h, i) => {
     if (A.feitos.has(i) || x < h) return; A.feitos.add(i);
     const dx = BON.x - P.x, dz = BON.z - P.z, d = Math.hypot(dx, dz), frente = (dx * Math.sin(P.face) + dz * Math.cos(P.face)) / (d || 1);
@@ -489,9 +489,9 @@ function naCurva(c, t) {
   const T = c.t, n = T.length; if (t <= T[0]) return [c.y[0], c.z[0]]; if (t >= T[n - 1]) return [c.y[n - 1], c.z[n - 1]];
   let i = 1; while (T[i] < t) i++; const f = (t - T[i - 1]) / (T[i] - T[i - 1]); return [c.y[i - 1] + (c.y[i] - c.y[i - 1]) * f, c.z[i - 1] + (c.z[i] - c.z[i - 1]) * f];
 }
-function raiz(nome, depois, sy = 1, sz = 1) { // toca uma animação com movimento próprio e, no fim, chama depois()
+function raiz(nome, depois, sy = 1, sz = 1, ate = 1) { // toca uma animação com movimento próprio e, no fim, chama depois()
   const c = curva(nome); if (!c || !R.act[nome]) return false;
-  P.rm = { nome, c, t: 0, dur: c.t[c.t.length - 1], x0: P.x, y0: P.y, z0: P.z, fx: Math.sin(P.face), fz: Math.cos(P.face), sy, sz, depois };
+  P.rm = { nome, c, t: 0, dur: c.t[c.t.length - 1] * ate, x0: P.x, y0: P.y, z0: P.z, fx: Math.sin(P.face), fz: Math.cos(P.face), sy, sz, depois };
   P.modo = 'raiz'; P.vy = 0; P.sp = 0; P.extra = null; P.land = 0; P.dash = 0; P.flip = 0; cur = null; return true;
 }
 function velSubida(n) { const c = curva(n); return c ? Math.abs(c.y[c.y.length - 1]) / c.t[c.t.length - 1] : 0.5 }
@@ -521,7 +521,7 @@ function tentaEscalar(mag) { // andando/correndo/pulando contra parede escaláve
       raiz('Wall_Run', () => { fimRaiz(); P.y = Math.max(s.top, chaoEm(P.x, P.z, s.top + 1)); P.chao = true }, h / c.y[c.y.length - 1], ate / c.z[c.z.length - 1]); return;
     }
     if (correndo && curva('Wall_Climb_Run') && h > 2.05 * K / 0.68) { // parede alta: sobe correndo uns passos e gruda pra escalar
-      raiz('Wall_Climb_Run', () => { P.rm = null; grudar(s, nx, nz) }, 1, 0.08); return;
+      raiz('Wall_Climb_Run', () => { P.rm = null; grudar(s, nx, nz) }, 1, 0.08, 0.28); return; // só a corrida subindo; o fim dessa animação é ela se apoiando em cima, que aqui não existe
     }
     if (h > 1.0 * K / 0.68) { grudar(s, nx, nz); return }
   }
