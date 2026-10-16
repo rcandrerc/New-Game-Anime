@@ -54,7 +54,7 @@
 </div>
 <div id="zoom"><button id="bSlow" aria-label="Câmera lenta">1x</button></div>
 <div id="menu" hidden></div>
-<div id="help">arraste pra girar a câmera · pinça pra aproximar/afastar · 1x/½x/¼x câmera lenta · pule 2x pra cambalhota · PC: WASD, Espaço, C (dash), Q (esquiva), Shift, roda do mouse</div>
+<div id="help">arraste pra girar a câmera · pinça pra aproximar/afastar · ande contra a torre pra escalar (pular solta) · 1x/½x/¼x câmera lenta · pule 2x pra cambalhota · PC: WASD, Espaço, C (dash), Q (esquiva), Shift, roda do mouse</div>
 <script src="js/three.min.js"></script>
 <script src="js/GLTFLoader.js"></script>
 <script src="js/vrm_char.js"></script>
@@ -125,10 +125,21 @@ for (let i = 0; i < 4; i++) bloco(-5 - i * 0.7, 5, 0.7, 2, 0.35 * (i + 1), mat.m
 bloco(-8.6, 5, 1.8, 2.6, 1.4, mat.madeira);
 bloco(4.5, -5.5, 3, 0.4, 0.5, mat.madeira); // banco
 
+// torre pra escalar (paredes escaláveis, topo plano), escada de mão na frente e muro pra correr na parede
+const TORRE = { x: 0, z: -15, w: 4, d: 4, h: 6 }, LAD = { x: 1.2, z: TORRE.z + TORRE.d / 2 };
+{ const o = malha(new THREE.BoxGeometry(TORRE.w, TORRE.h, TORRE.d), mat.pedra, TORRE.x, TORRE.h / 2, TORRE.z);
+  SOL.push({ x: TORRE.x, z: TORRE.z, hw: TORRE.w / 2, hd: TORRE.d / 2, top: TORRE.h, climb: 'parede' });
+  for (let i = 1; i < 6; i++) malha(new THREE.BoxGeometry(TORRE.w + 0.04, 0.06, TORRE.d + 0.04), mat.madeira, TORRE.x, i, TORRE.z, false); // faixas pra dar noção de altura
+  for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) malha(new THREE.BoxGeometry(0.6, 0.5, 0.6), mat.pedra, TORRE.x + dx * 1.7, TORRE.h + 0.25, TORRE.z + dz * 1.7);
+  for (const s of [-1, 1]) malha(new THREE.BoxGeometry(0.07, TORRE.h + 0.6, 0.07), mat.madeira, LAD.x + s * 0.28, (TORRE.h + 0.6) / 2, LAD.z + 0.12);
+  for (let y = 0.3; y < TORRE.h + 0.5; y += 0.32) malha(new THREE.BoxGeometry(0.56, 0.05, 0.05), mat.madeira, LAD.x, y, LAD.z + 0.12, false);
+  bloco(13, -2, 0.6, 5, 1.6, mat.pedra); SOL[SOL.length - 1].climb = 'muro';
+}
+
 // árvores (instanciadas) e cerca em volta
 const posArv = [];
 for (let i = 0; i < 46; i++) { const a = i / 46 * Math.PI * 2 + (i % 3) * 0.05, rr = 24 + (i % 4) * 1.4; posArv.push([Math.cos(a) * rr, Math.sin(a) * rr]) }
-for (const p of [[-15, -14], [15, -15], [-15, 15], [16, 15], [-4, -15], [5, 15], [-14, 4], [14, -4]]) posArv.push(p);
+for (const p of [[-15, -14], [15, -15], [-15, 15], [16, 15], [-5, -16], [5, 15], [-14, 4], [16, -6]]) posArv.push(p);
 const tronco = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.22, 0.3, 1.6, 7), mat.tronco, posArv.length);
 const copa = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1.4, 0), mat.folha, posArv.length);
 const copa2 = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1.0, 0), mat.folha2, posArv.length);
@@ -151,7 +162,7 @@ postes.count = np; postes.castShadow = true; sc.add(postes);
 
 // ---------------- personagem ----------------
 const P = { x: 0, z: 3.2, y: 0, vy: 0, face: Math.PI, sp: 0, chao: true, pulos: 0, flip: 0, dash: 0, dashX: 0, ddx: 0, ddz: 0, run: true, extra: null, extraT: 0,
-  jt: 9, land: 0, landN: null, flipT: FLIP_T, dashT: DASH_T, dashV: 0, tipo: 'rapido', climb: 0, climbT: 1, cy0: 0, cy1: 0, climbV: 0 };
+  jt: 9, land: 0, landN: null, flipT: FLIP_T, dashT: DASH_T, dashV: 0, tipo: 'rapido', climb: 0, climbT: 1, cy0: 0, cy1: 0, climbV: 0, modo: 'normal', parede: null, rm: null };
 // estilos escolhidos no menu ⋯ (lembra no aparelho)
 const ESTILO = { pulo: 'mixamo', duplo: 'Flip_Front', dash: 'rapido', esq: 'Roll_Quick' };
 try { Object.assign(ESTILO, JSON.parse(localStorage.getItem('nga-estilo') || '{}')) } catch (e) {}
@@ -184,7 +195,7 @@ function carregar(i) {
   }).catch(() => { if (meu === pedido) info.textContent = 'Não consegui carregar ' + nome + '. Toque de novo.'; delete cache[arq] });
   try { localStorage.setItem('nga-pers', i) } catch (e) {}
 }
-const ONCE = new Set(['Climb_Up', 'Slide_Start', 'Slide_Exit', 'Jump_Full_Short', 'Dodge_Forward', 'Jump_Start', 'Jump_Run', 'Land_A', 'Land_B', 'Flip_Front', 'Flip_Back', 'Roll_Quick', 'Roll_Dive', 'Roll_Sprint', 'Death_A', 'Hit_A', 'Melee_1H_Attack_Slice_Diagonal', 'Melee_2H_Attack_Spin', 'Ranged_Magic_Shoot',
+const ONCE = new Set(['Ledge_Up', 'Ladder_Start', 'Ladder_Top', 'Wall_Climb_Run', 'Wall_Run', 'Wall_Run_Diag', 'Climb_Up', 'Slide_Start', 'Slide_Exit', 'Jump_Full_Short', 'Dodge_Forward', 'Jump_Start', 'Jump_Run', 'Land_A', 'Land_B', 'Flip_Front', 'Flip_Back', 'Roll_Quick', 'Roll_Dive', 'Roll_Sprint', 'Death_A', 'Hit_A', 'Melee_1H_Attack_Slice_Diagonal', 'Melee_2H_Attack_Spin', 'Ranged_Magic_Shoot',
   'Ranged_Magic_Summon', 'Ranged_Magic_Raise', 'Interact', 'PickUp']);
 function tocar(n, rate = 1, fade = 0.15) {
   const a = R && R.act[n]; if (!a) return;
@@ -259,7 +270,7 @@ function menuMontar() {
 }
 
 function pular() {
-  if (!R || P.dash > 0 || P.climb > 0) return; P.extra = null;
+  if (!R) return; if (soltar()) return; if (P.modo !== 'normal' || P.dash > 0 || P.climb > 0) return; P.extra = null;
   if (P.chao) { P.vy = JUMPV; P.chao = false; P.pulos = 1; P.jt = 0; P.land = 0 }
   else if (P.pulos < 2) {
     P.vy = Math.max(P.vy, JUMPV * 0.9); P.pulos = 2; P.flip = 0.001;
@@ -267,13 +278,13 @@ function pular() {
   }
 }
 function dash() { // arrancada rápida reta, sem rolar, com rastro
-  if (!R || P.dash > 0 || P.dashCd > 0 || P.climb > 0) return; P.extra = null; P.flip = 0; P.land = 0;
+  if (!R || P.modo !== 'normal' || P.dash > 0 || P.dashCd > 0 || P.climb > 0) return; P.extra = null; P.flip = 0; P.land = 0;
   P.ddx = Math.sin(P.face); P.ddz = Math.cos(P.face); P.tipo = ESTILO.dash;
   if (P.tipo === 'voo') { P.dashT = DASH_T; P.dashV = DASH_V } else { P.dashT = 0.28; P.dashV = 14 * K }
   P.dash = P.dashT; P.dashCd = 0.35; if (!P.chao) P.vy = Math.max(0, P.vy); rastroLiga();
 }
 function esquiva() { // rolamento / mergulho / deslizar
-  if (!R || P.dash > 0 || P.dashCd > 0 || P.climb > 0) return; P.extra = null; P.flip = 0; P.land = 0;
+  if (!R || P.modo !== 'normal' || P.dash > 0 || P.dashCd > 0 || P.climb > 0) return; P.extra = null; P.flip = 0; P.land = 0;
   P.ddx = Math.sin(P.face); P.ddz = Math.cos(P.face); P.tipo = ESTILO.esq;
   const clip = P.tipo === 'Slide' ? null : R.act[P.tipo] && R.act[P.tipo].getClip();
   P.dashT = clip ? clip.duration : 1.0; P.dashV = DASH_DIST[P.tipo] * K / P.dashT;
@@ -306,6 +317,79 @@ function rastroPasso(dt) {
   rastroGeo.attributes.position.needsUpdate = rastroGeo.attributes.a.needsUpdate = true;
 }
 
+// ---------------- escalada ----------------
+// movimento de raiz: a animação sobe/avança o personagem pela curva gravada no .glb (extras.root)
+function curva(n) { return R && R.root.userData.vrm.root && R.root.userData.vrm.root[n] }
+function naCurva(c, t) {
+  const T = c.t, n = T.length; if (t <= T[0]) return [c.y[0], c.z[0]]; if (t >= T[n - 1]) return [c.y[n - 1], c.z[n - 1]];
+  let i = 1; while (T[i] < t) i++; const f = (t - T[i - 1]) / (T[i] - T[i - 1]); return [c.y[i - 1] + (c.y[i] - c.y[i - 1]) * f, c.z[i - 1] + (c.z[i] - c.z[i - 1]) * f];
+}
+function raiz(nome, depois, sy = 1, sz = 1) { // toca uma animação com movimento próprio e, no fim, chama depois()
+  const c = curva(nome); if (!c || !R.act[nome]) return false;
+  P.rm = { nome, c, t: 0, dur: c.t[c.t.length - 1], x0: P.x, y0: P.y, z0: P.z, fx: Math.sin(P.face), fz: Math.cos(P.face), sy, sz, depois };
+  P.modo = 'raiz'; P.vy = 0; P.sp = 0; P.extra = null; P.land = 0; P.dash = 0; P.flip = 0; cur = null; return true;
+}
+function velSubida(n) { const c = curva(n); return c ? Math.abs(c.y[c.y.length - 1]) / c.t[c.t.length - 1] : 0.5 }
+function grudar(s, nx, nz) { // entra no modo parede, olhando pra ela
+  P.modo = 'parede'; P.parede = { s, nx, nz }; P.face = Math.atan2(-nx, -nz); P.vy = 0; P.sp = 0; P.dash = 0; P.flip = 0; P.extra = null; P.land = 0; P.chao = false; cur = null;
+}
+function normalDe(s) { // lado da caixa em que o personagem está encostado
+  const dx = P.x - s.x, dz = P.z - s.z, ox = s.hw - Math.abs(dx), oz = s.hd - Math.abs(dz);
+  return Math.abs(dx) / s.hw > Math.abs(dz) / s.hd ? [Math.sign(dx), 0] : [0, Math.sign(dz)];
+}
+function tentaEscalar(mag) { // andando/correndo/pulando contra parede escalável
+  if (!mag || P.dash > 0 || P.modo !== 'normal' || !R.act.Wall_Up) return;
+  const fx = P.x + Math.sin(P.face) * (RAD + 0.12), fz = P.z + Math.cos(P.face) * (RAD + 0.12);
+  // escada de mão
+  if (Math.abs(P.x - LAD.x) < 0.45 && P.z > LAD.z && P.z - LAD.z < RAD + 0.25 && Math.cos(P.face) < -0.6 && P.y < 0.3 && curva('Ladder_Start')) {
+    P.x = LAD.x; P.z = LAD.z + RAD + 0.4; P.face = Math.PI;
+    raiz('Ladder_Start', () => { P.modo = 'escada'; cur = null }); return;
+  }
+  for (const s of SOL) {
+    if (!s.climb || Math.abs(fx - s.x) > s.hw || Math.abs(fz - s.z) > s.hd) continue;
+    const h = s.top - P.y; if (h <= STEP) continue;
+    const [nx, nz] = normalDe(s); if (Math.sin(P.face) * nx + Math.cos(P.face) * nz > -0.5) continue; // tem que estar de frente
+    P.face = Math.atan2(-nx, -nz);
+    if (s.climb === 'muro' && P.chao && P.sp > 2.6 * K && curva('Wall_Run')) { // correndo no muro: sobe correndo pela parede
+      const c = curva('Wall_Run'), ate = Math.abs(nx ? P.x - s.x : P.z - s.z); // termina em pé no meio do muro
+      raiz('Wall_Run', () => { fimRaiz(); P.y = s.top; P.chao = true }, h / c.y[c.y.length - 1], ate / c.z[c.z.length - 1]); return;
+    }
+    if (h > 1.0 * K / 0.68) { grudar(s, nx, nz); return }
+  }
+}
+function fimRaiz() { P.modo = 'normal'; P.rm = null; P.chao = false; P.vy = 0; cur = null }
+function passoEspecial(dt, ix, iz) {
+  if (P.modo === 'raiz') {
+    const m = P.rm; m.t += dt; const [y, z] = naCurva(m.c, m.t);
+    P.x = m.x0 + m.fx * z * m.sz; P.y = m.y0 + y * m.sy; P.z = m.z0 + m.fz * z * m.sz;
+    if (m.t >= m.dur) { const f = m.depois; P.rm = null; f() }
+    return;
+  }
+  const sobe = -iz, lado = ix; // joystick: pra cima sobe, pros lados anda de lado
+  if (P.modo === 'parede') {
+    const { s, nx, nz } = P.parede, v = velSubida('Wall_Up');
+    P.y += (Math.abs(sobe) > 0.3 ? Math.sign(sobe) : 0) * v * dt;
+    if (Math.abs(lado) > 0.3) { const tx = nz, tz = -nx; P.x += tx * Math.sign(lado) * 0.55 * K / 0.68 * dt; P.z += tz * Math.sign(lado) * 0.55 * K / 0.68 * dt }
+    if (nx) { P.x = s.x + nx * (s.hw + RAD * 0.75); P.z = Math.max(s.z - s.hd + 0.3, Math.min(s.z + s.hd - 0.3, P.z)) }
+    else { P.z = s.z + nz * (s.hd + RAD * 0.75); P.x = Math.max(s.x - s.hw + 0.3, Math.min(s.x + s.hw - 0.3, P.x)) }
+    const lc = curva('Ledge_Up');
+    if (lc && sobe > 0.3 && P.y >= s.top - lc.y[lc.y.length - 1]) { P.y = s.top - lc.y[lc.y.length - 1]; raiz('Ledge_Up', () => { fimRaiz(); P.y = s.top; P.chao = true }); return }
+    if (sobe < -0.3 && P.y <= chaoEm(P.x + nx * 0.3, P.z + nz * 0.3, P.y) + 0.02) { P.modo = 'normal'; P.parede = null; P.y = Math.max(0, P.y); cur = null }
+    return;
+  }
+  if (P.modo === 'escada') {
+    const v = velSubida('Ladder_Loop'), tc = curva('Ladder_Top');
+    P.y += (Math.abs(sobe) > 0.3 ? Math.sign(sobe) : 0) * v * dt; P.x = LAD.x; P.face = Math.PI;
+    if (tc && sobe > 0.3 && P.y >= TORRE.h - tc.y[tc.y.length - 1]) { P.y = TORRE.h - tc.y[tc.y.length - 1]; raiz('Ladder_Top', () => { fimRaiz(); P.y = TORRE.h; P.chao = true }); return }
+    if (sobe < -0.3 && P.y <= 0.02) { P.y = 0; P.modo = 'normal'; P.chao = true; cur = null; P.z += 0.2 }
+  }
+}
+function soltar() { // pular estando na parede/escada: se solta pra trás
+  if (P.modo !== 'parede' && P.modo !== 'escada') return false;
+  const nx = P.modo === 'parede' ? P.parede.nx : 0, nz = P.modo === 'parede' ? P.parede.nz : 1;
+  P.modo = 'normal'; P.parede = null; P.x += nx * 0.35; P.z += nz * 0.35; P.face = Math.atan2(nx, nz); P.vy = JUMPV * 0.55; P.chao = false; P.pulos = 2; cur = null; return true;
+}
+
 // ---------------- física simples ----------------
 function chaoEm(x, z, y) { // altura do que está embaixo (só o que dá pra pisar: topo abaixo dos pés + degrau)
   let h = 0; for (const s of SOL) if (s.top < 50 && Math.abs(x - s.x) < s.hw + RAD * 0.6 && Math.abs(z - s.z) < s.hd + RAD * 0.6 && s.top <= y + STEP) h = Math.max(h, s.top);
@@ -328,6 +412,8 @@ function passo(dt) {
   if (tecla.has('a') || tecla.has('arrowleft')) ix -= 1; if (tecla.has('d') || tecla.has('arrowright')) ix += 1;
   if (tecla.has('w') || tecla.has('arrowup')) iz -= 1; if (tecla.has('s') || tecla.has('arrowdown')) iz += 1;
   let mag = Math.min(1, Math.hypot(ix, iz)); if (mag < 0.12) mag = 0;
+  P.inX = ix; P.inY = -iz;
+  if (P.modo !== 'normal') { passoEspecial(dt, ix, iz); P.jt += dt; return }
   const alvo = mag ? (P.run && mag > 0.6 ? RUN : WALK) * (mag > 0.6 ? 1 : 0.5 + mag * 0.8) : 0;
   P.sp += (alvo - P.sp) * Math.min(1, dt * 10);
   if (mag) {
@@ -355,7 +441,7 @@ function passo(dt) {
       }
     }
   }
-  if (P.climb <= 0) empurra();
+  if (P.climb <= 0) { tentaEscalar(mag); if (P.modo !== 'normal') return; empurra() }
   // gravidade e chão
   if (P.climb > 0) P.vy = 0; else if (P.dash <= 0 || (P.tipo !== 'voo' && P.tipo !== 'rapido' && !P.chao)) P.vy -= GRAV * dt; else P.vy = 0;
   if (P.climb > 0) { if (P.extra) P.extraT += dt; P.jt += dt; return }
@@ -376,7 +462,13 @@ function anima(dt) {
   // escolhe a animação (mesma ordem do Quimera)
   const novoDuplo = ESTILO.duplo !== 'classico' && R.act[ESTILO.duplo], novoDash = P.dash > 0 && P.tipo !== 'voo';
   const novoPulo = ESTILO.pulo === 'mixamo' && R.act.Jump_Start;
-  if (P.flip > 0) tocar(novoDuplo ? ESTILO.duplo : 'Jump_Full_Short', 1, 0.08);
+  if (P.modo === 'raiz') tocar(P.rm.nome, 1, 0.1);
+  else if (P.modo === 'parede') {
+    const v = P.inY > 0.3 ? ['Wall_Up', 1] : P.inY < -0.3 ? ['Wall_Down', 1] : Math.abs(P.inX) > 0.3 ? ['Wall_Up', 0.6] : [cur === 'Wall_Down' ? 'Wall_Down' : 'Wall_Up', 0];
+    tocar(v[0], v[1], 0.2);
+  }
+  else if (P.modo === 'escada') tocar('Ladder_Loop', P.inY > 0.3 ? 1 : P.inY < -0.3 ? -1 : 0, 0.15);
+  else if (P.flip > 0) tocar(novoDuplo ? ESTILO.duplo : 'Jump_Full_Short', 1, 0.08);
   else if (P.climb > 0) tocar('Climb_Up', 1, 0.06);
   else if (P.dash > 0) {
     if (P.tipo === 'voo') tocar('Dodge_Forward', 1, 0.06);
@@ -420,7 +512,7 @@ PERS.forEach(([, nome], i) => { const b = document.createElement('button'); b.te
 let ini = 0; try { ini = Math.min(PERS.length - 1, +localStorage.getItem('nga-pers') || 0) } catch (e) {}
 carregar(ini); document.getElementById('chars').children[ini].scrollIntoView({ inline: 'center' });
 yaw = P.face + Math.PI; // começa olhando por trás
-window.VILA = { P, get cur() { return cur }, get R() { return R }, get K() { return K }, set yaw(v) { yaw = v }, camDist: () => dist, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { passo(dt); anima(dt) } }, pular, dash, esquiva, tecla, ESTILO }; // pra testes
+window.VILA = { P, get cur() { return cur }, get R() { return R }, get K() { return K }, set yaw(v) { yaw = v }, camDist: () => dist, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { passo(dt); anima(dt) } }, pular, TORRE, LAD, dash, esquiva, tecla, ESTILO }; // pra testes
 
 r.setAnimationLoop(() => {
   const real = Math.min(0.05, relogio.getDelta()), dt = real * lento;

@@ -4,7 +4,7 @@ Base pra um jogo novo com visual anime: 12 personagens VRoid prontos pro celular
 e as mesmas 23 animações (Mixamo + Quaternius). A preferida até agora é a **Shino**.
 
 **Vila de teste:** https://rcandrerc.github.io/New-Game-Anime/ — mini vila jogável pra testar os personagens como num jogo:
-joystick virtual (ou WASD), arrastar a tela gira a câmera, pinça aproxima/afasta, botão de câmera lenta (1x, ½x, ¼x), botões Correr, Pular (2x = mortal), Dash (arrancada com rastro), Esquiva (rolamento, mergulho ou deslizar) e ⋯ (estilos e outras animações); correndo contra algo de até ~1 m ela sobe apoiando as mãos;
+joystick virtual (ou WASD), arrastar a tela gira a câmera, pinça aproxima/afasta, botão de câmera lenta (1x, ½x, ¼x), botões Correr, Pular (2x = mortal), Dash (arrancada com rastro), Esquiva (rolamento, mergulho ou deslizar) e ⋯ (estilos e outras animações); correndo contra algo de até ~1 m ela sobe apoiando as mãos; torre de 6 m pra escalar (gruda andando contra ela, joystick sobe/desce/lados, no topo sobe na beirada, Pular solta), escada de mão na frente da torre e um muro pra subir correndo pela parede;
 casinhas, árvores, fonte, caixotes e uma escadinha pra testar pulo e degrau. Os números de velocidade, pulo, cambalhota e dash
 são os mesmos do Quimera Sandbox.
 
@@ -56,6 +56,12 @@ Pra abrir a página no próprio PC: `python3 -m http.server 8000` na pasta do re
 | Roll_Quick / Roll_Dive / Roll_Sprint | esquiva: rolamento / mergulho / arrancada rolando | Mixamo: Quick Roll, Dive Roll From Standing, Sprint To Forward Roll |
 | Slide_Start / Slide_Loop / Slide_Exit | esquiva: deslizar no chão | Quaternius UAL |
 | Climb_Up | subir em obstáculo de ~1 m | Quaternius UAL: ClimbUp_1m |
+| Wall_Up / Wall_Down / Ledge_Up | escalar parede / descer / subir na beirada | Mixamo: Climbing Up Wall, Climbing Down Wall, Braced Hang To Crouch |
+| Ladder_Start / Ladder_Loop / Ladder_Top | escada de mão: entrar / subir / sair no topo | Mixamo: Start Climbing Ladder, Climbing Ladder, Climbing To Top |
+| Wall_Run / Wall_Climb_Run / Wall_Run_Diag | correr na parede até o topo | Mixamo: Wall Run, Sprint To Wall Climb, Diagonal Wall Run |
+
+As animações de escalada guardam o movimento de verdade (quanto sobem e avançam) em `extras.root` do .glb; a vila move o
+personagem por essa curva enquanto a animação toca.
 
 Na vila, o menu ⋯ escolhe o estilo do pulo, do pulo duplo e do dash (os antigos, no jeito do Quimera, continuam como opção).
 

@@ -61,7 +61,13 @@ MIX = {
     'Roll_Quick': ('rolamento', 0.15, 0.95, 0.8),         # dash: rolamento rápido
     'Roll_Dive': ('mergulho', 0.2, 0.85, 1.0),            # dash: mergulho com rolamento
     'Roll_Sprint': ('arrancada_rola', 0.0, 1.0, 0.85),    # dash: arrancada com rolamento
+    # --- escalada (com movimento de raiz: o quadril fica parado no clipe e a curva de subida/avanço vai em extras.root) ---
+    'Wall_Up': 'esc_climbing_up_wall', 'Wall_Down': 'esc_climbing_down_wall', 'Ledge_Up': 'esc_braced_hang_to_crouch',
+    'Ladder_Start': 'esc_start_climbing_ladder', 'Ladder_Loop': 'esc_climbing_ladder', 'Ladder_Top': ('esc_climbing_to_top', 0.0, 0.72),
+    'Wall_Climb_Run': ('esc_sprint_to_wall_climb', 0.25, 1.0), 'Wall_Run': ('esc_wall_run', 0.12, 0.75), 'Wall_Run_Diag': 'esc_diagonal_wall_run',
 }
+ROOT = {'Wall_Up', 'Wall_Down', 'Ledge_Up', 'Ladder_Start', 'Ladder_Loop', 'Ladder_Top', 'Wall_Climb_Run', 'Wall_Run', 'Wall_Run_Diag'}
+ROOTM = {}
 NOY = {'Jump_Idle', 'Jump_Full_Short', 'Jump_Start', 'Jump_Run', 'Flip_Front', 'Flip_Back'}                   # quadril sem subir/descer: a altura do pulo é do jogo
 PING = {'Jump_Idle'}                                     # em loop vai e volta (sem salto de pose quando recomeça)
 NOPITCH = {'Jump_Full_Short', 'Dodge_Forward'}           # o jogo já gira/inclina o corpo: tira o giro do quadril (fica só a pose)
@@ -72,6 +78,8 @@ CLIPS = {
     'Melee_2H_Attack_Spin': 'Sword_Regular_Combo', 'Melee_Block': 'Sword_Block', 'Ranged_Magic_Shoot': 'Spell_Simple_Shoot',
     'Ranged_Magic_Spellcasting': 'Spell_Simple_Idle_Loop', 'Ranged_Magic_Spellcasting_Long': 'Spell_Simple_Idle_Loop',
     'Ranged_Magic_Summon': 'Spell_Simple_Shoot', 'Ranged_Magic_Raise': 'Spell_Simple_Enter', 'Interact': 'Interact', 'PickUp': 'Farm_Harvest',
+    'Sword_A': 'Sword_Regular_A', 'Sword_B': 'Sword_Regular_B', 'Sword_C': 'Sword_Regular_C', 'Sword_Heavy': 'Sword_Heavy_Combo', 'Sword_Dash_Full': 'Sword_Dash',
+    'Sword_Idle': 'Sword_Idle', 'Punch_Jab': 'Punch_Jab', 'Punch_Cross': 'Punch_Cross', 'Spell_Shoot': 'Spell_Simple_Shoot', 'Hit_Knock': 'Hit_Knockback',
     'Climb_Up': 'ClimbUp_1m', 'Slide_Start': 'Slide_Start', 'Slide_Loop': 'Slide_Loop', 'Slide_Exit': 'Slide_Exit', 'Crouch_Idle': 'Crouch_Idle_Loop', 'Crouch_Walk': 'Crouch_Fwd_Loop',
     'Chopping': 'TreeChopping_Loop', 'Pickaxing': 'TreeChopping_Loop', 'Sit_Chair_Idle': 'Sitting_Idle_Loop', 'Sit_Floor_Idle': 'Sitting_Idle_Loop',
 }
@@ -253,6 +261,9 @@ for (sj, sb), SRCX, CL, PEL in SOURCES:
             t, p = tr; pq, pt, ps = SW[spar[pel]] if pel in spar else (np.array([0, 0, 0, 1.0]), np.zeros(3), np.ones(3))
             w = pt[None] + qrot(np.repeat(pq[None], len(p), 0), p.astype(np.float64) * ps)
             d = (w - SW[pel][1][None]) * k_h
+            if game in ROOT and PEL == 'Hips':   # movimento de raiz: o jogo move o personagem por esta curva (subida y, avanço z)
+                ROOTM[game] = {'t': [round(float(x), 4) for x in t], 'y': [round(float(x), 4) for x in d[:, 1] - d[0, 1]], 'z': [round(float(x), 4) for x in d[:, 2] - d[0, 2]]}
+                d = np.repeat(d[:1], len(d), 0)
             d = np.stack([0 * d[:, 0], (0 if game in NOY and PEL == 'Hips' else 1) * d[:, 1], 0 * d[:, 2]], 1)  # quadril não anda pra frente/lado: quem move é o jogo
             loc = np.array(j['nodes'][hb['hips']].get('translation', [0, 0, 0]))[None] + d
             samps.append({'input': addacc(t.astype(np.float32).reshape(-1, 1), 'SCALAR', 5126, None, True), 'output': addacc(loc.astype(np.float32), 'VEC3', 5126), 'interpolation': 'LINEAR'})
@@ -267,7 +278,7 @@ for c in sa.get('colliderGroups', []):
 for g in sa.get('boneGroups', []):
     spring['groups'].append({'stiff': g['stiffiness'], 'grav': g['gravityPower'], 'gdir': [g['gravityDir']['x'], g['gravityDir']['y'], g['gravityDir']['z']],
                              'drag': g['dragForce'], 'hit': g['hitRadius'], 'roots': [nm_out(i) for i in g['bones']], 'col': g.get('colliderGroups', [])})
-out['extras'] = {'spring': spring, 'stride': STRIDE}
+out['extras'] = {'spring': spring, 'stride': STRIDE, 'root': ROOTM}
 while len(blob) % 4: blob.append(0)
 out['buffers'] = [{'byteLength': len(blob)}]
 js = json.dumps(out, separators=(',', ':')).encode()

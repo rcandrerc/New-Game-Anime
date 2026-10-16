@@ -64,7 +64,7 @@
         n.userData.side = m.side; o.material = n; m.dispose();
       });
       const ex = (gl.parser && gl.parser.json && gl.parser.json.extras) || {};
-      wrap.userData.vrm = { model: gl.scene, spring: ex.spring, stride: ex.stride || {} };
+      wrap.userData.vrm = { model: gl.scene, spring: ex.spring, stride: ex.stride || {}, root: ex.root || {} };
       return { gl: { scene: wrap }, an: { animations: gl.animations } };
     },
     fix(R, run = 4.6, walk = 2.2) { // velocidades (por segundo, em unidades do mundo) em que a passada toca no ritmo 1
