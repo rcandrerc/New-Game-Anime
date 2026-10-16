@@ -356,6 +356,7 @@ const BON = { x: -3.2, z: 8.5, g: new THREE.Group(), corpo: new THREE.Group(), v
   SOL.push({ x: BON.x, z: BON.z, hw: 0.38, hd: 0.38, top: 99 });
 }
 function boneco(dt) { // mola: volta pro lugar balançando
+  pausa = Math.max(0, pausa - dt);
   BON.vx += (-BON.rx * 60 - BON.vx * 6) * dt; BON.vz += (-BON.rz * 60 - BON.vz * 6) * dt; BON.rx += BON.vx * dt; BON.rz += BON.vz * dt;
   BON.corpo.rotation.set(BON.rx, 0, BON.rz); BON.flash = Math.max(0, BON.flash - dt * 6);
   for (const m of BON.mats) m.emissive.setRGB(BON.flash, BON.flash * 0.9, BON.flash * 0.8);
@@ -400,7 +401,9 @@ function orbesPasso(dt) {
     if (bate || b.t > 1.5) { sc.remove(b.o); ORBES.splice(i, 1) }
   }
 }
+let pausa = 0, tremor = 0;
 function acerta(v, crit, dx, dz, cor) { // o boneco recebe o golpe
+  pausa = crit ? 0.09 : 0.055; tremor = crit ? 0.16 : 0.09;
   const l = Math.hypot(dx, dz) || 1; BON.vx += dz / l * (crit ? 5 : 3.2); BON.vz -= dx / l * (crit ? 5 : 3.2); BON.flash = 1;
   dano(v, crit); faiscas(BON.x, 1.35, BON.z, crit ? 18 : 10, cor || 0xfff1b0);
 }
@@ -414,10 +417,11 @@ const GOLPES = {
 };
 // golpes do Mixamo (One Hand Sword Combo): 4 cortes e o combo inteiro; se o personagem não tiver, fica o da Quaternius
 const GOLPES_MX = {
-  combo: [{ a: 'Esp1', dur: 0.89, hits: [0.5], alc: 1.6, dano: [70, 100], raiz: 1 }, { a: 'Esp2', dur: 0.95, hits: [0.53], alc: 1.7, dano: [80, 110], raiz: 1 },
-          { a: 'Esp3', dur: 0.93, hits: [0.58], alc: 1.7, dano: [90, 120], raiz: 1 }, { a: 'Esp4', dur: 0.85, hits: [0.41], alc: 1.9, dano: [120, 170], crit: true, raiz: 1 }],
-  giro: { a: 'EspCombo', dur: 3.66, hits: [0.12, 0.38, 0.66, 0.86], alc: 1.9, dano: [100, 150], cd: 5, crit: true, raiz: 1 },
+  combo: [{ a: 'Esp1', dur: 0.89, hits: [0.5], alc: 1.7, dano: [70, 100], raiz: 1, vel: 1.45, anda: [0.3, 0.55, 3.2] }, { a: 'Esp2', dur: 0.95, hits: [0.53], alc: 1.8, dano: [80, 110], raiz: 1, vel: 1.45, anda: [0.32, 0.58, 3.2] },
+          { a: 'Esp3', dur: 0.93, hits: [0.58], alc: 1.8, dano: [90, 120], raiz: 1, vel: 1.45, anda: [0.36, 0.62, 3.4] }, { a: 'Esp4', dur: 0.85, hits: [0.41], alc: 2.0, dano: [120, 170], crit: true, raiz: 1, vel: 1.35, anda: [0.2, 0.45, 4.5] }],
+  giro: { a: 'EspCombo', dur: 3.66, hits: [0.12, 0.38, 0.66, 0.86], alc: 2.0, dano: [100, 150], cd: 5, crit: true, raiz: 1, vel: 1.45, anda: [0.08, 0.9, 1.6] },
 };
+function g0vel(g) { return pausa > 0 ? 0 : (g.vel || 1) }
 function golpes() { return R && R.act.Esp1 ? Object.assign({}, GOLPES, GOLPES_MX) : GOLPES }
 const CD = { giro: 0, investida: 0, magia: 0 };
 let comboN = 0, comboT = 9;
@@ -433,7 +437,7 @@ function atacar(tipo) {
 function ataquePasso(dt) {
   for (const k in CD) CD[k] = Math.max(0, CD[k] - dt);
   comboT += dt; const A = P.atk; if (!A) return;
-  const g = A.g, dur = g.ate ? g.dur * g.ate * 2 : g.dur, x = A.t / g.dur; A.t += dt;
+  dt *= g0vel(A.g); const g = A.g, dur = g.ate ? g.dur * g.ate * 2 : g.dur, x = A.t / g.dur; A.t += dt;
   if (g.raiz) { const c = curva(g.a); if (c) { const z1 = naCurva(c, A.t)[1], z0 = naCurva(c, A.t - dt)[1]; P.x += Math.sin(P.face) * (z1 - z0); P.z += Math.cos(P.face) * (z1 - z0) } }
   if (g.anda && x > g.anda[0] && x < g.anda[1]) { P.x += Math.sin(P.face) * g.anda[2] * K / 0.68 * dt; P.z += Math.cos(P.face) * g.anda[2] * K / 0.68 * dt }
   (g.hits || []).forEach((h, i) => {
@@ -445,6 +449,25 @@ function ataquePasso(dt) {
   if (A.t >= dur) { P.atk = null; comboT = 0; if (A.atkFila && A.tipo === 'combo') { P.atkFila = false; atacar('combo') } }
   if (P.atkFila) { A.atkFila = true; P.atkFila = false }
 }
+// rastro da lâmina: fita que segue a base e a ponta da espada e some rápido
+const LN = 14, lamPts = [], lamGeo = new THREE.BufferGeometry();
+lamGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(LN * 2 * 3), 3)); lamGeo.setAttribute('a', new THREE.BufferAttribute(new Float32Array(LN * 2), 1));
+{ const ix = []; for (let i = 0; i < LN - 1; i++) { const k = i * 2; ix.push(k, k + 1, k + 2, k + 1, k + 3, k + 2) } lamGeo.setIndex(ix) }
+const lamina = new THREE.Mesh(lamGeo, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+  vertexShader: 'attribute float a; varying float va; void main(){ va = a; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: 'varying float va; void main(){ gl_FragColor = vec4(0.75, 0.92, 1.0, va); }' }));
+lamina.frustumCulled = false; lamina.visible = false; sc.add(lamina);
+const _b = new THREE.Vector3(), _t = new THREE.Vector3();
+function laminaPasso(dt) {
+  const ativo = espada && espada.visible && P.atk && P.atk.tipo !== 'magia';
+  if (ativo) { espada.userData.base.getWorldPosition(_b); espada.userData.ponta.getWorldPosition(_t); lamPts.unshift({ b: _b.clone(), t: _t.clone(), v: 0 }) }
+  for (const q of lamPts) q.v += dt; while (lamPts.length > LN || (lamPts.length && lamPts[lamPts.length - 1].v > 0.14)) lamPts.pop();
+  lamina.visible = lamPts.length > 1; if (!lamina.visible) return;
+  const pos = lamGeo.attributes.position.array, al = lamGeo.attributes.a.array;
+  for (let i = 0; i < LN; i++) { const q = lamPts[Math.min(i, lamPts.length - 1)], f = i < lamPts.length ? Math.max(0, 1 - q.v / 0.14) * (1 - i / LN) : 0;
+    pos.set([q.b.x, q.b.y, q.b.z, q.t.x, q.t.y, q.t.z], i * 6); al[i * 2] = f * 0.15; al[i * 2 + 1] = f * 0.6 }
+  lamGeo.attributes.position.needsUpdate = lamGeo.attributes.a.needsUpdate = true;
+}
 // espada na mão direita (aparece ao atacar e some depois de uns segundos parada)
 let espada = null, espadaT = 0;
 function poeEspada() {
@@ -454,7 +477,8 @@ function poeEspada() {
   add(new THREE.BoxGeometry(0.055, L, 0.012), aco, 0.12 + L / 2); add(new THREE.ConeGeometry(0.04, 0.12, 4), aco, 0.12 + L + 0.05).rotation.y = Math.PI / 4;
   add(new THREE.BoxGeometry(0.22, 0.035, 0.05), ouro, 0.1); add(new THREE.CylinderGeometry(0.02, 0.022, 0.2, 8), cabo, 0); add(new THREE.SphereGeometry(0.032, 8, 6), ouro, -0.11);
   let mao = null; R.root.traverse(o => { if (o.name === 'handslotr' || o.name === 'handslot.r') mao = o }); if (!mao) R.root.traverse(o => { if (!mao && /^handr$|^hand\.?r$/.test(o.name)) mao = o });
-  if (mao) { const ws = new THREE.Vector3(); mao.parent.updateWorldMatrix(true, false); mao.getWorldScale(ws); espada.scale.setScalar(1 / ws.x); espada.rotation.set(Math.PI / 2, 0, 0); mao.add(espada) }
+  if (mao) { const ws = new THREE.Vector3(); mao.parent.updateWorldMatrix(true, false); mao.getWorldScale(ws); espada.scale.setScalar(1 / ws.x); espada.rotation.set(0, 0, 0); mao.add(espada) }
+  espada.userData.base = new THREE.Object3D(); espada.userData.base.position.y = 0.2; espada.userData.ponta = new THREE.Object3D(); espada.userData.ponta.position.y = 0.12 + L + 0.08; espada.add(espada.userData.base, espada.userData.ponta);
   espada.visible = false;
 }
 
@@ -618,7 +642,7 @@ function anima(dt) {
     tocar(v[0], v[1], 0.2);
   }
   else if (P.modo === 'escada') tocar('Ladder_Loop', P.inY > 0.3 ? 1 : P.inY < -0.3 ? -1 : 0, 0.15);
-  else if (P.atk) tocar(P.atk.g.a, P.atk.g.ate ? 1 : 1, 0.08);
+  else if (P.atk) tocar(P.atk.g.a, g0vel(P.atk.g), 0.06);
   else if (P.flip > 0) tocar(novoDuplo ? ESTILO.duplo : 'Jump_Full_Short', 1, 0.08);
   else if (P.climb > 0) tocar('Climb_Up', 1, 0.06);
   else if (P.dash > 0) {
@@ -637,7 +661,7 @@ function anima(dt) {
   else if (P.sp > 2.6 * K) tocar('Running_A', Math.min(1.5, Math.max(0.75, P.sp / RUN)));
   else if (P.sp > 0.25 * K) tocar('Walking_A', Math.max(0.7, P.sp / WALK));
   else tocar('Idle_A');
-  mix.update(dt);
+  mix.update(pausa > 0 && P.atk ? 0 : dt);
   // o corpo gira na cambalhota e inclina no dash (igual ao Quimera)
   corpo.rotation.set(0, 0, 0); corpo.position.set(0, 0, 0);
   if (P.flip > 0 && !novoDuplo) { const t = ma(P.flip / FLIP_T, 0, 1), C = 6.2832 * oq(ma((t - 0.04) / 0.8, 0, 1)), D = FLIP_D; corpo.rotation.x = C; corpo.position.y = D - D * Math.cos(C); corpo.position.z = -D * Math.sin(C) }
@@ -645,7 +669,7 @@ function anima(dt) {
   else if (P.dash > 0 && !novoDash) { const x = 1 - P.dash / DASH_T; if (x < 0.16) corpo.rotation.x = 0.38 * oq(x / 0.16); else { const y = oq(ma((x - 0.16) / 0.18, 0, 1)) * (x > 0.82 ? 1 - oq((x - 0.82) / 0.18) * 0.5 : 1); corpo.rotation.x = 0.38 + 0.82 * y; corpo.position.y = DASH_UP * y } }
   else if (P.dashX > 0) corpo.rotation.x = 0.42 * Math.pow(P.dashX / 0.4, 1.4);
   player.position.set(P.x, P.y, P.z); player.rotation.y = P.face;
-  player.updateMatrixWorld(true); VRMC.tick(R, dt); rastroPasso(dt);
+  player.updateMatrixWorld(true); VRMC.tick(R, dt); rastroPasso(dt); laminaPasso(dt);
   if (espada) { espadaT = P.atk && P.atk.tipo !== 'magia' ? 0.12 : Math.max(0, espadaT - dt); espada.visible = espadaT > 0 }
   for (const k of ['giro', 'investida', 'magia']) { const b = document.getElementById({ giro: 'bS1', investida: 'bS2', magia: 'bS3' }[k]); if (CD[k] > 0) b.dataset.cd = Math.ceil(CD[k]); else delete b.dataset.cd }
 }
@@ -657,6 +681,7 @@ function camera(dt) {
   cam.position.set(alvoCam.x + Math.sin(yaw) * cp * dist, alvoCam.y + Math.sin(pitch) * dist, alvoCam.z + Math.cos(yaw) * cp * dist);
   if (cam.position.y < 0.3) cam.position.y = 0.3;
   cam.lookAt(alvoCam);
+  if (tremor > 0) { tremor = Math.max(0, tremor - dt); const k = tremor * 0.35; cam.position.x += (Math.random() - 0.5) * k; cam.position.y += (Math.random() - 0.5) * k }
   sol.position.set(P.x + 6, 14, P.z + 5); sol.target.position.set(P.x, 0, P.z);
 }
 
