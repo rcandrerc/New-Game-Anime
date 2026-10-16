@@ -66,7 +66,7 @@
 </div>
 <div id="nums"></div>
 <div id="menu" hidden></div>
-<div id="help">arraste: câmera · pinça: zoom · ande contra a torre pra escalar · pule 2x: mortal</div>
+<div id="help">arraste: câmera · pinça: zoom · ande contra paredes de pedra pra escalar · pule 2x: mortal</div>
 <script src="js/three.min.js"></script>
 <script src="js/GLTFLoader.js"></script>
 <script src="js/vrm_char.js"></script>
@@ -146,6 +146,11 @@ const TORRE = { x: 0, z: -15, w: 4, d: 4, h: 6 }, LAD = { x: 1.2, z: TORRE.z + T
   for (const s of [-1, 1]) malha(new THREE.BoxGeometry(0.07, TORRE.h + 0.6, 0.07), mat.madeira, LAD.x + s * 0.28, (TORRE.h + 0.6) / 2, LAD.z + 0.12);
   for (let y = 0.3; y < TORRE.h + 0.5; y += 0.32) malha(new THREE.BoxGeometry(0.56, 0.05, 0.05), mat.madeira, LAD.x, y, LAD.z + 0.12, false);
   bloco(13, -2, 0.6, 5, 1.6, mat.pedra); SOL[SOL.length - 1].climb = 'muro';
+  // perto de onde começa: paredão de 3 m, morro de pedra em degraus e outro muro baixo
+  bloco(4.5, 13.5, 3.2, 1.2, 3.0, mat.pedra); SOL[SOL.length - 1].climb = 'parede';
+  bloco(-10.5, 15.5, 4, 4, 1.8, mat.pedra); SOL[SOL.length - 1].climb = 'parede';
+  bloco(-11.5, 16.5, 2.4, 2.4, 3.6, mat.pedra); SOL[SOL.length - 1].climb = 'parede';
+  bloco(9, 8, 0.6, 3.5, 1.6, mat.pedra); SOL[SOL.length - 1].climb = 'muro';
 }
 
 // árvores (instanciadas) e cerca em volta
@@ -212,8 +217,11 @@ const ONCE = new Set(['Sword_A', 'Sword_B', 'Sword_C', 'Sword_Dash_Full', 'Spell
 function tocar(n, rate = 1, fade = 0.15) {
   const a = R && R.act[n]; if (!a) return;
   if (cur !== n) {
-    const prev = R.act[cur]; a.reset(); a.setLoop(ONCE.has(n) ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = true; a.play();
-    if (prev) a.crossFadeFrom(prev, fade, false); cur = n;
+    // liga a nova e desliga suavemente TODAS as outras (antes só desligava a anterior e sobravam animações misturadas)
+    a.reset(); a.setLoop(ONCE.has(n) ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = true; a.enabled = true;
+    a.setEffectiveWeight(1); a.play(); if (fade > 0) a.fadeIn(fade);
+    for (const k in R.act) { const b = R.act[k]; if (b !== a && b.isScheduled() && b.getEffectiveWeight() > 0.001) fade > 0 ? b.fadeOut(fade) : b.stop() }
+    cur = n;
   }
   a.timeScale = rate;
 }
