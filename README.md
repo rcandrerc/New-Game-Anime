@@ -4,7 +4,7 @@ Base pra um jogo novo com visual anime: 12 personagens VRoid prontos pro celular
 e as mesmas 23 animações (Mixamo + Quaternius). A preferida até agora é a **Shino**.
 
 **Vila de teste:** https://rcandrerc.github.io/New-Game-Anime/ — mini vila jogável pra testar os personagens como num jogo:
-joystick virtual (ou WASD), arrastar a tela gira a câmera, botões Correr, Pular (2x = cambalhota), Dash e ⋯ (outras animações);
+joystick virtual (ou WASD), arrastar a tela gira a câmera, pinça aproxima/afasta, botão de câmera lenta (1x, ½x, ¼x), botões Correr, Pular (2x = cambalhota), Dash e ⋯ (outras animações);
 casinhas, árvores, fonte, caixotes e uma escadinha pra testar pulo e degrau. Os números de velocidade, pulo, cambalhota e dash
 são os mesmos do Quimera Sandbox.
 

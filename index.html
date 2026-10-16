@@ -6,7 +6,7 @@
   :root{--bg:#9fc7e8;--fg:#f4f6fb;--glass:rgba(20,26,40,.55);--line:rgba(255,255,255,.28);--accent:#f0a83a;--ink:#16130e;color-scheme:dark}
   html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:14px system-ui,sans-serif;overflow:hidden;
     user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none}
-  canvas{display:block}
+  canvas{display:block;touch-action:none}
   button{font:inherit;cursor:pointer;color:var(--fg);background:var(--glass);border:1px solid var(--line);border-radius:10px;padding:7px 10px;white-space:nowrap;
     -webkit-tap-highlight-color:transparent;backdrop-filter:blur(4px)}
   button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -32,6 +32,9 @@
     display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
   #menu button{font-size:12px}
   #menu[hidden]{display:none}
+  #zoom{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));top:calc(84px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px}
+  #zoom button{width:46px;height:46px;border-radius:50%;padding:0;font-size:24px;line-height:1;display:grid;place-items:center}
+  #zoom #bSlow{font-size:13px;font-weight:700}
   #help{position:fixed;left:0;right:0;bottom:calc(6px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;opacity:.7;text-shadow:0 1px 2px #0008;pointer-events:none}
   @media (hover:hover) and (pointer:fine){ #help{opacity:.85} }
 </style></head>
@@ -45,8 +48,9 @@
   <button id="bDash">Dash</button>
   <button id="bJump">Pular</button>
 </div>
+<div id="zoom"><button id="bSlow" aria-label="Câmera lenta">1x</button></div>
 <div id="menu" hidden></div>
-<div id="help">arraste a tela pra girar a câmera · pule 2x pra cambalhota · PC: WASD, Espaço, Shift, C</div>
+<div id="help">arraste pra girar a câmera · pinça pra aproximar/afastar · 1x/½x/¼x câmera lenta · pule 2x pra cambalhota · PC: WASD, Espaço, Shift, C, roda do mouse</div>
 <script src="js/three.min.js"></script>
 <script src="js/GLTFLoader.js"></script>
 <script src="js/vrm_char.js"></script>
@@ -68,11 +72,11 @@ const WALK = 2.2, RUN = 4.6, GRAV = 17, JUMPV = 7.2, FLIP_T = 0.56, DASH_T = 0.2
 // ---------------- cena ----------------
 const r = new THREE.WebGLRenderer({ antialias: true }); r.setPixelRatio(Math.min(2, devicePixelRatio)); r.outputEncoding = THREE.sRGBEncoding;
 r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; document.body.prepend(r.domElement);
-const sc = new THREE.Scene(); sc.background = new THREE.Color(0x9fc7e8); sc.fog = new THREE.Fog(0x9fc7e8, 30, 70);
+const sc = new THREE.Scene(); sc.background = new THREE.Color(0x9fc7e8); sc.fog = new THREE.Fog(0x9fc7e8, 40, 95);
 sc.add(new THREE.HemisphereLight(0xeef3ff, 0x4a6a38, 0.75));
 const sol = new THREE.DirectionalLight(0xfff1d6, 0.85); sol.castShadow = true; sol.shadow.mapSize.set(1024, 1024);
 Object.assign(sol.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 40 }); sol.shadow.bias = -0.0005; sc.add(sol, sol.target);
-const cam = new THREE.PerspectiveCamera(50, 1, 0.1, 120);
+const cam = new THREE.PerspectiveCamera(50, 1, 0.03, 140);
 function tam() { r.setSize(innerWidth, innerHeight); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix() } addEventListener('resize', tam); tam();
 
 const M = c => new THREE.MeshLambertMaterial({ color: new THREE.Color(c).convertSRGBToLinear() });
@@ -170,36 +174,47 @@ function tocar(n, rate = 1, fade = 0.15) {
 
 // ---------------- controles ----------------
 const tecla = new Set(), stick = { id: null, x0: 0, y0: 0, dx: 0, dy: 0 }, camT = new Map();
-let yaw = 0, pitch = 0.32, dist = 5.2, pinch = 0;
+let yaw = 0, pitch = 0.32, dist = 5.2, pinch = 0, zoomV = 0, lento = 1;
+const ZMIN = 0.9, ZMAX = 22;
 const knob = document.getElementById('knob'), stickEl = document.getElementById('stick');
 addEventListener('keydown', e => {
   const k = e.key.toLowerCase(); if (e.repeat) return; tecla.add(k);
-  if (k === ' ') pular(); if (k === 'c') dash(); if (k === 'shift') P.run = !P.run, atualRun();
+  if (k === ' ') pular(); if (k === 'c') dash(); if (k === 'shift') P.run = !P.run, atualRun(); if (k === '+' || k === '=') dist = Math.max(ZMIN, dist / 1.2); if (k === '-') dist = Math.min(ZMAX, dist * 1.2);
 });
 addEventListener('keyup', e => tecla.delete(e.key.toLowerCase()));
 const cv = r.domElement;
 cv.addEventListener('pointerdown', e => {
   cv.setPointerCapture(e.pointerId);
   if (stick.id == null && e.clientX < innerWidth * 0.45 && e.clientY > innerHeight * 0.35) {
-    Object.assign(stick, { id: e.pointerId, x0: e.clientX, y0: e.clientY, dx: 0, dy: 0 });
+    Object.assign(stick, { id: e.pointerId, x0: e.clientX, y0: e.clientY, dx: 0, dy: 0, t: e.timeStamp, lx: e.clientX, ly: e.clientY });
     stickEl.style.left = (e.clientX - 64) + 'px'; stickEl.style.top = (e.clientY - 64) + 'px'; stickEl.style.bottom = 'auto';
-  } else camT.set(e.pointerId, [e.clientX, e.clientY]);
+  } else {
+    // segundo dedo logo depois e o primeiro quase parado: era pinça, não joystick
+    if (stick.id != null && e.timeStamp - stick.t < 350 && Math.hypot(stick.dx, stick.dy) < 0.25) {
+      camT.set(stick.id, [stick.lx, stick.ly]); stick.id = null; stick.dx = stick.dy = 0; knob.style.transform = ''; stickEl.style.left = ''; stickEl.style.top = ''; stickEl.style.bottom = '';
+    }
+    camT.set(e.pointerId, [e.clientX, e.clientY]);
+  }
 });
 cv.addEventListener('pointermove', e => {
   if (e.pointerId === stick.id) {
-    let dx = e.clientX - stick.x0, dy = e.clientY - stick.y0; const l = Math.hypot(dx, dy), max = 52; if (l > max) dx *= max / l, dy *= max / l;
+    stick.lx = e.clientX; stick.ly = e.clientY; let dx = e.clientX - stick.x0, dy = e.clientY - stick.y0; const l = Math.hypot(dx, dy), max = 52; if (l > max) dx *= max / l, dy *= max / l;
     stick.dx = dx / max; stick.dy = dy / max; knob.style.transform = `translate(${dx}px,${dy}px)`; return;
   }
   if (!camT.has(e.pointerId)) return; const [x0, y0] = camT.get(e.pointerId); camT.set(e.pointerId, [e.clientX, e.clientY]);
-  if (camT.size === 1) { yaw -= (e.clientX - x0) * 0.008; pitch = Math.min(1.25, Math.max(-0.15, pitch + (e.clientY - y0) * 0.005)) }
-  else { const p = [...camT.values()], d = Math.hypot(p[0][0] - p[1][0], p[0][1] - p[1][1]); if (pinch) dist = Math.min(11, Math.max(2.2, dist * pinch / d)); pinch = d }
+  if (camT.size === 1) { if (!pinch) { yaw -= (e.clientX - x0) * 0.008; pitch = Math.min(1.25, Math.max(-0.15, pitch + (e.clientY - y0) * 0.005)) } }
+  else { const p = [...camT.values()], d = Math.max(20, Math.hypot(p[0][0] - p[1][0], p[0][1] - p[1][1])); if (pinch > 0) dist = Math.min(ZMAX, Math.max(ZMIN, dist * (pinch / d))); pinch = d }
 });
 const solta = e => {
   if (e.pointerId === stick.id) { stick.id = null; stick.dx = stick.dy = 0; knob.style.transform = ''; stickEl.style.left = ''; stickEl.style.top = ''; stickEl.style.bottom = '' }
-  camT.delete(e.pointerId); pinch = 0;
+  camT.delete(e.pointerId); if (camT.size === 0) pinch = 0; else if (pinch) pinch = -1;
 };
 cv.addEventListener('pointerup', solta); cv.addEventListener('pointercancel', solta);
-addEventListener('wheel', e => dist = Math.min(11, Math.max(2.2, dist + e.deltaY * 0.004)), { passive: true });
+addEventListener('wheel', e => dist = Math.min(ZMAX, Math.max(ZMIN, dist * Math.exp(e.deltaY * 0.0012))), { passive: true });
+document.getElementById('bSlow').addEventListener('pointerdown', e => {
+  e.preventDefault(); e.stopPropagation(); lento = lento === 1 ? 0.5 : lento === 0.5 ? 0.25 : 1;
+  const b = document.getElementById('bSlow'); b.textContent = lento === 1 ? '1x' : lento === 0.5 ? '½x' : '¼x'; b.classList.toggle('on', lento !== 1);
+});
 const botao = (id, f) => document.getElementById(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); f() });
 botao('bJump', pular); botao('bDash', dash); botao('bRun', () => { P.run = !P.run; atualRun() });
 botao('bMenu', () => { const m = document.getElementById('menu'); m.hidden = !m.hidden });
@@ -285,7 +300,7 @@ function anima(dt) {
 
 const alvoCam = new THREE.Vector3(P.x, 1.2, P.z);
 function camera(dt) {
-  _v.set(P.x, P.y + 1.25, P.z); alvoCam.lerp(_v, Math.min(1, dt * 8));
+  _v.set(P.x, P.y + (dist < 2.5 ? 0.85 + (dist - ZMIN) * 0.25 : 1.25), P.z); alvoCam.lerp(_v, Math.min(1, dt * 8));
   const cp = Math.cos(pitch);
   cam.position.set(alvoCam.x + Math.sin(yaw) * cp * dist, alvoCam.y + Math.sin(pitch) * dist, alvoCam.z + Math.cos(yaw) * cp * dist);
   if (cam.position.y < 0.3) cam.position.y = 0.3;
@@ -298,10 +313,10 @@ PERS.forEach(([, nome], i) => { const b = document.createElement('button'); b.te
 let ini = 0; try { ini = Math.min(PERS.length - 1, +localStorage.getItem('nga-pers') || 0) } catch (e) {}
 carregar(ini); document.getElementById('chars').children[ini].scrollIntoView({ inline: 'center' });
 yaw = P.face + Math.PI; // começa olhando por trás
-window.VILA = { P, get cur() { return cur }, set yaw(v) { yaw = v }, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { passo(dt); anima(dt) } }, pular, dash, tecla }; // pra testes
+window.VILA = { P, get cur() { return cur }, set yaw(v) { yaw = v }, camDist: () => dist, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { passo(dt); anima(dt) } }, pular, dash, tecla }; // pra testes
 
 r.setAnimationLoop(() => {
-  const dt = Math.min(0.05, relogio.getDelta());
-  if (R) passo(dt); anima(dt); camera(dt); r.render(sc, cam);
+  const real = Math.min(0.05, relogio.getDelta()), dt = real * lento;
+  if (R) passo(dt); anima(dt); camera(real); r.render(sc, cam);
 });
 </script></body></html>
