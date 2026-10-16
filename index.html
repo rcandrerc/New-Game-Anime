@@ -112,7 +112,7 @@ const praca = malha(new THREE.CircleGeometry(5.5, 40), mat.pedra, 0, 0.015, 0, f
 
 // colisão: caixas no plano (x, z, meia-largura, meia-profundidade, topo). topo baixo = dá pra subir/pular em cima
 const SOL = [];
-function bloco(x, z, w, d, h, m, y0 = 0) { const o = malha(new THREE.BoxGeometry(w, h, d), m, x, y0 + h / 2, z); SOL.push({ x, z, hw: w / 2, hd: d / 2, top: y0 + h }); return o }
+function bloco(x, z, w, d, h, m, y0 = 0) { const o = malha(new THREE.BoxGeometry(w, h, d), m, x, y0 + h / 2, z); SOL.push({ x, z, hw: w / 2, hd: d / 2, top: y0 + h, climb: 'parede' }); return o } // tudo que é bloco dá pra escalar
 
 // casinhas
 function casa(x, z, w, d, rot, telha) {
@@ -122,7 +122,8 @@ function casa(x, z, w, d, rot, telha) {
   const tel = add(new THREE.CylinderGeometry(0.01, Math.max(w, d) * 0.78, 1.8, 4, 1), telha, 0, 3.5, 0); tel.rotation.y = Math.PI / 4; tel.scale.set(w / Math.max(w, d), 1, d / Math.max(w, d));
   add(new THREE.BoxGeometry(1, 1.7, 0.08), mat.porta, 0, 0.85, d / 2 + 0.04);
   for (const s of [-1, 1]) add(new THREE.BoxGeometry(0.7, 0.6, 0.08), mat.agua, s * w * 0.3, 1.6, d / 2 + 0.04);
-  const c = Math.abs(Math.cos(rot)) > 0.5; SOL.push({ x, z, hw: (c ? w : d) / 2, hd: (c ? d : w) / 2, top: 99 });
+  const c = Math.abs(Math.cos(rot)) > 0.5; // paredes escaláveis; o telhado (pirâmide) dá pra pisar
+  SOL.push({ x, z, hw: (c ? w : d) / 2, hd: (c ? d : w) / 2, top: 2.6, climb: 'parede', teto: { h: 1.8, hw: 0.55 * (c ? w : d), hd: 0.55 * (c ? d : w) } });
 }
 casa(-9, -9, 5, 4, 0, mat.telhaV); casa(9, -9, 4.5, 4.5, 0, mat.telhaA); casa(-10, 9, 4, 5, Math.PI, mat.telhaT);
 casa(10, 10, 5, 4, Math.PI, mat.telhaV); casa(-20, -2, 4, 4, Math.PI / 2, mat.telhaA); casa(20, 3, 4.5, 4, -Math.PI / 2, mat.telhaT);
@@ -504,7 +505,7 @@ function passoEspecial(dt, ix, iz) {
     if (nx) { P.x = s.x + nx * (s.hw + RAD * 0.75); P.z = Math.max(s.z - s.hd + 0.3, Math.min(s.z + s.hd - 0.3, P.z)) }
     else { P.z = s.z + nz * (s.hd + RAD * 0.75); P.x = Math.max(s.x - s.hw + 0.3, Math.min(s.x + s.hw - 0.3, P.x)) }
     const lc = curva('Ledge_Up');
-    if (lc && sobe > 0.3 && P.y >= s.top - lc.y[lc.y.length - 1]) { P.y = s.top - lc.y[lc.y.length - 1]; raiz('Ledge_Up', () => { fimRaiz(); P.y = s.top; P.chao = true }); return }
+    if (lc && sobe > 0.3 && P.y >= s.top - lc.y[lc.y.length - 1]) { P.y = s.top - lc.y[lc.y.length - 1]; raiz('Ledge_Up', () => { fimRaiz(); P.y = Math.max(s.top, chaoEm(P.x, P.z, s.top + 1)); P.chao = true }); return }
     if (sobe < -0.3 && P.y <= chaoEm(P.x + nx * 0.3, P.z + nz * 0.3, P.y) + 0.02) { P.modo = 'normal'; P.parede = null; P.y = Math.max(0, P.y); cur = null }
     return;
   }
@@ -523,12 +524,16 @@ function soltar() { // pular estando na parede/escada: se solta pra trás
 
 // ---------------- física simples ----------------
 function chaoEm(x, z, y) { // altura do que está embaixo (só o que dá pra pisar: topo abaixo dos pés + degrau)
-  let h = 0; for (const s of SOL) if (s.top < 50 && Math.abs(x - s.x) < s.hw + RAD * 0.6 && Math.abs(z - s.z) < s.hd + RAD * 0.6 && s.top <= y + STEP) h = Math.max(h, s.top);
+  let h = 0;
+  for (const s of SOL) {
+    if (s.top < 50 && Math.abs(x - s.x) < s.hw + RAD * 0.6 && Math.abs(z - s.z) < s.hd + RAD * 0.6 && s.top <= y + STEP) h = Math.max(h, s.top);
+    if (s.teto) { const f = Math.max(Math.abs(x - s.x) / s.teto.hw, Math.abs(z - s.z) / s.teto.hd); if (f < 1) { const t = s.top + s.teto.h * (1 - f); if (t <= y + STEP && y >= s.top - STEP) h = Math.max(h, t) } }
+  }
   return h;
 }
 function empurra() { // não atravessa paredes, troncos e caixas altas demais
   for (const s of SOL) {
-    if (s.top <= P.y + STEP && s.top < 50) continue;
+    if (s.top <= P.y + STEP && s.top < 50) continue; // já está em cima
     const dx = P.x - s.x, dz = P.z - s.z, ox = s.hw + RAD - Math.abs(dx), oz = s.hd + RAD - Math.abs(dz);
     if (ox > 0 && oz > 0) { if (ox < oz) P.x += Math.sign(dx) * ox; else P.z += Math.sign(dz) * oz }
   }
