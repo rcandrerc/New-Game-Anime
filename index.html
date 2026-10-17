@@ -411,9 +411,9 @@ addEventListener('pointerup', () => telaCheia(true), { once: true, capture: true
 // o navegador só deixa tocar som depois do primeiro toque; aí carrega tudo e liga
 const SOM = { ctx: null, buf: {}, mudo: false, vol: null };
 try { SOM.mudo = localStorage.getItem('nga-mudo') === '1' } catch (e) {}
-const SONS = { corte: ['corte1', 'corte2', 'corte3'], saca: ['saca'], pulo: ['pulo1', 'pulo2'], passo: ['passo0', 'passo1', 'passo2', 'passo3', 'passo4'],
+const SONS = { pulo: ['pulo1', 'pulo2'], passo: ['passo0', 'passo1', 'passo2', 'passo3', 'passo4'],
   acerto: ['acerto1', 'acerto2', 'acerto3'], critico: ['critico1', 'critico2'], boneco: ['boneco1', 'boneco2'], aterrissa: ['aterrissa'], queda: ['queda'],
-  circulo: ['circulo'], explosao: ['explosao'], gelo: ['gelo1', 'gelo2'], dor: ['dor'], lute: ['voz_lute'], venceu: ['voz_venceu'], perfeito: ['voz_perfeito'], fim: ['voz_fim'], vitoria: ['jingle_vitoria'] };
+  metal: ['metal1', 'metal2'], dor: ['dor'], lute: ['voz_lute'], venceu: ['voz_venceu'], perfeito: ['voz_perfeito'], fim: ['voz_fim'], vitoria: ['jingle_vitoria'] };
 function somLiga() {
   if (SOM.ctx) return; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
   SOM.ctx = new AC(); SOM.vol = SOM.ctx.createGain(); SOM.vol.gain.value = SOM.mudo ? 0 : 0.8; SOM.vol.connect(SOM.ctx.destination);
@@ -432,6 +432,32 @@ function vush(dur = 0.35, f0 = 300, f1 = 2200, vol = 0.5) { // sopro de fogo / a
   s.buffer = SOM.ruido; s.loop = true; f.type = 'bandpass'; f.Q.value = 1.2; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur);
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + dur * 0.25); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   s.connect(f); f.connect(g); g.connect(SOM.vol); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.05);
+}
+function espadada(peso = 1, vol = 0.7) { // a lâmina cortando o ar: sopro grave que desce, com um zunido de metal por cima
+  if (!SOM.ctx || SOM.mudo || !SOM.ruido) return; const c = SOM.ctx, t = c.currentTime, d = 0.2 + 0.1 * peso;
+  const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  s.buffer = SOM.ruido; s.loop = true; f.type = 'bandpass'; f.Q.value = 1.6; f.frequency.setValueAtTime(1400 + Math.random() * 300, t); f.frequency.exponentialRampToValueAtTime(260 / peso, t + d);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + d * 0.35); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  s.connect(f); f.connect(g); g.connect(SOM.vol); s.start(t, Math.random() * 0.5); s.stop(t + d + 0.05);
+  const o = c.createOscillator(), go = c.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(55, t + d); // peso do braço
+  go.gain.setValueAtTime(0.0001, t); go.gain.exponentialRampToValueAtTime(0.35 * vol * peso, t + d * 0.4); go.gain.exponentialRampToValueAtTime(0.0001, t + d); o.connect(go); go.connect(SOM.vol); o.start(t); o.stop(t + d + 0.05);
+}
+function pancada(vol = 0.7, grave = 1) { // corpo do golpe: baque grave curto (soma com o som de soco do pacote)
+  if (!SOM.ctx || SOM.mudo || !SOM.ruido) return; const c = SOM.ctx, t = c.currentTime;
+  const o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(110 * grave, t); o.frequency.exponentialRampToValueAtTime(40 * grave, t + 0.18);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22); o.connect(g); g.connect(SOM.vol); o.start(t); o.stop(t + 0.25);
+  const s = c.createBufferSource(), f = c.createBiquadFilter(), gs = c.createGain(); s.buffer = SOM.ruido; f.type = 'highpass'; f.frequency.value = 2500; // "tsh" do corte
+  gs.gain.setValueAtTime(vol * 0.35, t); gs.gain.exponentialRampToValueAtTime(0.0001, t + 0.09); s.connect(f); f.connect(gs); gs.connect(SOM.vol); s.start(t, Math.random() * 0.5); s.stop(t + 0.1);
+}
+function ronco(dur = 1.1, vol = 0.6) { // círculo mágico abrindo: ronco grave que sobe, com chiado de fogo
+  if (!SOM.ctx || SOM.mudo || !SOM.ruido) return; const c = SOM.ctx, t = c.currentTime;
+  for (const [f0, f1, tipo, v] of [[45, 90, 'sawtooth', 0.25], [90, 180, 'sine', 0.5]]) {
+    const o = c.createOscillator(), lp = c.createBiquadFilter(), g = c.createGain(); o.type = tipo; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    lp.type = 'lowpass'; lp.frequency.value = 400; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v * vol, t + 0.12); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(lp); lp.connect(g); g.connect(SOM.vol); o.start(t); o.stop(t + dur + 0.05);
+  }
+  const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = SOM.ruido; s.loop = true; f.type = 'bandpass'; f.frequency.value = 700; f.Q.value = 0.7;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.45 * vol, t + 0.15); g.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.9); s.connect(f); f.connect(g); g.connect(SOM.vol); s.start(t); s.stop(t + dur);
 }
 function estrondo(vol = 0.8) { // explosão grave
   if (!SOM.ctx || SOM.mudo || !SOM.ruido) return; const c = SOM.ctx, t = c.currentTime, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
@@ -777,7 +803,7 @@ function fxConjura(tipo) { // começo da magia: círculo no chão, coluna de luz
   for (let i = 0; i < 36; i++) { const a = i / 36 * 6.283; labareda(P.x + Math.cos(a) * FXC.r * 0.9, P.y + 0.05, P.z + Math.sin(a) * FXC.r * 0.9, cb, cc, 1.6) }
   for (let i = 0; i < 24; i++) { const a = Math.random() * 6.283, d = FXC.r * Math.sqrt(Math.random()) * 0.8; labareda(P.x + Math.cos(a) * d, P.y + 0.05, P.z + Math.sin(a) * d, cb, cc, 1.2) }
   fxSurto(P.x, P.y + 0.1, P.z, 40, cb, cc, 7); luzFlash = Math.max(luzFlash, 0.9); tremor = Math.max(tremor, 0.1);
-  poeira(P.x, P.y, P.z, FXC.r, 40); som('circulo', 0.45, ehMagia(tipo) ? 0.7 : 0.55); vush(0.6, 200, 1800, 0.4); setTimeout(() => som('gelo', 0.25, 1.4), 250);
+  poeira(P.x, P.y, P.z, FXC.r, 40); ronco(ehMagia(tipo) ? 1.2 : 0.8, ehMagia(tipo) ? 0.6 : 0.45); vush(0.6, 200, 1400, 0.35);
 }
 // poeira que sobe do círculo: brasinhas de fogo e cristais azuis de gelo
 function poeira(x, y, z, r, n) {
@@ -789,7 +815,7 @@ function poeira(x, y, z, r, n) {
 }
 function fxArea(x, y, z, r, tipo) { // magia de área explodindo: círculo gigante, fogo, fumaça, clarão
   const [cb, cc] = FXCOR[tipo] || FXCOR.magchao, H = 2.42 * K;
-  som('explosao', 0.7, 0.55); estrondo(tipo === 'magchao' ? 0.9 : 0.5); FXA.t = 0; FXA.r = r; FXA.m.position.set(x, y + 0.06, z); FXA.m.material.color.set(cc); FXA.m.visible = true; luzFlash = 1; luzMagia.color.set(cc);
+  estrondo(tipo === 'magchao' ? 1 : 0.6); pancada(0.8, 0.6); FXA.t = 0; FXA.r = r; FXA.m.position.set(x, y + 0.06, z); FXA.m.material.color.set(cc); FXA.m.visible = true; luzFlash = 1; luzMagia.color.set(cc);
   const nf = tipo === 'magchao' ? 70 : 40;
   for (let i = 0; i < nf; i++) { const a = Math.random() * 6.283, d = r * Math.sqrt(Math.random()); labareda(x + Math.cos(a) * d, y + 0.05, z + Math.sin(a) * d, cb, cc, tipo === 'magchao' ? 1.7 : 1.1) }
   if (tipo === 'magonda') for (let i = 0; i < 60; i++) { const a = i / 60 * 6.283, v = r * 2.6; part(FOGO, x + Math.cos(a) * 0.4, y + 0.3 * H, z + Math.sin(a) * 0.4, Math.cos(a) * v, 0, Math.sin(a) * v, 0.45, 0.35 * H, 0.15 * H, cb, cc, 1, 0, 1.2) }
@@ -797,7 +823,7 @@ function fxArea(x, y, z, r, tipo) { // magia de área explodindo: círculo gigan
   part(FOGO, x, y + 0.5 * H, z, 0, 0, 0, 0.3, r * 0.7, r * 1.4, 0xffffff, cc, 0.6); // clarão
 }
 function fxCura(x, y, z) { // espiral verde subindo e cruzinhas de luz
-  som('circulo', 0.4, 1.3); som('gelo', 0.3, 1.1); const [cb, cc] = FXCOR.magcura, H = 2.42 * K; luzFlash = 0.8; luzMagia.color.set(cc);
+  vush(0.9, 300, 1200, 0.3); const [cb, cc] = FXCOR.magcura, H = 2.42 * K; luzFlash = 0.8; luzMagia.color.set(cc);
   for (let i = 0; i < 46; i++) { const a = i * 0.55, d = 0.45 * H; part(FOGO, x + Math.cos(a) * d, y + i * 0.018 * H, z + Math.sin(a) * d, -Math.sin(a) * 0.6, rnd(1.4, 2.4) * K, Math.cos(a) * 0.6, rnd(0.9, 1.4), 0.16 * H, 0.04 * H, cb, cc, 1, 0.4, 0.4) }
   part(FOGO, x, y + 0.5 * H, z, 0, 0, 0, 0.5, 0.6 * H, 1.6 * H, 0xffffff, cc, 0.7);
 }
@@ -830,7 +856,7 @@ function fxPasso(dt) {
   lotePasso(FOGO, dt); lotePasso(FUMA, dt);
 }
 function acerta(alvo, v, crit, dx, dz, cor) { // um alvo (boneco ou bicho) recebe o golpe
-  som(alvo === BON ? 'boneco' : crit ? 'critico' : 'acerto', crit ? 0.9 : 0.7, alvo.tipo === 'monstro' ? 0.8 : 1);
+  if (alvo === BON) som('boneco', 0.8); else { som(crit ? 'critico' : 'acerto', crit ? 0.9 : 0.75, alvo.tipo === 'monstro' ? 0.85 : 1); pancada(crit ? 0.8 : 0.55, alvo.tipo === 'monstro' ? 0.8 : 1); if (crit) som('metal', 0.18, 0.6) }
   pausa = crit ? 0.09 : 0.055; tremor = crit ? 0.16 : 0.09;
   if (alvo !== BON) { alvo.leva(v, crit, dx, dz); dano(v, crit, alvo.x, alvo.alt + 0.4, alvo.z); faiscas(alvo.x, alvo.alt * 0.6, alvo.z, crit ? 18 : 10, cor || alvo.cor); return }
   const l = Math.hypot(dx, dz) || 1; BON.vx += dz / l * (crit ? 5 : 3.2); BON.vz -= dx / l * (crit ? 5 : 3.2); BON.flash = 1;
@@ -1104,7 +1130,6 @@ function atacar(tipo) {
   let mira = null, md = 4.5; for (const a of alvos()) { const d = Math.hypot(a.x - P.x, a.z - P.z) - a.r; if (d < md) { md = d; mira = a } }
   if (mira) P.face = Math.atan2(mira.x - P.x, mira.z - P.z); // mira no alvo mais perto
   P.atk = { tipo, g, t: 0, feitos: new Set() }; P.extra = null; P.land = 0; P.sp = 0; cur = null;
-  if (!ehMagia(tipo) && espadaT <= 0) som('saca', 0.35);
   if (comFx(tipo)) fxConjura(tipo);
 }
 function ataquePasso(dt) {
@@ -1116,7 +1141,8 @@ function ataquePasso(dt) {
   if (g.raiz) { const c = curva(g.a); if (c) { const z1 = naCurva(c, A.t)[1], z0 = naCurva(c, A.t - dt)[1], dz = z1 - z0; if (!(colado && dz > 0)) { P.x += Math.sin(P.face) * dz; P.z += Math.cos(P.face) * dz } } }
   if (g.anda && !colado && x > g.anda[0] && x < g.anda[1]) { const u = (x - g.anda[0]) / (g.anda[1] - g.anda[0]), v = g.anda[2] * K / 0.68 * dt * (g.anda[3] ? (1 - u) * (1 - u) : 1); P.x += Math.sin(P.face) * v; P.z += Math.cos(P.face) * v }
   (g.hits || []).forEach((h, i) => {
-    if (A.feitos.has(i) || x < h) return; A.feitos.add(i); som('corte', 0.55, A.tipo === 'combo' ? 1.1 : 0.9);
+    if (!ehMagia(A.tipo) && !(A.zun || (A.zun = new Set())).has(i) && x >= h - 0.09) { A.zun.add(i); espadada(A.tipo === 'combo' ? 1 : 1.3, 0.6) }
+    if (A.feitos.has(i) || x < h) return; A.feitos.add(i);
     for (const a of alvos()) {
       const dx = a.x - P.x, dz = a.z - P.z, d = Math.hypot(dx, dz), frente = (dx * Math.sin(P.face) + dz * Math.cos(P.face)) / (d || 1);
       if (d < g.alc * K / 0.68 + 0.05 + a.r && (g.roda || frente > 0.3 || d < a.r + 0.3)) { const ult = i === g.hits.length - 1; acerta(a, g.dano[0] + Math.random() * (g.dano[1] - g.dano[0]) | 0, g.crit && ult, dx, dz) }
@@ -1310,7 +1336,7 @@ function passo(dt) {
   }
   else if (P.y - g > 0.08 || P.vy > 0) P.chao = false;
   else P.y = g; // descendo degrau
-  if (P.chao && P.dash <= 0 && !P.atk && P.sp > 0.4) { passoD += P.sp * dt; if (passoD > (P.sp > 2.5 * K ? 1.15 : 0.75) * K / 0.64) { passoD = 0; som('passo', P.sp > 2.5 * K ? 0.4 : 0.25) } }
+  if (P.chao && P.dash <= 0 && !P.atk && P.sp > 0.4) { passoD += P.sp * dt; if (passoD > (P.sp > 2.5 * K ? 1.15 : 0.75) * K / 0.64) { passoD = 0; som('passo', P.sp > 2.5 * K ? 0.25 : 0.15, 0.85) } }
   if (P.flip > 0) { P.flip += dt; if (P.flip > P.flipT) P.flip = 0 }
   if (P.extra) P.extraT += dt;
   P.jt += dt; if (P.land > 0) { P.land -= dt; if (P.sp > 2.6 * K && P.land < (R.act[P.landN] ? R.act[P.landN].getClip().duration : 0) - 0.15) P.land = 0 }
