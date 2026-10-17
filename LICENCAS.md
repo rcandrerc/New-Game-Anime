@@ -7,3 +7,6 @@
 | Animações Quaternius Universal Animation Library 1 e 2 | CC0 1.0 | quaternius.com |
 | Animações Mixamo (Adobe) | livres de royalties pra usar dentro de jogos e projetos; os arquivos .fbx soltos não podem ser redistribuídos (por isso não estão aqui, só convertidas dentro do shino.glb) | mixamo.com |
 | Three.js (`js/three.min.js`, `js/GLTFLoader.js`) | MIT | threejs.org |
+| Cenário da floresta (`cenario/*.glb`): árvores, pedras, mato, flores e cogumelos do Stylized Nature MegaKit, convertidos pra .glb com texturas 512px | CC0 1.0 | Quaternius, quaternius.itch.io |
+| Monstros da floresta (`monstros/*.glb`): Orc, Demon, Yeti e MushroomKing do Ultimate Monsters | CC0 1.0 | Quaternius, quaternius.com |
+| Sons (`sons/*.ogg`): golpes, passos e pulo do RPG Audio e do Impact Sounds; vozes do Voiceover Pack Fighter; jingle do Music Jingles | CC0 1.0 | Kenney, kenney.nl |
