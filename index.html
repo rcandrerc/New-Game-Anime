@@ -345,8 +345,10 @@ for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) document.addEve
 function atualRun() { document.getElementById('bRun').classList.toggle('on', P.run) } atualRun();
 // ---------------- menu de configurações ----------------
 let persAtual = 0, sexoVer = null, abaAtual = 'apar';
-const SKILLS = { giro: () => R && R.act.EspCombo ? 'Fúria' : 'Salto giratório', investida: () => 'Investida', magia: () => 'Magia' };
-const SKILL_DESC = { giro: 'gira a espada várias vezes · 30 MP', investida: 'avança cortando · 20 MP', magia: 'bola de energia · 15 MP' };
+const SKILLS = { giro: () => R && R.act.EspCombo ? 'Fúria' : 'Salto giratório', investida: () => 'Investida', magia: () => 'Magia',
+  espgiro: () => 'Golpe giratório', espsalto: () => 'Salto fatal', espraio: () => 'Combo relâmpago', magchao: () => 'Explosão', magonda: () => 'Onda arcana', magcura: () => 'Cura' };
+const SKILL_REQ = { espgiro: 'EspGiro', espsalto: 'EspSalto', espraio: 'EspRaio', magchao: 'MagChao', magonda: 'MagOnda', magcura: 'MagCura' };
+const SKILL_DESC = { giro: 'gira a espada várias vezes · 30 MP', investida: 'avança cortando · 20 MP', magia: 'bola de energia · 15 MP', espgiro: 'salta girando e corta em volta · 25 MP', espsalto: 'pula e crava a espada no chão, acerta em volta · 25 MP', espraio: '3 cortes e um salto · 35 MP', magchao: 'explosão no chão em volta · 35 MP', magonda: 'onda que empurra tudo · 30 MP', magcura: 'recupera 45 de vida · 30 MP' };
 let SLOT = ['giro', 'investida', 'magia'];
 try { const sl = JSON.parse(localStorage.getItem('nga-skills')); if (Array.isArray(sl) && sl.length === 3 && sl.every(k => SKILLS[k]) && new Set(sl).size === 3) SLOT = sl } catch (e) {}
 function skillsRotulos() { SLOT.forEach((k, i) => { document.getElementById('bS' + (i + 1)).innerHTML = SKILLS[k]().replace(' ', '<br>') }) }
@@ -416,10 +418,11 @@ function skillsMontar() {
   p.append(el('h3', 'Qual skill fica em cada botão'), el('p', 'Escolha a skill de cada botão. Se escolher uma que já está em outro botão, as duas trocam de lugar.', 'dica'));
   SLOT.forEach((atual, i) => {
     const lin = el('div', null, 'lin'); lin.append(el('span', 'Botão de skill ' + (i + 1)));
-    for (const k in SKILLS) { const b = el('button', SKILLS[k]()); b.title = SKILL_DESC[k]; b.classList.toggle('on', atual === k); b.onclick = () => { const j = SLOT.indexOf(k); SLOT[j] = SLOT[i]; SLOT[i] = k; try { localStorage.setItem('nga-skills', JSON.stringify(SLOT)) } catch (e) {} skillsRotulos(); skillsMontar() }; lin.append(b) }
+    for (const k in SKILLS) { if (SKILL_REQ[k] && !(R && R.act[SKILL_REQ[k]])) continue; const b = el('button', SKILLS[k]()); b.title = SKILL_DESC[k]; b.classList.toggle('on', atual === k); b.onclick = () => { const j = SLOT.indexOf(k); if (j >= 0) SLOT[j] = SLOT[i]; SLOT[i] = k; try { localStorage.setItem('nga-skills', JSON.stringify(SLOT)) } catch (e) {} skillsRotulos(); skillsMontar() }; lin.append(b) }
     p.append(lin);
   });
-  p.append(el('p', 'Fúria / Salto giratório: ' + SKILL_DESC.giro + ' · Investida: ' + SKILL_DESC.investida + ' · Magia: ' + SKILL_DESC.magia, 'dica'));
+  p.append(el('h3', 'O que cada skill faz'));
+  for (const k in SKILLS) if (!SKILL_REQ[k] || (R && R.act[SKILL_REQ[k]])) p.append(el('p', SKILLS[k]() + ': ' + SKILL_DESC[k], 'dica'));
   p.append(el('h3', 'Posição dos botões'), el('p', 'São 3 esquemas, cada um com seu próprio arranjo. Escolha um e, se quiser, edite: arraste os botões, o joystick e as barras, e mude o tamanho.', 'dica'));
   const lin = el('div', null, 'lin'); lin.append(el('span', 'Esquema'));
   HUD.L.forEach((_, i) => { const b = el('button', (i + 1) + ' · ' + PRESET_NOME[i]); b.classList.toggle('on', HUD.e === i); b.onclick = () => { HUD.e = i; hudSalva(); hudAplicaTudo(); skillsMontar() }; lin.append(b) });
@@ -556,6 +559,11 @@ function orbesPasso(dt) {
   }
 }
 let pausa = 0, tremor = 0;
+const ANEIS = [0, 1].map(() => { const m = new THREE.Mesh(new THREE.RingGeometry(0.82, 1, 48), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, side: THREE.DoubleSide })); m.rotation.x = -Math.PI / 2; m.visible = false; sc.add(m); return { m, t: 9, r: 1 } });
+let anelI = 0;
+function anel(x, y, z, r, cor) { const a = ANEIS[anelI++ % 2]; a.m.position.set(x, y + 0.08, z); a.m.material.color.set(cor); a.t = 0; a.r = r; a.m.visible = true }
+function aneisPasso(dt) { for (const a of ANEIS) { if (!a.m.visible) continue; a.t += dt; const u = a.t / 0.45; if (u >= 1) { a.m.visible = false; continue } a.m.scale.setScalar(0.2 + a.r * (1 - (1 - u) * (1 - u))); a.m.material.opacity = 1 - u } }
+function curaNum(v) { const d = document.createElement('div'); d.textContent = '+' + v; d.style.color = '#7dffa0'; d.style.textShadow = '0 2px 0 #1d6b35,0 0 6px #000a'; numsEl.append(d); NUMS.push({ d, t: 0, x: P.x, y: P.y + 2 * K / 0.68, z: P.z }) }
 function acerta(alvo, v, crit, dx, dz, cor) { // um alvo (boneco ou bicho) recebe o golpe
   pausa = crit ? 0.09 : 0.055; tremor = crit ? 0.16 : 0.09;
   if (alvo !== BON) { alvo.leva(v, crit, dx, dz); dano(v, crit, alvo.x, alvo.alt + 0.4, alvo.z); faiscas(alvo.x, alvo.alt * 0.6, alvo.z, crit ? 18 : 10, cor || alvo.cor); return }
@@ -778,11 +786,19 @@ const GOLPES = {
 const GOLPES_MX = {
   combo: [{ a: 'Esp1', dur: 0.89, hits: [0.5], alc: 1.7, dano: [70, 100], raiz: 1, vel: 1.85 }, { a: 'Esp2', dur: 0.95, hits: [0.53], alc: 1.8, dano: [80, 110], raiz: 1, vel: 1.85 },
           { a: 'Esp3', dur: 0.93, hits: [0.58], alc: 1.8, dano: [90, 120], raiz: 1, vel: 1.85 }, { a: 'Esp4', dur: 0.85, hits: [0.41], alc: 2.0, dano: [120, 170], crit: true, raiz: 1, vel: 1.7 }],
+  // skills novas (Mixamo): hits = momentos do corte; area = golpe em volta; cura = recupera vida
+  espgiro: { a: 'EspGiro', dur: 2.43, hits: [0.42, 0.6], alc: 2.2, roda: true, dano: [140, 190], cd: 4, crit: true, raiz: 1, vel: 1.6 },
+  espsalto: { a: 'EspSalto', dur: 2.33, area: { at: 0.58, r: 2.6, dano: [180, 240], cor: 0xffd27a }, cd: 5, raiz: 1, vel: 1.5 },
+  espraio: { a: 'EspRaio', dur: 3.53, hits: [0.14, 0.4, 0.6, 0.76], alc: 2.0, dano: [90, 130], cd: 6, crit: true, raiz: 1, vel: 1.7 },
+  magbola: { a: 'MagBola', dur: 2.3, orbe: 0.43, cd: 1.5, vel: 1.7, ate: 0.33 },
+  magchao: { a: 'MagChao', dur: 2.97, area: { at: 0.6, r: 3.6, dano: [200, 260], cor: 0xff8a3d }, cd: 7, raiz: 1, vel: 1.6 },
+  magonda: { a: 'MagOnda', dur: 3.53, area: { at: 0.5, r: 4.2, dano: [120, 160], cor: 0x6fc8ff, empurra: 1 }, cd: 6, vel: 1.8, ate: 0.4 },
+  magcura: { a: 'MagCura', dur: 2.67, cura: { at: 0.5, hp: 45 }, cd: 8, vel: 1.7, ate: 0.4 },
   giro: { a: 'EspCombo', dur: 3.66, hits: [0.12, 0.38, 0.66, 0.86], alc: 2.0, dano: [100, 150], cd: 5, crit: true, raiz: 1, vel: 1.75 },
 };
 function g0vel(g) { return pausa > 0 ? 0 : (g.vel || 1) }
-function golpes() { return R && R.act.Esp1 ? Object.assign({}, GOLPES, GOLPES_MX) : GOLPES }
-const CD = { giro: 0, investida: 0, magia: 0 }, CUSTO = { giro: 30, investida: 20, magia: 15 };
+function golpes() { const G = R && R.act.Esp1 ? Object.assign({}, GOLPES, GOLPES_MX) : Object.assign({}, GOLPES); if (R && R.act.MagBola) G.magia = G.magbola; return G }
+const CD = { giro: 0, investida: 0, magia: 0, espgiro: 0, espsalto: 0, espraio: 0, magchao: 0, magonda: 0, magcura: 0 }, CUSTO = { giro: 30, investida: 20, magia: 15, espgiro: 25, espsalto: 25, espraio: 35, magchao: 35, magonda: 30, magcura: 30 };
 function semMana(tipo) {
   const b = document.getElementById('bS' + (SLOT.indexOf(tipo) + 1)) || document.body, mb = document.getElementById('mpB');
   for (const e of [b, mb]) { e.classList.remove('semmana', 'pisca'); void e.offsetWidth } b.classList.add('semmana'); mb.classList.add('pisca');
@@ -816,6 +832,11 @@ function ataquePasso(dt) {
     }
   });
   if (g.orbe && !A.orbeFeito && x >= g.orbe) { A.orbeFeito = true; orbe() }
+  if (g.area && !A.areaFeito && x >= g.area.at) { // golpe em volta: acerta tudo no raio e mostra um anel
+    A.areaFeito = true; const r = g.area.r * K / 0.68; anel(P.x, P.y, P.z, r, g.area.cor); tremor = 0.18;
+    for (const a of alvos()) { const dx = a.x - P.x, dz = a.z - P.z; if (Math.hypot(dx, dz) < r + a.r) { acerta(a, g.area.dano[0] + Math.random() * (g.area.dano[1] - g.area.dano[0]) | 0, Math.random() < 0.35, dx, dz, g.area.cor); if (g.area.empurra && a !== BON) { const l = Math.hypot(dx, dz) || 1; a.kx = dx / l * 7 / a.peso; a.kz = dz / l * 7 / a.peso } } }
+  }
+  if (g.cura && !A.curaFeita && x >= g.cura.at) { A.curaFeita = true; const v = Math.min(P.hpMax - P.hp, g.cura.hp); P.hp += v; anel(P.x, P.y, P.z, 1.4 * K / 0.68, 0x7dffa0); faiscas(P.x, P.y + 1, P.z, 16, 0x7dffa0); curaNum(v) }
   const corta = A.tipo === 'combo' && (A.atkFila || P.atkFila) && g.hits && x > g.hits[g.hits.length - 1] + 0.1;
   if (A.t >= dur || corta) { P.atk = null; comboT = 0; if ((A.atkFila || P.atkFila) && A.tipo === 'combo') { P.atkFila = false; atacar('combo') } }
   if (P.atkFila) { A.atkFila = true; P.atkFila = false }
@@ -830,7 +851,7 @@ const lamina = new THREE.Mesh(lamGeo, new THREE.ShaderMaterial({ transparent: tr
 lamina.frustumCulled = false; lamina.visible = false; sc.add(lamina);
 const _b = new THREE.Vector3(), _t = new THREE.Vector3();
 function laminaPasso(dt) {
-  const ativo = espada && espada.visible && P.atk && P.atk.tipo !== 'magia';
+  const ativo = espada && espada.visible && P.atk && !/^mag/.test(P.atk.tipo);
   if (ativo) { espada.userData.base.getWorldPosition(_b); espada.userData.ponta.getWorldPosition(_t); lamPts.unshift({ b: _b.clone(), t: _t.clone(), v: 0 }) }
   for (const q of lamPts) q.v += dt; while (lamPts.length > LN || (lamPts.length && lamPts[lamPts.length - 1].v > 0.14)) lamPts.pop();
   lamina.visible = lamPts.length > 1; if (!lamina.visible) return;
@@ -1043,7 +1064,7 @@ function anima(dt) {
   else if (P.dashX > 0) corpo.rotation.x = 0.42 * Math.pow(P.dashX / 0.4, 1.4);
   player.position.set(P.x, P.y, P.z); player.rotation.y = P.face;
   player.updateMatrixWorld(true); VRMC.tick(R, dt); rastroPasso(dt); laminaPasso(dt);
-  if (espada) { espadaT = P.atk && P.atk.tipo !== 'magia' ? 0.12 : Math.max(0, espadaT - dt); espada.visible = espadaT > 0 }
+  if (espada) { espadaT = P.atk && !/^mag/.test(P.atk.tipo) ? 0.12 : Math.max(0, espadaT - dt); espada.visible = espadaT > 0 }
   SLOT.forEach((k, i) => { const b = document.getElementById('bS' + (i + 1)); if (CD[k] > 0) b.dataset.cd = Math.ceil(CD[k]); else delete b.dataset.cd });
 }
 
@@ -1067,6 +1088,6 @@ window.VILA = { P, get cur() { return cur }, get R() { return R }, get K() { ret
 setTimeout(() => { const h = document.getElementById('help'); if (h) h.style.opacity = 0 }, 12000); // a dica some sozinha
 r.setAnimationLoop(() => {
   const real = Math.min(0.05, relogio.getDelta()), dt = real * lento;
-  if (R) passo(dt); anima(dt); boneco(dt); bichosPasso(dt); vidaPasso(dt); faiscasPasso(dt); orbesPasso(dt); camera(real); numsPasso(dt); r.render(sc, cam);
+  if (R) passo(dt); anima(dt); boneco(dt); bichosPasso(dt); vidaPasso(dt); aneisPasso(dt); faiscasPasso(dt); orbesPasso(dt); camera(real); numsPasso(dt); r.render(sc, cam);
 });
 </script></body></html>

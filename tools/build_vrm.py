@@ -69,7 +69,11 @@ MIX = {
 MIX.update({  # combo de espada do Mixamo (One Hand Sword Combo): 4 golpes cortados + o combo inteiro
     'Esp1': ('espada_combo', 0.12, 0.32), 'Esp2': ('espada_combo', 0.32, 0.53), 'Esp3': ('espada_combo', 0.53, 0.74),
     'Esp4': ('espada_combo', 0.74, 0.93), 'EspCombo': ('espada_combo', 0.12, 0.93)})
-ROOTZ = {'Esp1', 'Esp2', 'Esp3', 'Esp4', 'EspCombo'}   # só o avanço vai pro jogo (o sobe-desce do quadril fica no clipe)
+# skills novas (Mixamo, sem "In Place": o avanço do golpe vai pro jogo)
+MIX.update({'EspGiro': 'mx_sword_and_shield_power_slash', 'EspSalto': 'mx_sword_and_shield_jump_attack', 'EspRaio': 'mx_sword_and_shield_slash_combo',
+            'MagBola': 'mx_one_handed_casting_spell_fowards', 'MagChao': 'mx_two_handed_casting_spell_towards_ground',
+            'MagOnda': 'mx_casting_a_magic_spell_wide_with_two_arms', 'MagCura': 'mx_casting_a_healing_spell_with_one_hand'})
+ROOTZ = {'Esp1', 'Esp2', 'Esp3', 'Esp4', 'EspCombo', 'EspGiro', 'EspSalto', 'EspRaio', 'MagChao'}   # só o avanço vai pro jogo (o sobe-desce do quadril fica no clipe)
 ROOT = {'Wall_Up', 'Wall_Down', 'Ledge_Up', 'Ladder_Start', 'Ladder_Loop', 'Ladder_Top', 'Wall_Climb_Run', 'Wall_Run', 'Wall_Run_Diag'}
 ROOTM = {}
 NOY = {'Jump_Idle', 'Jump_Full_Short', 'Jump_Start', 'Jump_Run', 'Flip_Front', 'Flip_Back'}                   # quadril sem subir/descer: a altura do pulo é do jogo
