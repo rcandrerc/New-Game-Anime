@@ -562,14 +562,14 @@ function faiscasPasso(dt) {
 const ORBES = [], orbeGeo = new THREE.SphereGeometry(0.16, 14, 10), orbeMat = new THREE.MeshBasicMaterial({ color: 0xfff2b0 });
 const auraMat = new THREE.MeshBasicMaterial({ color: 0xff7a1a, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false });
 function orbe() {
-  const o = new THREE.Mesh(orbeGeo, orbeMat), a = new THREE.Mesh(orbeGeo, auraMat); a.scale.setScalar(2); o.add(a);
+  const o = new THREE.Mesh(orbeGeo, orbeMat), a = new THREE.Mesh(orbeGeo, auraMat); a.scale.setScalar(2); o.add(a); o.scale.setScalar(1.6);
   const fx = Math.sin(P.face), fz = Math.cos(P.face); o.position.set(P.x + fx * 0.5, P.y + 1.15 * K / 0.68, P.z + fz * 0.5); sc.add(o);
   ORBES.push({ o, vx: fx * 13, vz: fz * 13, t: 0 });
 }
 function orbesPasso(dt) {
   for (let i = ORBES.length - 1; i >= 0; i--) {
     const b = ORBES[i]; b.t += dt; b.o.position.x += b.vx * dt; b.o.position.z += b.vz * dt; b.o.children[0].scale.setScalar(2 + Math.sin(b.t * 30) * 0.3);
-    { const o = b.o.position, H = 2.42 * K; part(FOGO, o.x, o.y, o.z, 0, 0, 0, 0.08, 0.75 * H, 0.5 * H, 0xfff2b0, 0xff7a1a, 0.9); for (let k = 0; k < 3; k++) part(FOGO, o.x + rnd(-0.08, 0.08), o.y + rnd(-0.08, 0.08), o.z + rnd(-0.08, 0.08), -b.vx * 0.08 + rnd(-0.4, 0.4), rnd(0, 0.8), -b.vz * 0.08 + rnd(-0.4, 0.4), rnd(0.25, 0.45), 0.3 * H, 0.04 * H, 0xffd27a, 0xff3a0a, 0.9, 1.5, 0.5); if (Math.random() < 0.3) part(FUMA, o.x, o.y, o.z, 0, 0.4, 0, 0.8, 0.15 * H, 0.45 * H, 0x6a6470, 0x4a4650, 0.35, 0.3, 1) }
+    { const o = b.o.position, H = 2.42 * K; part(FOGO, o.x, o.y, o.z, 0, 0, 0, 0.08, 0.75 * H, 0.5 * H, 0xfff2b0, 0xff7a1a, 0.9); for (let k = 0; k < 3; k++) part(FUMA, o.x + rnd(-0.1, 0.1), o.y + rnd(-0.1, 0.1), o.z + rnd(-0.1, 0.1), -b.vx * 0.05 + rnd(-0.5, 0.5), rnd(0.2, 1.2), -b.vz * 0.05 + rnd(-0.5, 0.5), rnd(0.25, 0.4), 0.42 * H, 0.08 * H, 0xff9a1a, 0x5a0d02, 0.85, 1.5, 0.5); for (let k = 0; k < 3; k++) part(FOGO, o.x + rnd(-0.08, 0.08), o.y + rnd(-0.08, 0.08), o.z + rnd(-0.08, 0.08), -b.vx * 0.08 + rnd(-0.4, 0.4), rnd(0, 0.8), -b.vz * 0.08 + rnd(-0.4, 0.4), rnd(0.25, 0.45), 0.3 * H, 0.04 * H, 0xffd27a, 0xff3a0a, 0.9, 1.5, 0.5); if (Math.random() < 0.3) part(FUMA, o.x, o.y, o.z, 0, 0.4, 0, 0.8, 0.15 * H, 0.45 * H, 0x6a6470, 0x4a4650, 0.35, 0.3, 1) }
     const alvo = alvos().find(a => Math.hypot(b.o.position.x - a.x, b.o.position.z - a.z) < 0.25 + a.r), bate = !!alvo;
     if (bate) { acerta(alvo, 150 + Math.random() * 60 | 0, Math.random() < 0.3, b.vx, b.vz, 0xffb35a); const o = b.o.position, H = 2.42 * K; fxSurto(o.x, o.y, o.z, 30, 0xfff2b0, 0xff5a12, 7); part(FOGO, o.x, o.y, o.z, 0, 0, 0, 0.3, 0.6 * H, 1.4 * H, 0xffffff, 0xff7a1a, 0.9); fumacaChao(o.x, Math.max(0, o.y - 0.7 * H), o.z, 0.5 * H, 10, 0x77707e); luzFlash = Math.max(luzFlash, 0.6) }
     if (bate || b.t > 1.5) { sc.remove(b.o); ORBES.splice(i, 1) }
