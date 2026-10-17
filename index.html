@@ -584,6 +584,9 @@ function curaNum(v) { const d = document.createElement('div'); d.textContent = '
 // ---------------- efeitos das magias ----------------
 // cores de cada magia: brilho (cor clara do miolo) e cor (fogo/borda)
 const FXCOR = { magia: [0xfff2b0, 0xff7a1a], magbola: [0xfff2b0, 0xff7a1a], magchao: [0xffe6a0, 0xff4a12], magonda: [0xbfe6ff, 0x2a7dff], magcura: [0xeaffef, 0x3fe07a] };
+// skills de espada: círculo de fogo vermelho e dourado
+for (const k of ['giro', 'investida', 'espgiro', 'espsalto', 'espraio']) FXCOR[k] = [0xfff0b0, 0xff3d0a];
+const comFx = t => !!FXCOR[t]; // golpes com círculo no chão (o combo do Atacar fica sem)
 const ehMagia = t => t === 'magia' || /^mag/.test(t);
 // textura redonda e macia (fogo, brilho e fumaça usam a mesma)
 const texBola = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
@@ -627,7 +630,7 @@ function lote(n, aditivo) {
     fragmentShader: 'uniform sampler2D mapa; varying vec4 vc; void main(){ float a = texture2D(mapa, gl_PointCoord).a; gl_FragColor = vec4(vc.rgb, vc.a * a); }' });
   const pts = new THREE.Points(geo, mat); pts.frustumCulled = false; pts.renderOrder = aditivo ? 3 : 1; sc.add(pts); return { n, pts, geo, mat, P: [] };
 }
-const FOGO = lote(700, true), FUMA = lote(600, false);
+const FOGO = lote(1100, true), FUMA = lote(1000, false);
 const _c0 = new THREE.Color(), _c1 = new THREE.Color();
 // uma partícula: posição, velocidade, vida, tamanho de começo e fim, cor de começo e fim, opacidade, "sobe" (empuxo pra cima, negativo cai)
 function part(L, x, y, z, vx, vy, vz, vida, t0, t1, c0, c1, a, sobe = 0, arrasto = 0) {
@@ -667,10 +670,22 @@ function maos() { if (maosR !== R) { maosR = R; maosL = []; if (R) R.root.traver
 const _h = new THREE.Vector3();
 function fxConjura(tipo) { // começo da magia: círculo no chão, coluna de luz, fumaça saindo do chão
   const [cb, cc] = FXCOR[tipo] || FXCOR.magia, H = 2.42 * K;
-  FXC.tipo = tipo; FXC.t = 0; FXC.vivo = true; FXC.r = (tipo === 'magchao' ? 1.25 : tipo === 'magonda' ? 1.15 : 0.95) * H;
+  FXC.tipo = tipo; FXC.t = 0; FXC.vivo = true; FXC.r = (tipo === 'magchao' ? 1.75 : tipo === 'magonda' ? 1.65 : ehMagia(tipo) ? 1.45 : 1.35) * H;
   FXC.a.material.color.set(cc); FXC.b.material.color.set(cc); FXC.col.material.color.set(cc); FXC.g.visible = FXC.a.visible = FXC.b.visible = true;
   luzMagia.color.set(cc); fumacaChao(P.x, P.y, P.z, FXC.r * 0.9, 22, tipo === 'magcura' ? 0xc8e8d0 : 0x8a8496);
-  for (let i = 0; i < 20; i++) { const a = i / 20 * 6.283; labareda(P.x + Math.cos(a) * FXC.r * 0.85, P.y + 0.05, P.z + Math.sin(a) * FXC.r * 0.85, cb, cc, 0.9) }
+  // o círculo bate no chão: anel de labaredas grandes, fogo espirrando pra cima, clarão e tremidinha
+  for (let i = 0; i < 36; i++) { const a = i / 36 * 6.283; labareda(P.x + Math.cos(a) * FXC.r * 0.9, P.y + 0.05, P.z + Math.sin(a) * FXC.r * 0.9, cb, cc, 1.6) }
+  for (let i = 0; i < 24; i++) { const a = Math.random() * 6.283, d = FXC.r * Math.sqrt(Math.random()) * 0.8; labareda(P.x + Math.cos(a) * d, P.y + 0.05, P.z + Math.sin(a) * d, cb, cc, 1.2) }
+  fxSurto(P.x, P.y + 0.1, P.z, 40, cb, cc, 7); luzFlash = Math.max(luzFlash, 0.9); tremor = Math.max(tremor, 0.1);
+  poeira(P.x, P.y, P.z, FXC.r, 40);
+}
+// poeira que sobe do círculo: brasinhas de fogo e cristais azuis de gelo
+function poeira(x, y, z, r, n) {
+  const H = 2.42 * K;
+  for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, d = r * Math.sqrt(Math.random()) * 0.95, gelo = i % 2;
+    const px = x + Math.cos(a) * d, py = y + rnd(0.02, 0.3) * H, pz = z + Math.sin(a) * d, vx = rnd(-0.3, 0.3), vy = rnd(0.6, 1.6) * K, vz = rnd(-0.3, 0.3), v = rnd(1.0, 1.8);
+    if (gelo) { part(FUMA, px, py, pz, vx, vy, vz, v, rnd(0.11, 0.16) * H, 0.03 * H, 0x8fe0ff, 0x2f7dff, 0.95, 0.15, 0.6); part(FOGO, px, py, pz, vx, vy, vz, v, 0.05 * H, 0.01 * H, 0xffffff, 0x6fc8ff, 0.9, 0.15, 0.6) }
+    else { part(FUMA, px, py, pz, vx, vy, vz, v, rnd(0.1, 0.15) * H, 0.03 * H, 0xff8a1a, 0x8a1a04, 0.9, 0.35, 0.6); part(FOGO, px, py, pz, vx, vy, vz, v, 0.05 * H, 0.01 * H, 0xffe08a, 0xff3a0a, 1, 0.35, 0.6) } }
 }
 function fxArea(x, y, z, r, tipo) { // magia de área explodindo: círculo gigante, fogo, fumaça, clarão
   const [cb, cc] = FXCOR[tipo] || FXCOR.magchao, H = 2.42 * K;
@@ -688,7 +703,7 @@ function fxCura(x, y, z) { // espiral verde subindo e cruzinhas de luz
 }
 function fxPasso(dt) {
   FOGO.mat.uniforms.esc.value = FUMA.mat.uniforms.esc.value = r.domElement.height / (2 * Math.tan(cam.fov * Math.PI / 360));
-  const H = 2.42 * K, A = P.atk, conjurando = A && ehMagia(A.tipo);
+  const H = 2.42 * K, A = P.atk, conjurando = A && comFx(A.tipo);
   if (FXC.vivo) {
     FXC.t += dt; if (!conjurando) FXC.vivo = false;
     FXC.f = Math.min(1, FXC.f + dt * 6); const [cb, cc] = FXCOR[FXC.tipo] || FXCOR.magia;
@@ -700,9 +715,11 @@ function fxPasso(dt) {
     if (Math.random() < dt * 40) { const a = Math.random() * 6.283; labareda(P.x + Math.cos(a) * FXC.r * 0.9, P.y + 0.05, P.z + Math.sin(a) * FXC.r * 0.9, cb, cc, 0.8) }
     if (Math.random() < dt * 30) { const a = FXC.t * 5 + Math.random() * 0.4, d = FXC.r * rnd(0.3, 0.8); part(FOGO, P.x + Math.cos(a) * d, P.y + 0.1, P.z + Math.sin(a) * d, -Math.sin(a) * 0.8, rnd(1.5, 3) * K, Math.cos(a) * 0.8, 0.8, 0.07 * H, 0.02 * H, 0xffffff, cc, 1, 0.5, 0.3) }
     if (Math.random() < dt * 8) fumacaChao(P.x, P.y, P.z, FXC.r * 0.9, 1, 0x8a8496, 0.6);
+    { let n = dt * 150; while (n > 0) { if (Math.random() < n) poeira(P.x, P.y, P.z, FXC.r, 1); n -= 1 } }
+    if (ehMagia(FXC.tipo)) {
     // brilho nas mãos
     for (const m of maos()) { m.getWorldPosition(_h); part(FOGO, _h.x, _h.y, _h.z, 0, 0, 0, 0.1, 0.32 * H, 0.2 * H, cb, cc, 0.85); if (Math.random() < dt * 20) part(FOGO, _h.x, _h.y, _h.z, rnd(-1, 1), rnd(0, 1.5), rnd(-1, 1), 0.4, 0.06 * H, 0.01, 0xffffff, cc, 1, -2, 0) }
-    if (!maos().length) part(FOGO, P.x + Math.sin(P.face) * 0.3, P.y + 0.5 * H, P.z + Math.cos(P.face) * 0.3, 0, 0, 0, 0.1, 0.35 * H, 0.2 * H, cb, cc, 0.8);
+    if (!maos().length) part(FOGO, P.x + Math.sin(P.face) * 0.3, P.y + 0.5 * H, P.z + Math.cos(P.face) * 0.3, 0, 0, 0, 0.1, 0.35 * H, 0.2 * H, cb, cc, 0.8); }
   }
   if (!FXC.vivo && FXC.g.visible) { FXC.f -= dt * 3; FXC.a.scale.multiplyScalar(1 + dt * 0.6); if (FXC.f <= 0) { FXC.f = 0; FXC.g.visible = false } }
   FXC.a.material.opacity = FXC.f; FXC.b.material.opacity = FXC.f * 0.9; FXC.col.material.opacity = FXC.f * 0.45;
@@ -964,7 +981,7 @@ function atacar(tipo) {
   let mira = null, md = 4.5; for (const a of alvos()) { const d = Math.hypot(a.x - P.x, a.z - P.z) - a.r; if (d < md) { md = d; mira = a } }
   if (mira) P.face = Math.atan2(mira.x - P.x, mira.z - P.z); // mira no alvo mais perto
   P.atk = { tipo, g, t: 0, feitos: new Set() }; P.extra = null; P.land = 0; P.sp = 0; cur = null;
-  if (ehMagia(tipo)) fxConjura(tipo === 'magia' ? 'magia' : tipo);
+  if (comFx(tipo)) fxConjura(tipo);
 }
 function ataquePasso(dt) {
   for (const k in CD) CD[k] = Math.max(0, CD[k] - dt);
@@ -983,7 +1000,7 @@ function ataquePasso(dt) {
   });
   if (g.orbe && !A.orbeFeito && x >= g.orbe) { A.orbeFeito = true; orbe(); luzFlash = 0.7; FXC.vivo = false; const H = 2.42 * K; fxSurto(P.x + Math.sin(P.face) * 0.5, P.y + 1.15 * K / 0.68, P.z + Math.cos(P.face) * 0.5, 20, 0xfff2b0, 0xff7a1a, 4) }
   if (g.area && !A.areaFeito && x >= g.area.at) { // golpe em volta: acerta tudo no raio e mostra um anel
-    A.areaFeito = true; const r = g.area.r * K / 0.68; anel(P.x, P.y, P.z, r, g.area.cor); tremor = 0.18; if (ehMagia(A.tipo)) fxArea(P.x, P.y, P.z, r, A.tipo);
+    A.areaFeito = true; const r = g.area.r * K / 0.68; anel(P.x, P.y, P.z, r, g.area.cor); tremor = 0.18; if (comFx(A.tipo)) fxArea(P.x, P.y, P.z, r, A.tipo);
     for (const a of alvos()) { const dx = a.x - P.x, dz = a.z - P.z; if (Math.hypot(dx, dz) < r + a.r) { acerta(a, g.area.dano[0] + Math.random() * (g.area.dano[1] - g.area.dano[0]) | 0, Math.random() < 0.35, dx, dz, g.area.cor); if (g.area.empurra && a !== BON) { const l = Math.hypot(dx, dz) || 1; a.kx = dx / l * 7 / a.peso; a.kz = dz / l * 7 / a.peso } } }
   }
   if (g.cura && !A.curaFeita && x >= g.cura.at) { A.curaFeita = true; const v = Math.min(P.hpMax - P.hp, g.cura.hp); P.hp += v; anel(P.x, P.y, P.z, 1.4 * K / 0.68, 0x7dffa0); faiscas(P.x, P.y + 1, P.z, 16, 0x7dffa0); fxCura(P.x, P.y, P.z); curaNum(v) }
