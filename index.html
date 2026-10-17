@@ -39,6 +39,8 @@
   #vida #hpB i{background:linear-gradient(90deg,#c9302c,#ff6b5a)} #vida #mpB i{background:linear-gradient(90deg,#2d63d6,#5fb2ff)}
   #vida .bar span{position:absolute;inset:0;font:700 10px/14px system-ui,sans-serif;padding-left:7px;text-shadow:0 1px 1px #000}
   #vida #mpB.pisca{animation:pisca .4s 2} @keyframes pisca{50%{border-color:#ffd23a;box-shadow:0 0 8px #ffd23a}}
+  #carga{position:fixed;inset:0;z-index:30;display:grid;place-content:center;gap:10px;justify-items:center;background:rgba(10,14,24,.55);font:700 16px system-ui,sans-serif;text-shadow:0 1px 3px #000;pointer-events:none}
+  #carga.fora{display:none} #carga .bar{width:220px;height:8px;border-radius:4px;background:rgba(255,255,255,.2);overflow:hidden} #carga .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
   #dor{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 90px 30px rgba(220,30,20,.55);opacity:0;transition:opacity .35s}
   #caiu{position:fixed;inset:0;display:none;place-items:center;font:800 26px system-ui,sans-serif;text-shadow:0 2px 6px #000;background:rgba(40,0,0,.35);pointer-events:none}
   /* editor de botões */
@@ -96,7 +98,7 @@
 </style></head>
 <body>
 <div id="top"><button id="bMenu" aria-label="Menu">☰ Menu</button><span id="esp"></span><button id="bSlow" aria-label="Câmera lenta">1x</button><button id="bRun">Correr</button><button id="bSom" aria-label="Som">🔊</button><button id="bFull" aria-label="Tela cheia">⛶</button></div>
-<div id="info">carregando…</div>
+<div id="info">carregando…</div><div id="carga"><b>Carregando…</b><div class="bar"><i></i></div></div>
 <div id="vida" data-hud="vida"><div class="bar" id="hpB"><i></i><span>HP 100/100</span></div><div class="bar" id="mpB"><i></i><span>MP 100/100</span></div></div>
 <div id="dor"></div><div id="caiu">Você caiu…</div>
 <div id="stick" data-hud="stick"><div id="knob"></div></div>
@@ -150,8 +152,11 @@ escala(K);
 const FLIP_T = 0.56, DASH_T = 0.2, RAD = 0.32, STEP = 0.45;
 
 // ---------------- cena ----------------
-const r = new THREE.WebGLRenderer({ antialias: true }); r.setPixelRatio(Math.min(2, devicePixelRatio)); r.outputEncoding = THREE.sRGBEncoding;
+const r = new THREE.WebGLRenderer({ antialias: true }); r.setPixelRatio(Math.min(1.5, devicePixelRatio)); r.outputEncoding = THREE.sRGBEncoding;
 r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; document.body.prepend(r.domElement);
+// se o celular derrubar o WebGL (falta de memória), recarrega uma vez em vez de ficar com a tela congelada
+r.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); const i = document.getElementById('info'); if (i) i.textContent = 'recarregando…';
+  let ja = false; try { ja = sessionStorage.getItem('nga-recarga') === '1'; sessionStorage.setItem('nga-recarga', '1') } catch (x) {} if (!ja) setTimeout(() => location.reload(), 600) });
 const sc = new THREE.Scene(); sc.background = new THREE.Color(0x9fc7e8); sc.fog = new THREE.Fog(0x9fc7e8, 40, 95);
 const hemi = new THREE.HemisphereLight(0xeef3ff, 0x4a6a38, 0.75); sc.add(hemi);
 const sol = new THREE.DirectionalLight(0xfff1d6, 0.85); sol.castShadow = true; sol.shadow.mapSize.set(1024, 1024);
@@ -161,6 +166,8 @@ function tam() { r.setSize(innerWidth, innerHeight); cam.aspect = innerWidth / i
 
 // cenário: vila (padrão) ou floresta; vem do link (?mapa=floresta) ou da última escolha no menu
 const MAPA = (() => { const q = new URLSearchParams(location.search).get('mapa'); if (q === 'vila' || q === 'floresta') return q; try { return localStorage.getItem('nga-mapa') === 'floresta' ? 'floresta' : 'vila' } catch (e) { return 'vila' } })();
+// o cenário e os monstros só começam a baixar depois do personagem (no 4G o personagem chegava por último e a tela ficava vazia)
+let prontoOk; const PRONTO = new Promise(ok => prontoOk = ok); setTimeout(() => prontoOk(), 20000);
 const M = c => new THREE.MeshLambertMaterial({ color: new THREE.Color(c).convertSRGBToLinear() });
 const mat = { grama: M(0x7fb35a), terra: M(0xc9a978), pedra: M(0xb9b4ac), parede: M(0xf1e6d2), madeira: M(0x8a5a36), telhaV: M(0xc4553e),
   telhaA: M(0x4f78b8), telhaT: M(0x3f8a6a), porta: M(0x6b4226), tronco: M(0x7a5233), folha: M(0x4f9a4a), folha2: M(0x6bb04f), agua: M(0x5aa7d8), caixa: M(0xb98a52), cerca: M(0xa77b4f) };
@@ -244,16 +251,17 @@ postes.count = np; postes.castShadow = true; sc.add(postes);
 // ---------------- cenário: floresta (Quaternius Stylized Nature, CC0) ----------------
 // clareira no fim da tarde: pinheiros e árvores em volta, pedras pra escalar no meio, mato, flores, cogumelos e vaga-lumes
 const _gl = new THREE.GLTFLoader(), _mA = new THREE.Matrix4(), _vA = new THREE.Vector3(), _qA = new THREE.Quaternion(), _sA = new THREE.Vector3(), _Y = new THREE.Vector3(0, 1, 0);
+const MATS = {}; // material por nome, compartilhado entre os modelos (a casca e as folhas se repetem)
 function espalha(nome, lista, sombra = true) { // várias cópias de um modelo numa malha instanciada só; lista de [x, z, giro, escala]
   if (!lista.length) return;
-  _gl.load('cenario/' + nome + '.glb', g => {
-    g.scene.updateMatrixWorld(true); const ms = []; g.scene.traverse(o => { if (o.isMesh) ms.push(o) });
+  PRONTO.then(() => _gl.load('cenario/' + nome + '.glb', g => {
+    g.scene.updateMatrixWorld(true); const ms = []; g.scene.traverse(o => { if (o.isMesh) { const n = o.material.name; if (!MATS[n]) { o.material.normalMap = null; MATS[n] = o.material } o.material = MATS[n]; ms.push(o) } });
     for (const m of ms) {
       const im = new THREE.InstancedMesh(m.geometry, m.material, lista.length);
       lista.forEach(([x, z, rot, s], i) => { _mA.compose(_vA.set(x, 0, z), _qA.setFromAxisAngle(_Y, rot), _sA.set(s, s, s)).multiply(m.matrixWorld); im.setMatrixAt(i, _mA) });
       im.castShadow = sombra; im.receiveShadow = true; sc.add(im);
     }
-  });
+  }));
 }
 let vagalumes = null;
 function floresta() {
@@ -267,11 +275,18 @@ function floresta() {
   const livreDe = (x, z, d) => Math.hypot(x + 3.2, z - 10) > d && Math.hypot(x + 3.2, z - 8.5) > d; // longe do começo e do boneco
   // árvores: anel fechado em volta (é a "parede" da arena) e algumas soltas dentro
   const arv = { Pine_1: [], Pine_2: [], Pine_3: [], CommonTree_1: [], CommonTree_2: [], CommonTree_3: [], DeadTree_1: [] }, nomes = Object.keys(arv).slice(0, 6);
-  for (let i = 0; i < 64; i++) { const a = i / 64 * Math.PI * 2 + ru(-0.03, 0.03), r = 19.5 + (i % 3) * 1.6 + ru(-0.6, 0.6), x = Math.cos(a) * r, z = Math.sin(a) * r;
-    arv[nomes[i % 6]].push([x, z, ru(0, 6.28), ru(0.5, 0.68)]); SOL.push({ x, z, hw: 0.32, hd: 0.32, top: 99 }) }
+  const longe = []; // árvores do anel: 18 modelos na frente, pinheiros simples (leves pro celular) atrás
+  for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2 + ru(-0.08, 0.08), r = 18.6 + ru(-0.5, 0.5), x = Math.cos(a) * r, z = Math.sin(a) * r;
+    arv[nomes[i % 6]].push([x, z, ru(0, 6.28), ru(0.5, 0.66)]); SOL.push({ x, z, hw: 0.32, hd: 0.32, top: 99 }) }
+  for (let i = 0; i < 70; i++) { const a = i / 70 * Math.PI * 2 + ru(-0.03, 0.03), r = 20 + (i % 3) * 1.7 + ru(-0.5, 0.5), x = Math.cos(a) * r, z = Math.sin(a) * r;
+    longe.push([x, z, ru(3.2, 5.2)]); SOL.push({ x, z, hw: 0.32, hd: 0.32, top: 99 }) }
+  { const tr = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.12, 0.2, 1, 6), M(0x5a3d26), longe.length), fo = new THREE.InstancedMesh(new THREE.ConeGeometry(1, 1, 7), M(0x2f5e34), longe.length * 3);
+    longe.forEach(([x, z, h], i) => { tr.setMatrixAt(i, _mA.compose(_vA.set(x, h * 0.15, z), _qA.identity(), _sA.set(1, h * 0.3, 1)));
+      for (let k = 0; k < 3; k++) { const w = h * (0.32 - k * 0.08); fo.setMatrixAt(i * 3 + k, _mA.compose(_vA.set(x, h * (0.42 + k * 0.2), z), _qA.setFromAxisAngle(_Y, i + k), _sA.set(w, h * 0.42, w))) } });
+    sc.add(tr, fo) }
   for (const [x, z, n] of [[-12, 8, 'Pine_2'], [13, -11, 'CommonTree_2'], [-14, -12, 'Pine_1'], [5, 14, 'CommonTree_1'], [15, 9, 'Pine_3'], [-8, -15, 'CommonTree_3'], [11, -1, 'DeadTree_1'], [-15, 1, 'DeadTree_1']]) {
     arv[n].push([x, z, ru(0, 6.28), n === 'DeadTree_1' ? 0.42 : ru(0.55, 0.65)]); SOL.push({ x, z, hw: 0.3, hd: 0.3, top: 99 }) }
-  for (const n in arv) espalha(n, arv[n]);
+  for (const n in arv) espalha(n, arv[n], false);
   // pedras: obstáculos que dá pra subir (pequena pula em cima, grande escala)
   const pedras = { Rock_Medium_1: [], Rock_Medium_2: [], Rock_Medium_3: [] };
   for (const [x, z, s, n] of [[-7, 1, 1.25, 1], [-8.6, -0.6, 0.6, 2], [6, -3, 1.1, 3], [7.4, -1.2, 0.55, 1], [-2, -8, 0.8, 2], [1, -9.5, 1.45, 1], [9, 6.5, 0.9, 3], [-11, -7, 1.2, 2],
@@ -281,12 +296,12 @@ function floresta() {
   }
   for (const n in pedras) espalha(n, pedras[n]);
   // mato, flores e cogumelos (sem colisão)
-  const deco = { Bush_Common: [16, 0.7, 1.0], Bush_Common_Flowers: [10, 0.7, 1.0], Fern_1: [26, 0.6, 0.9], Grass_Common_Tall: [60, 0.45, 0.7], Grass_Wispy_Tall: [40, 0.45, 0.65],
-    Flower_3_Group: [14, 0.4, 0.55], Flower_4_Group: [14, 0.35, 0.5], Mushroom_Common: [18, 0.6, 1.0], Plant_1_Big: [10, 0.45, 0.6], Pebble_Round_2: [24, 0.8, 1.6] };
+  const deco = { Bush_Common: [16, 0.7, 1.0], Bush_Common_Flowers: [10, 0.7, 1.0], Fern_1: [22, 0.6, 0.9], Grass_Common_Tall: [34, 0.45, 0.7], Grass_Wispy_Tall: [22, 0.45, 0.65],
+    Flower_3_Group: [9, 0.4, 0.55], Flower_4_Group: [9, 0.35, 0.5], Mushroom_Common: [9, 0.6, 1.0], Plant_1_Big: [10, 0.45, 0.6], Pebble_Round_2: [24, 0.8, 1.6] };
   for (const n in deco) { const [q, s0, s1] = deco[n], l = [];
     for (let i = 0; i < q * 3 && l.length < q; i++) { const a = ru(0, 6.28), r = n === 'Bush_Common' || n === 'Fern_1' ? ru(9, 19) : ru(2, 19), x = Math.cos(a) * r, z = Math.sin(a) * r;
       if (livreDe(x, z, 2.2) && !SOL.some(s => s.top < 50 && Math.abs(x - s.x) < s.hw + 0.4 && Math.abs(z - s.z) < s.hd + 0.4)) l.push([x, z, ru(0, 6.28), ru(s0, s1)]) }
-    espalha(n, l, n.startsWith('Bush') || n === 'Plant_1_Big') }
+    espalha(n, l, false) }
   // vaga-lumes
   const N = 60, pos = new Float32Array(N * 3), base = [];
   for (let i = 0; i < N; i++) { const a = ru(0, 6.28), r = ru(3, 18); base.push([Math.cos(a) * r, ru(0.4, 2.6), Math.sin(a) * r, ru(0, 6.28)]) }
@@ -316,10 +331,13 @@ if (ESTILO.dash !== 'rapido' && ESTILO.dash !== 'voo') ESTILO.dash = 'rapido'; /
 const player = new THREE.Group(), corpo = new THREE.Group(); player.add(corpo); sc.add(player);
 let R = null, mix = null, cur = null, pedido = 0; const cache = {};
 const info = document.getElementById('info');
+function carga(txt, f) { // tela de carregando por cima de tudo até o personagem chegar
+  const c = document.getElementById('carga'); c.classList.toggle('fora', !txt); if (!txt) return; c.querySelector('b').textContent = txt; c.querySelector('i').style.width = Math.round((f || 0) * 100) + '%';
+}
 function carregar(i) {
-  const [arq, nome] = PERS[i], meu = ++pedido; info.textContent = 'carregando ' + nome + '…';
+  const [arq, nome] = PERS[i], meu = ++pedido; info.textContent = 'carregando ' + nome + '…'; carga(R ? null : 'Carregando ' + nome + '…', 0);
   persAtual = i; if (!document.getElementById('cfg').hidden) gradeMontar();
-  (cache[arq] || (cache[arq] = new Promise((ok, erro) => new THREE.GLTFLoader().load('personagens/' + arq + '.glb', ok, undefined, erro)))).then(gl => {
+  (cache[arq] || (cache[arq] = new Promise((ok, erro) => new THREE.GLTFLoader().load('personagens/' + arq + '.glb', ok, e => { if (e.total && meu === pedido && !R) carga('Carregando ' + nome + '…', e.loaded / e.total) }, erro)))).then(gl => {
     if (meu !== pedido) return;
     if (R) { corpo.remove(R.root); mix.stopAllAction() }
     if (!gl.__A) gl.__A = VRMC.prep(gl);
@@ -330,8 +348,8 @@ function carregar(i) {
     root.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(root), alt = Math.max(0.8, bb.max.y - bb.min.y);
     escala(alt / ALT_Q);
     VRMC.fix(R, RUN, WALK); // passada casada com a velocidade, igual ao Quimera
-    info.textContent = nome; P.extra = null; P.atk = null; poeEspada(); coresPrep(); coresAplica(); skillsRotulos(); if (!document.getElementById('cfg').hidden) cfgMontar();
-  }).catch(() => { if (meu === pedido) info.textContent = 'Não consegui carregar ' + nome + '. Toque de novo.'; delete cache[arq] });
+    info.textContent = nome; carga(null); prontoOk(); P.extra = null; P.atk = null; poeEspada(); coresPrep(); coresAplica(); skillsRotulos(); if (!document.getElementById('cfg').hidden) cfgMontar();
+  }).catch(() => { if (meu === pedido) { info.textContent = 'Não consegui carregar ' + nome + '. Toque de novo.'; if (!R) { carga('A internet falhou. Toque pra tentar de novo.', 0); addEventListener('pointerup', () => carregar(i), { once: true }) } } delete cache[arq] });
   try { localStorage.setItem('nga-pers', i) } catch (e) {}
 }
 const ONCE = new Set(['Esp1', 'Esp2', 'Esp3', 'Esp4', 'EspCombo', 'Sword_A', 'Sword_B', 'Sword_C', 'Sword_Dash_Full', 'Spell_Shoot', 'Hit_Knock', 'Ledge_Up', 'Ladder_Start', 'Ladder_Top', 'Wall_Climb_Run', 'Wall_Run', 'Wall_Run_Diag', 'Climb_Up', 'Slide_Start', 'Slide_Exit', 'Jump_Full_Short', 'Dodge_Forward', 'Jump_Start', 'Jump_Run', 'Land_A', 'Land_B', 'Flip_Front', 'Flip_Back', 'Roll_Quick', 'Roll_Dive', 'Roll_Sprint', 'Death_A', 'Hit_A', 'Melee_1H_Attack_Slice_Diagonal', 'Melee_2H_Attack_Spin', 'Ranged_Magic_Shoot',
@@ -975,11 +993,11 @@ function novoBicho(tipo, x, z, cor, nome) {
     barraHP(b, 0.7, 1.05);
   } else if (tipo === 'monstro') { // monstro animado do pacote Ultimate Monsters
     Object.assign(b, { hp: 1400, max: 1400, r: 0.7, alt: 1.8, vel: 1.3, veCaca: 3.4, peso: 3.2 });
-    _gl.load('monstros/' + nome + '.glb', g => {
+    PRONTO.then(() => _gl.load('monstros/' + nome + '.glb', g => {
       const c = g.scene; c.scale.setScalar(0.62 * K / 0.64); b.corpo.add(c);
       c.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; o.material = o.material.clone(); o.material.emissive = new THREE.Color(0); b.mats.push(o.material) } });
       b.mix = new THREE.AnimationMixer(c); b.acts = {}; for (const a of g.animations) b.acts[a.name] = b.mix.clipAction(a);
-    });
+    }));
     b.anima = n => { if (!b.acts || b.atual === n || !b.acts[n]) return; const a = b.acts[n], u = b.acts[b.atual]; a.reset(); const uma = n === 'Death' || n === 'HitReact' || n === 'Punch';
       a.setLoop(uma ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = uma; a.timeScale = n === 'Punch' ? 1.5 : 1; a.play(); if (u) a.crossFadeFrom(u, 0.15, false); b.atual = n };
     barraHP(b, 1.1, 2.25 * K / 0.64);
