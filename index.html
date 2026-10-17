@@ -27,7 +27,8 @@
   #acts button{position:absolute;border-radius:50%;padding:0;display:grid;place-items:center;font-weight:600;font-size:12px}
   #bJump{width:80px;height:80px;font-size:14px!important}
   #bAtk{width:70px;height:70px;font-size:13px!important;background:rgba(150,40,40,.6)!important}
-  #bDash,#bS1,#bS2,#bS3{width:54px;height:54px}
+  #bDash,#acts .sk{width:54px;height:54px}
+  #acts .sk.off{display:none}
   #bEsq{width:56px;height:56px}
   #acts button.semmana{animation:semmana .35s}
   @keyframes semmana{0%,100%{translate:0}25%{translate:-4px}75%{translate:4px}}
@@ -103,6 +104,12 @@
   <button data-hud="bS3" id="bS3" class="sk">Magia</button>
   <button data-hud="bS2" id="bS2" class="sk">Investida</button>
   <button data-hud="bS1" id="bS1" class="sk">Salto<br>giratório</button>
+  <button data-hud="bS4" id="bS4" class="sk off"></button>
+  <button data-hud="bS5" id="bS5" class="sk off"></button>
+  <button data-hud="bS6" id="bS6" class="sk off"></button>
+  <button data-hud="bS7" id="bS7" class="sk off"></button>
+  <button data-hud="bS8" id="bS8" class="sk off"></button>
+  <button data-hud="bS9" id="bS9" class="sk off"></button>
   <button data-hud="bEsq" id="bEsq">Esquiva</button>
   <button data-hud="bDash" id="bDash">Dash</button>
   <button data-hud="bAtk" id="bAtk">Atacar</button>
@@ -323,7 +330,7 @@ document.getElementById('bSlow').addEventListener('pointerdown', e => {
   const b = document.getElementById('bSlow'); b.textContent = lento === 1 ? '1x' : lento === 0.5 ? '½x' : '¼x'; b.classList.toggle('on', lento !== 1);
 });
 const botao = (id, f) => document.getElementById(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (!document.body.classList.contains('edit') && P.modo !== 'caido') f() });
-botao('bJump', pular); botao('bDash', dash); botao('bEsq', esquiva); botao('bAtk', () => atacar('combo')); botao('bS1', () => atacar(SLOT[0])); botao('bS2', () => atacar(SLOT[1])); botao('bS3', () => atacar(SLOT[2])); botao('bRun', () => { P.run = !P.run; atualRun() });
+botao('bJump', pular); botao('bDash', dash); botao('bEsq', esquiva); botao('bAtk', () => atacar('combo')); for (let i = 0; i < 9; i++) botao('bS' + (i + 1), () => atacar(SLOT[i])); botao('bRun', () => { P.run = !P.run; atualRun() });
 botao('bMenu', () => cfgAbre(!(document.getElementById('cfg').hidden)));
 document.getElementById('cfgGal').onclick = () => location.href = 'galeria.html';
 // tela cheia: entra sozinha no primeiro toque (o navegador só deixa depois de um toque) e o botão ⛶ sai e volta
@@ -349,9 +356,15 @@ const SKILLS = { giro: () => R && R.act.EspCombo ? 'Fúria' : 'Salto giratório'
   espgiro: () => 'Golpe giratório', espsalto: () => 'Salto fatal', espraio: () => 'Combo relâmpago', magchao: () => 'Explosão', magonda: () => 'Onda arcana', magcura: () => 'Cura' };
 const SKILL_REQ = { espgiro: 'EspGiro', espsalto: 'EspSalto', espraio: 'EspRaio', magchao: 'MagChao', magonda: 'MagOnda', magcura: 'MagCura' };
 const SKILL_DESC = { giro: 'gira a espada várias vezes · 30 MP', investida: 'avança cortando · 20 MP', magia: 'bola de energia · 15 MP', espgiro: 'salta girando e corta em volta · 25 MP', espsalto: 'pula e crava a espada no chão, acerta em volta · 25 MP', espraio: '3 cortes e um salto · 35 MP', magchao: 'explosão no chão em volta · 35 MP', magonda: 'onda que empurra tudo · 30 MP', magcura: 'recupera 45 de vida · 30 MP' };
-let SLOT = ['giro', 'investida', 'magia'];
-try { const sl = JSON.parse(localStorage.getItem('nga-skills')); if (Array.isArray(sl) && sl.length === 3 && sl.every(k => SKILLS[k]) && new Set(sl).size === 3) SLOT = sl } catch (e) {}
-function skillsRotulos() { SLOT.forEach((k, i) => { document.getElementById('bS' + (i + 1)).innerHTML = SKILLS[k]().replace(' ', '<br>') }) }
+let SLOT = ['giro', 'investida', 'magia'], NSK = 3; // NSK = quantos botões de skill aparecem (3 a 9)
+try { NSK = Math.max(3, Math.min(9, +localStorage.getItem('nga-nsk') || 3)) } catch (e) {}
+try { const sl = JSON.parse(localStorage.getItem('nga-skills')); if (Array.isArray(sl) && sl.length >= 3 && sl.every(k => SKILLS[k]) && new Set(sl).size === sl.length) SLOT = sl } catch (e) {}
+function slotsAjusta() { // completa (ou corta) a lista de skills pro número de botões, sem repetir
+  SLOT = SLOT.slice(0, NSK);
+  for (const k in SKILLS) { if (SLOT.length >= NSK) break; if (!SLOT.includes(k) && (!SKILL_REQ[k] || (R && R.act[SKILL_REQ[k]]))) SLOT.push(k) }
+  for (let i = 1; i <= 9; i++) document.getElementById('bS' + i).classList.toggle('off', i > SLOT.length);
+}
+function skillsRotulos() { slotsAjusta(); SLOT.forEach((k, i) => { document.getElementById('bS' + (i + 1)).innerHTML = SKILLS[k]().replace(' ', '<br>') }) }
 const el = (tag, txt, cls) => { const e = document.createElement(tag); if (txt != null) e.textContent = txt; if (cls) e.className = cls; return e };
 function cfgAbre(fechar) {
   const c = document.getElementById('cfg'); c.hidden = !!fechar; if (fechar) return;
@@ -416,6 +429,9 @@ function salvaCores() { try { localStorage.setItem('nga-cores', JSON.stringify(C
 function skillsMontar() {
   const p = document.querySelector('#cfg [data-pag="skills"]'); p.textContent = '';
   p.append(el('h3', 'Qual skill fica em cada botão'), el('p', 'Escolha a skill de cada botão. Se escolher uma que já está em outro botão, as duas trocam de lugar.', 'dica'));
+  { const lin = el('div', null, 'lin'); lin.append(el('span', 'Botões de skill'));
+    for (let n = 3; n <= 9; n++) { const b = el('button', String(n)); b.classList.toggle('on', NSK === n); b.onclick = () => { NSK = n; try { localStorage.setItem('nga-nsk', n); localStorage.setItem('nga-skills', JSON.stringify(SLOT)) } catch (e) {} skillsRotulos(); try { localStorage.setItem('nga-skills', JSON.stringify(SLOT)) } catch (e) {} skillsMontar() }; lin.append(b) }
+    p.append(lin, el('p', 'Quantos botões de skill aparecem na tela (até 9). Os novos começam numa fileira no alto à direita: use "Editar posição" pra arrumar.', 'dica')) }
   SLOT.forEach((atual, i) => {
     const lin = el('div', null, 'lin'); lin.append(el('span', 'Botão de skill ' + (i + 1)));
     for (const k in SKILLS) { if (SKILL_REQ[k] && !(R && R.act[SKILL_REQ[k]])) continue; const b = el('button', SKILLS[k]()); b.title = SKILL_DESC[k]; b.classList.toggle('on', atual === k); b.onclick = () => { const j = SLOT.indexOf(k); if (j >= 0) SLOT[j] = SLOT[i]; SLOT[i] = k; try { localStorage.setItem('nga-skills', JSON.stringify(SLOT)) } catch (e) {} skillsRotulos(); skillsMontar() }; lin.append(b) }
@@ -601,13 +617,14 @@ function caidoPasso(dt) {
 // cada item guarda o canto de referência (esquerda/direita, cima/baixo), a distância até esse canto e a escala
 const PRESET_NOME = ['Arco', 'Compacto', 'Em linha'];
 const rb = (x, y, s = 1) => ({ h: 'r', v: 'b', x, y, s });
-const BASE = { stick: { h: 'l', v: 'b', x: 28, y: 28, s: 1 }, vida: { h: 'l', v: 't', x: 12, y: 46, s: 1 } };
+const EXTRA = { bS4: { h: 'r', v: 't', x: 14, y: 58, s: 1 }, bS5: { h: 'r', v: 't', x: 78, y: 58, s: 1 }, bS6: { h: 'r', v: 't', x: 142, y: 58, s: 1 }, bS7: { h: 'r', v: 't', x: 206, y: 58, s: 1 }, bS8: { h: 'r', v: 't', x: 270, y: 58, s: 1 }, bS9: { h: 'r', v: 't', x: 334, y: 58, s: 1 } };
+const BASE = { ...EXTRA, stick: { h: 'l', v: 'b', x: 28, y: 28, s: 1 }, vida: { h: 'l', v: 't', x: 12, y: 46, s: 1 } };
 const PRESETS = [
   { ...BASE, bJump: rb(14, 16), bAtk: rb(106, 24), bDash: rb(188, 24), bEsq: rb(20, 110), bS1: rb(114, 108), bS2: rb(182, 92), bS3: rb(80, 178) },
   { ...BASE, bAtk: rb(29, 29, 1.25), bJump: rb(116, 24, 0.9), bDash: rb(103, 101), bEsq: rb(36, 128), bS1: rb(196, 80), bS2: rb(143, 163), bS3: rb(51, 201) },
   { ...BASE, bJump: rb(14, 16), bAtk: rb(104, 20), bDash: rb(186, 26), bEsq: rb(252, 25), bS1: rb(20, 112), bS2: rb(84, 112), bS3: rb(148, 112) },
 ];
-const HUD_NOME = { bJump: 'Pular', bAtk: 'Atacar', bDash: 'Dash', bEsq: 'Esquiva', bS1: 'Skill 1', bS2: 'Skill 2', bS3: 'Skill 3', stick: 'Joystick', vida: 'Vida e mana' };
+const HUD_NOME = { bJump: 'Pular', bAtk: 'Atacar', bDash: 'Dash', bEsq: 'Esquiva', bS1: 'Skill 1', bS2: 'Skill 2', bS3: 'Skill 3', bS4: 'Skill 4', bS5: 'Skill 5', bS6: 'Skill 6', bS7: 'Skill 7', bS8: 'Skill 8', bS9: 'Skill 9', stick: 'Joystick', vida: 'Vida e mana' };
 let HUD = { e: 0, L: [{}, {}, {}] };
 try { const h = JSON.parse(localStorage.getItem('nga-hud')); if (h && h.L && h.L.length === 3) HUD = h } catch (e) {}
 function hudSalva() { try { localStorage.setItem('nga-hud', JSON.stringify(HUD)) } catch (e) {} }
