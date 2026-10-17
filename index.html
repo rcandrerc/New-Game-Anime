@@ -51,7 +51,7 @@
   body.edit [data-hud].sel{outline:3px solid #7fdc68}
   #acts .sk{background:rgba(60,40,110,.6);font-size:10px!important;line-height:1.05;text-align:center}
   #acts .sk[data-cd]::after{content:attr(data-cd);position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;font-size:15px;font-weight:700}
-  #top #bSlow,#top #bRun,#top #bMenu,#top #bFull{font-size:12px;padding:6px 10px;flex:none}
+  #top #bSlow,#top #bRun,#top #bMenu,#top #bFull,#top #bSom{font-size:12px;padding:6px 10px;flex:none}
   #top #bFull{font-size:15px;padding:4px 10px}
   #top #esp{flex:1} #top #bMenu{font-size:13px;padding:6px 12px}
   #top #bGal{flex:none}
@@ -95,7 +95,7 @@
   @media (hover:hover) and (pointer:fine){ #help{opacity:.85} }
 </style></head>
 <body>
-<div id="top"><button id="bMenu" aria-label="Menu">☰ Menu</button><span id="esp"></span><button id="bSlow" aria-label="Câmera lenta">1x</button><button id="bRun">Correr</button><button id="bFull" aria-label="Tela cheia">⛶</button></div>
+<div id="top"><button id="bMenu" aria-label="Menu">☰ Menu</button><span id="esp"></span><button id="bSlow" aria-label="Câmera lenta">1x</button><button id="bRun">Correr</button><button id="bSom" aria-label="Som">🔊</button><button id="bFull" aria-label="Tela cheia">⛶</button></div>
 <div id="info">carregando…</div>
 <div id="vida" data-hud="vida"><div class="bar" id="hpB"><i></i><span>HP 100/100</span></div><div class="bar" id="mpB"><i></i><span>MP 100/100</span></div></div>
 <div id="dor"></div><div id="caiu">Você caiu…</div>
@@ -153,25 +153,31 @@ const FLIP_T = 0.56, DASH_T = 0.2, RAD = 0.32, STEP = 0.45;
 const r = new THREE.WebGLRenderer({ antialias: true }); r.setPixelRatio(Math.min(2, devicePixelRatio)); r.outputEncoding = THREE.sRGBEncoding;
 r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; document.body.prepend(r.domElement);
 const sc = new THREE.Scene(); sc.background = new THREE.Color(0x9fc7e8); sc.fog = new THREE.Fog(0x9fc7e8, 40, 95);
-sc.add(new THREE.HemisphereLight(0xeef3ff, 0x4a6a38, 0.75));
+const hemi = new THREE.HemisphereLight(0xeef3ff, 0x4a6a38, 0.75); sc.add(hemi);
 const sol = new THREE.DirectionalLight(0xfff1d6, 0.85); sol.castShadow = true; sol.shadow.mapSize.set(1024, 1024);
 Object.assign(sol.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 40 }); sol.shadow.bias = -0.0005; sc.add(sol, sol.target);
 const cam = new THREE.PerspectiveCamera(50, 1, 0.03, 140);
 function tam() { r.setSize(innerWidth, innerHeight); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix() } addEventListener('resize', tam); tam();
 
+// cenário: vila (padrão) ou floresta; vem do link (?mapa=floresta) ou da última escolha no menu
+const MAPA = (() => { const q = new URLSearchParams(location.search).get('mapa'); if (q === 'vila' || q === 'floresta') return q; try { return localStorage.getItem('nga-mapa') === 'floresta' ? 'floresta' : 'vila' } catch (e) { return 'vila' } })();
 const M = c => new THREE.MeshLambertMaterial({ color: new THREE.Color(c).convertSRGBToLinear() });
 const mat = { grama: M(0x7fb35a), terra: M(0xc9a978), pedra: M(0xb9b4ac), parede: M(0xf1e6d2), madeira: M(0x8a5a36), telhaV: M(0xc4553e),
   telhaA: M(0x4f78b8), telhaT: M(0x3f8a6a), porta: M(0x6b4226), tronco: M(0x7a5233), folha: M(0x4f9a4a), folha2: M(0x6bb04f), agua: M(0x5aa7d8), caixa: M(0xb98a52), cerca: M(0xa77b4f) };
 function malha(g, m, x, y, z, sombra = true) { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); o.castShadow = sombra; o.receiveShadow = true; sc.add(o); return o }
 
+const _m = new THREE.Matrix4(), _q0 = new THREE.Quaternion(), _s0 = new THREE.Vector3();
+// colisão: caixas no plano (x, z, meia-largura, meia-profundidade, topo). topo baixo = dá pra subir/pular em cima
+const SOL = [];
+function bloco(x, z, w, d, h, m, y0 = 0) { const o = malha(new THREE.BoxGeometry(w, h, d), m, x, y0 + h / 2, z); SOL.push({ x, z, hw: w / 2, hd: d / 2, top: y0 + h, climb: 'parede' }); return o } // tudo que é bloco dá pra escalar
+const LIM = 22; // cerca (na floresta, o anel de árvores)
+const TORRE = { x: 0, z: -15, w: 4, d: 4, h: 6 }, LAD = MAPA === 'vila' ? { x: 1.2, z: TORRE.z + TORRE.d / 2 } : { x: 999, z: 999 };
+function vila() {
 // chão e caminhos
 const chao = malha(new THREE.PlaneGeometry(80, 80), mat.grama, 0, 0, 0, false); chao.rotation.x = -Math.PI / 2;
 for (const [w, d] of [[3, 56], [56, 3]]) { const p = malha(new THREE.PlaneGeometry(w, d), mat.terra, 0, 0.01, 0, false); p.rotation.x = -Math.PI / 2 }
 const praca = malha(new THREE.CircleGeometry(5.5, 40), mat.pedra, 0, 0.015, 0, false); praca.rotation.x = -Math.PI / 2;
 
-// colisão: caixas no plano (x, z, meia-largura, meia-profundidade, topo). topo baixo = dá pra subir/pular em cima
-const SOL = [];
-function bloco(x, z, w, d, h, m, y0 = 0) { const o = malha(new THREE.BoxGeometry(w, h, d), m, x, y0 + h / 2, z); SOL.push({ x, z, hw: w / 2, hd: d / 2, top: y0 + h, climb: 'parede' }); return o } // tudo que é bloco dá pra escalar
 
 // casinhas
 function casa(x, z, w, d, rot, telha) {
@@ -198,7 +204,6 @@ bloco(-8.6, 5, 1.8, 2.6, 1.4, mat.madeira);
 bloco(4.5, -5.5, 3, 0.4, 0.5, mat.madeira); // banco
 
 // torre pra escalar (paredes escaláveis, topo plano), escada de mão na frente e muro pra correr na parede
-const TORRE = { x: 0, z: -15, w: 4, d: 4, h: 6 }, LAD = { x: 1.2, z: TORRE.z + TORRE.d / 2 };
 { const o = malha(new THREE.BoxGeometry(TORRE.w, TORRE.h, TORRE.d), mat.pedra, TORRE.x, TORRE.h / 2, TORRE.z);
   SOL.push({ x: TORRE.x, z: TORRE.z, hw: TORRE.w / 2, hd: TORRE.d / 2, top: TORRE.h, climb: 'parede' });
   for (let i = 1; i < 6; i++) malha(new THREE.BoxGeometry(TORRE.w + 0.04, 0.06, TORRE.d + 0.04), mat.madeira, TORRE.x, i, TORRE.z, false); // faixas pra dar noção de altura
@@ -220,7 +225,6 @@ for (const p of [[-15, -14], [15, -15], [-15, 15], [16, 15], [-5, -16], [5, 15],
 const tronco = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.22, 0.3, 1.6, 7), mat.tronco, posArv.length);
 const copa = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1.4, 0), mat.folha, posArv.length);
 const copa2 = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1.0, 0), mat.folha2, posArv.length);
-const _m = new THREE.Matrix4(), _q0 = new THREE.Quaternion(), _s0 = new THREE.Vector3();
 posArv.forEach(([x, z], i) => {
   const k = 0.85 + ((i * 37) % 10) / 25; _s0.set(k, k, k);
   tronco.setMatrixAt(i, _m.compose(new THREE.Vector3(x, 0.8 * k, z), _q0, _s0));
@@ -229,13 +233,71 @@ posArv.forEach(([x, z], i) => {
   SOL.push({ x, z, hw: 0.3, hd: 0.3, top: 99 });
 });
 for (const o of [tronco, copa, copa2]) { o.castShadow = o.receiveShadow = true; sc.add(o) }
-const LIM = 22; // cerca
 for (const [x, z, w, d] of [[0, -LIM, LIM * 2, 0.15], [0, LIM, LIM * 2, 0.15], [-LIM, 0, 0.15, LIM * 2], [LIM, 0, 0.15, LIM * 2]]) {
   malha(new THREE.BoxGeometry(w, 0.12, d), mat.cerca, x, 0.75, z); malha(new THREE.BoxGeometry(w, 0.12, d), mat.cerca, x, 0.4, z);
 }
 const postes = new THREE.InstancedMesh(new THREE.BoxGeometry(0.16, 1, 0.16), mat.cerca, 88); let np = 0;
 for (let i = -LIM; i <= LIM; i += 2) for (const [x, z] of [[i, -LIM], [i, LIM], [-LIM, i], [LIM, i]]) if (np < 88) postes.setMatrixAt(np++, _m.makeTranslation(x, 0.5, z));
 postes.count = np; postes.castShadow = true; sc.add(postes);
+
+}
+// ---------------- cenário: floresta (Quaternius Stylized Nature, CC0) ----------------
+// clareira no fim da tarde: pinheiros e árvores em volta, pedras pra escalar no meio, mato, flores, cogumelos e vaga-lumes
+const _gl = new THREE.GLTFLoader(), _mA = new THREE.Matrix4(), _vA = new THREE.Vector3(), _qA = new THREE.Quaternion(), _sA = new THREE.Vector3(), _Y = new THREE.Vector3(0, 1, 0);
+function espalha(nome, lista, sombra = true) { // várias cópias de um modelo numa malha instanciada só; lista de [x, z, giro, escala]
+  if (!lista.length) return;
+  _gl.load('cenario/' + nome + '.glb', g => {
+    g.scene.updateMatrixWorld(true); const ms = []; g.scene.traverse(o => { if (o.isMesh) ms.push(o) });
+    for (const m of ms) {
+      const im = new THREE.InstancedMesh(m.geometry, m.material, lista.length);
+      lista.forEach(([x, z, rot, s], i) => { _mA.compose(_vA.set(x, 0, z), _qA.setFromAxisAngle(_Y, rot), _sA.set(s, s, s)).multiply(m.matrixWorld); im.setMatrixAt(i, _mA) });
+      im.castShadow = sombra; im.receiveShadow = true; sc.add(im);
+    }
+  });
+}
+let vagalumes = null;
+function floresta() {
+  sc.background.set(0xf2c597); sc.fog.color.set(0xe6b88e); sc.fog.near = 14; sc.fog.far = 52;
+  hemi.color.set(0xffe2c0); hemi.groundColor.set(0x3d5a2a); hemi.intensity = 0.7; sol.color.set(0xffc48a); sol.intensity = 0.95;
+  const chao = malha(new THREE.PlaneGeometry(90, 90), M(0x6a9446), 0, 0, 0, false); chao.rotation.x = -Math.PI / 2;
+  // manchas de grama escura e uma trilha de terra até o meio
+  let sd = 7; const rd = () => { sd = (sd * 16807) % 2147483647; return (sd - 1) / 2147483646 }, ru = (a, b) => a + rd() * (b - a);
+  for (let i = 0; i < 14; i++) { const p = malha(new THREE.CircleGeometry(ru(2, 4.5), 20), M(i % 3 ? 0x5c8a3c : 0x7a9a4a), ru(-18, 18), 0.005 + i * 0.0003, ru(-18, 18), false); p.rotation.x = -Math.PI / 2 }
+  for (let i = 0; i < 9; i++) { const p = malha(new THREE.CircleGeometry(1.6, 18), M(0xa8875c), -3 + Math.sin(i * 0.7) * 1.5, 0.009, 13 - i * 2.4, false); p.rotation.x = -Math.PI / 2; p.scale.set(1, 1.5, 1) }
+  const livreDe = (x, z, d) => Math.hypot(x + 3.2, z - 10) > d && Math.hypot(x + 3.2, z - 8.5) > d; // longe do começo e do boneco
+  // árvores: anel fechado em volta (é a "parede" da arena) e algumas soltas dentro
+  const arv = { Pine_1: [], Pine_2: [], Pine_3: [], CommonTree_1: [], CommonTree_2: [], CommonTree_3: [], DeadTree_1: [] }, nomes = Object.keys(arv).slice(0, 6);
+  for (let i = 0; i < 64; i++) { const a = i / 64 * Math.PI * 2 + ru(-0.03, 0.03), r = 19.5 + (i % 3) * 1.6 + ru(-0.6, 0.6), x = Math.cos(a) * r, z = Math.sin(a) * r;
+    arv[nomes[i % 6]].push([x, z, ru(0, 6.28), ru(0.5, 0.68)]); SOL.push({ x, z, hw: 0.32, hd: 0.32, top: 99 }) }
+  for (const [x, z, n] of [[-12, 8, 'Pine_2'], [13, -11, 'CommonTree_2'], [-14, -12, 'Pine_1'], [5, 14, 'CommonTree_1'], [15, 9, 'Pine_3'], [-8, -15, 'CommonTree_3'], [11, -1, 'DeadTree_1'], [-15, 1, 'DeadTree_1']]) {
+    arv[n].push([x, z, ru(0, 6.28), n === 'DeadTree_1' ? 0.42 : ru(0.55, 0.65)]); SOL.push({ x, z, hw: 0.3, hd: 0.3, top: 99 }) }
+  for (const n in arv) espalha(n, arv[n]);
+  // pedras: obstáculos que dá pra subir (pequena pula em cima, grande escala)
+  const pedras = { Rock_Medium_1: [], Rock_Medium_2: [], Rock_Medium_3: [] };
+  for (const [x, z, s, n] of [[-7, 1, 1.25, 1], [-8.6, -0.6, 0.6, 2], [6, -3, 1.1, 3], [7.4, -1.2, 0.55, 1], [-2, -8, 0.8, 2], [1, -9.5, 1.45, 1], [9, 6.5, 0.9, 3], [-11, -7, 1.2, 2],
+    [3, 3, 0.45, 1], [-5, -4, 0.5, 3], [13, -6, 1.3, 1], [-13, 12, 1.0, 3], [0, 15.5, 0.7, 2], [15, 2, 0.6, 2]]) {
+    pedras['Rock_Medium_' + n].push([x, z, Math.round(ru(0, 3)) * Math.PI / 2, s]);
+    SOL.push({ x, z, hw: 1.2 * s, hd: 1.0 * s, top: 1.85 * s, climb: 'parede' });
+  }
+  for (const n in pedras) espalha(n, pedras[n]);
+  // mato, flores e cogumelos (sem colisão)
+  const deco = { Bush_Common: [16, 0.7, 1.0], Bush_Common_Flowers: [10, 0.7, 1.0], Fern_1: [26, 0.6, 0.9], Grass_Common_Tall: [60, 0.45, 0.7], Grass_Wispy_Tall: [40, 0.45, 0.65],
+    Flower_3_Group: [14, 0.4, 0.55], Flower_4_Group: [14, 0.35, 0.5], Mushroom_Common: [18, 0.6, 1.0], Plant_1_Big: [10, 0.45, 0.6], Pebble_Round_2: [24, 0.8, 1.6] };
+  for (const n in deco) { const [q, s0, s1] = deco[n], l = [];
+    for (let i = 0; i < q * 3 && l.length < q; i++) { const a = ru(0, 6.28), r = n === 'Bush_Common' || n === 'Fern_1' ? ru(9, 19) : ru(2, 19), x = Math.cos(a) * r, z = Math.sin(a) * r;
+      if (livreDe(x, z, 2.2) && !SOL.some(s => s.top < 50 && Math.abs(x - s.x) < s.hw + 0.4 && Math.abs(z - s.z) < s.hd + 0.4)) l.push([x, z, ru(0, 6.28), ru(s0, s1)]) }
+    espalha(n, l, n.startsWith('Bush') || n === 'Plant_1_Big') }
+  // vaga-lumes
+  const N = 60, pos = new Float32Array(N * 3), base = [];
+  for (let i = 0; i < N; i++) { const a = ru(0, 6.28), r = ru(3, 18); base.push([Math.cos(a) * r, ru(0.4, 2.6), Math.sin(a) * r, ru(0, 6.28)]) }
+  const c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d'), gr = x.createRadialGradient(16, 16, 0, 16, 16, 16);
+  gr.addColorStop(0, '#fff'); gr.addColorStop(0.3, 'rgba(255,240,150,.8)'); gr.addColorStop(1, 'rgba(255,220,100,0)'); x.fillStyle = gr; x.fillRect(0, 0, 32, 32);
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.22, map: new THREE.CanvasTexture(c), color: 0xfff0a0, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  pts.frustumCulled = false; sc.add(pts); let t = 0;
+  vagalumes = dt => { t += dt; base.forEach(([bx, by, bz, f], i) => { pos[i * 3] = bx + Math.sin(t * 0.4 + f) * 1.2; pos[i * 3 + 1] = by + Math.sin(t * 0.9 + f * 2) * 0.35; pos[i * 3 + 2] = bz + Math.cos(t * 0.3 + f) * 1.2 }); geo.attributes.position.needsUpdate = true; pts.material.opacity = 0.6 + Math.sin(t * 3) * 0.3 };
+}
+if (MAPA === 'vila') vila(); else floresta();
 
 // ---------------- personagem ----------------
 const P = { x: -3.2, z: 11, y: 0, vy: 0, face: Math.PI, sp: 0, chao: true, pulos: 0, flip: 0, dash: 0, dashX: 0, ddx: 0, ddz: 0, run: true, extra: null, extraT: 0,
@@ -345,9 +407,43 @@ function telaCheia(on) {
   } catch (e) {}
 }
 addEventListener('pointerup', () => telaCheia(true), { once: true, capture: true });
+// ---------------- sons (Kenney, CC0) ----------------
+// o navegador só deixa tocar som depois do primeiro toque; aí carrega tudo e liga
+const SOM = { ctx: null, buf: {}, mudo: false, vol: null };
+try { SOM.mudo = localStorage.getItem('nga-mudo') === '1' } catch (e) {}
+const SONS = { corte: ['corte1', 'corte2', 'corte3'], saca: ['saca'], pulo: ['pulo1', 'pulo2'], passo: ['passo0', 'passo1', 'passo2', 'passo3', 'passo4'],
+  acerto: ['acerto1', 'acerto2', 'acerto3'], critico: ['critico1', 'critico2'], boneco: ['boneco1', 'boneco2'], aterrissa: ['aterrissa'], queda: ['queda'],
+  circulo: ['circulo'], explosao: ['explosao'], gelo: ['gelo1', 'gelo2'], dor: ['dor'], lute: ['voz_lute'], venceu: ['voz_venceu'], perfeito: ['voz_perfeito'], fim: ['voz_fim'], vitoria: ['jingle_vitoria'] };
+function somLiga() {
+  if (SOM.ctx) return; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+  SOM.ctx = new AC(); SOM.vol = SOM.ctx.createGain(); SOM.vol.gain.value = SOM.mudo ? 0 : 0.8; SOM.vol.connect(SOM.ctx.destination);
+  for (const lista of Object.values(SONS)) for (const n of lista) fetch('sons/' + n + '.ogg').then(r => r.arrayBuffer()).then(a => SOM.ctx.decodeAudioData(a, b => SOM.buf[n] = b)).catch(() => {});
+  // ruído pra fazer o "vush" do fogo e do dash
+  const n = SOM.ctx.sampleRate, b = SOM.ctx.createBuffer(1, n, n), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; SOM.ruido = b;
+}
+addEventListener('pointerup', somLiga, { capture: true }); addEventListener('keydown', somLiga, { capture: true });
+function som(nome, vol = 1, vel = 1) { // toca um dos sons da lista (sorteado), com volume e velocidade (mais lento = mais grave)
+  if (!SOM.ctx || SOM.mudo) return; const lista = SONS[nome], b = lista && SOM.buf[lista[Math.random() * lista.length | 0]]; if (!b) return;
+  const s = SOM.ctx.createBufferSource(), g = SOM.ctx.createGain(); s.buffer = b; s.playbackRate.value = vel * (0.94 + Math.random() * 0.12); g.gain.value = vol;
+  s.connect(g); g.connect(SOM.vol); s.start();
+}
+function vush(dur = 0.35, f0 = 300, f1 = 2200, vol = 0.5) { // sopro de fogo / arrancada: ruído passando por um filtro que varre
+  if (!SOM.ctx || SOM.mudo || !SOM.ruido) return; const c = SOM.ctx, t = c.currentTime, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  s.buffer = SOM.ruido; s.loop = true; f.type = 'bandpass'; f.Q.value = 1.2; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + dur * 0.25); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f); f.connect(g); g.connect(SOM.vol); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.05);
+}
+function estrondo(vol = 0.8) { // explosão grave
+  if (!SOM.ctx || SOM.mudo || !SOM.ruido) return; const c = SOM.ctx, t = c.currentTime, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  s.buffer = SOM.ruido; s.loop = true; f.type = 'lowpass'; f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(60, t + 0.9);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.0); s.connect(f); f.connect(g); g.connect(SOM.vol); s.start(t); s.stop(t + 1.05);
+}
 const bFull = document.getElementById('bFull');
 bFull.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation() });
 bFull.addEventListener('click', e => { e.stopPropagation(); telaCheia(!emTelaCheia()) });
+{ const b = document.getElementById('bSom'), mostra = () => b.textContent = SOM.mudo ? '🔇' : '🔊'; mostra();
+  b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation() });
+  b.addEventListener('click', e => { e.stopPropagation(); somLiga(); SOM.mudo = !SOM.mudo; if (SOM.vol) SOM.vol.gain.value = SOM.mudo ? 0 : 0.8; try { localStorage.setItem('nga-mudo', SOM.mudo ? '1' : '0') } catch (e) {} mostra() }) }
 for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(ev, () => bFull.classList.toggle('on', emTelaCheia()));
 function atualRun() { document.getElementById('bRun').classList.toggle('on', P.run) } atualRun();
 // ---------------- menu de configurações ----------------
@@ -446,7 +542,11 @@ function skillsMontar() {
   const ed = el('button', '✥ Editar posição e tamanho dos botões'); ed.className = 'on'; ed.onclick = () => { cfgAbre(true); hudEditar(true) }; p.append(ed);
 }
 function movMontar() {
-  const p = document.querySelector('#cfg [data-pag="mov"]'); p.textContent = ''; p.append(el('h3', 'Jeito de cada movimento'));
+  const p = document.querySelector('#cfg [data-pag="mov"]'); p.textContent = '';
+  p.append(el('h3', 'Cenário')); { const lin = el('div', null, 'lin'); lin.append(el('span', 'Mapa'));
+    for (const [v, nome] of [['vila', 'Vila de treino'], ['floresta', 'Floresta (monstros)']]) { const b = el('button', nome); b.classList.toggle('on', MAPA === v);
+      b.onclick = () => { try { localStorage.setItem('nga-mapa', v) } catch (e) {} location.href = location.pathname + '?mapa=' + v }; lin.append(b) } p.append(lin) }
+  p.append(el('h3', 'Jeito de cada movimento'));
   for (const [k, titulo] of [['pulo', 'Pulo'], ['duplo', 'Pulo duplo'], ['dash', 'Dash'], ['esq', 'Esquiva']]) {
     const lin = el('div', null, 'lin'); lin.append(el('span', titulo));
     for (const [v, nome] of OPC[k]) {
@@ -465,9 +565,9 @@ function animMontar() {
 
 function pular() {
   if (!R) return; if (soltar()) return; if (P.modo !== 'normal' || P.dash > 0 || P.climb > 0) return; P.extra = null;
-  if (P.chao) { P.vy = JUMPV; P.chao = false; P.pulos = 1; P.jt = 0; P.land = 0 }
+  if (P.chao) { P.vy = JUMPV; P.chao = false; P.pulos = 1; P.jt = 0; P.land = 0; som('pulo', 0.5) }
   else if (P.pulos < 2) {
-    P.vy = Math.max(P.vy, JUMPV * 0.9); P.pulos = 2; P.flip = 0.001;
+    P.vy = Math.max(P.vy, JUMPV * 0.9); P.pulos = 2; P.flip = 0.001; vush(0.35, 500, 1500, 0.3);
     P.flipT = ESTILO.duplo !== 'classico' && R.act[ESTILO.duplo] ? R.act[ESTILO.duplo].getClip().duration : FLIP_T;
   }
 }
@@ -475,14 +575,14 @@ function dash() { // arrancada rápida reta, sem rolar, com rastro
   if (!R || P.modo !== 'normal' || P.dash > 0 || P.dashCd > 0 || P.climb > 0) return; P.extra = null; P.flip = 0; P.land = 0;
   P.ddx = Math.sin(P.face); P.ddz = Math.cos(P.face); P.tipo = ESTILO.dash;
   if (P.tipo === 'voo') { P.dashT = DASH_T; P.dashV = DASH_V } else { P.dashT = 0.28; P.dashV = 14 * K }
-  P.dash = P.dashT; P.dashCd = 0.35; if (!P.chao) P.vy = Math.max(0, P.vy); rastroLiga();
+  P.dash = P.dashT; P.dashCd = 0.35; if (!P.chao) P.vy = Math.max(0, P.vy); rastroLiga(); vush(0.3, 600, 3000, 0.5);
 }
 function esquiva() { // rolamento / mergulho / deslizar
   if (!R || P.modo !== 'normal' || P.dash > 0 || P.dashCd > 0 || P.climb > 0) return; P.extra = null; P.flip = 0; P.land = 0;
   P.ddx = Math.sin(P.face); P.ddz = Math.cos(P.face); P.tipo = ESTILO.esq;
   const clip = P.tipo === 'Slide' ? null : R.act[P.tipo] && R.act[P.tipo].getClip();
   P.dashT = clip ? clip.duration : 1.0; P.dashV = DASH_DIST[P.tipo] * K / P.dashT;
-  P.dash = P.dashT; P.dashCd = 0.3; if (!P.chao) P.vy = Math.max(0, P.vy);
+  P.dash = P.dashT; P.dashCd = 0.3; if (!P.chao) P.vy = Math.max(0, P.vy); som('pulo', 0.5, 0.8); setTimeout(() => som('aterrissa', 0.5), 250);
 }
 
 // rastro do dash: faixa azul-clara suave (forte no meio do corpo, some em cima, embaixo e no fim)
@@ -564,14 +664,14 @@ const auraMat = new THREE.MeshBasicMaterial({ color: 0xff7a1a, transparent: true
 function orbe() {
   const o = new THREE.Mesh(orbeGeo, orbeMat), a = new THREE.Mesh(orbeGeo, auraMat); a.scale.setScalar(2); o.add(a); o.scale.setScalar(1.6);
   const fx = Math.sin(P.face), fz = Math.cos(P.face); o.position.set(P.x + fx * 0.5, P.y + 1.15 * K / 0.68, P.z + fz * 0.5); sc.add(o);
-  ORBES.push({ o, vx: fx * 13, vz: fz * 13, t: 0 });
+  ORBES.push({ o, vx: fx * 13, vz: fz * 13, t: 0 }); vush(0.5, 400, 2500, 0.55);
 }
 function orbesPasso(dt) {
   for (let i = ORBES.length - 1; i >= 0; i--) {
     const b = ORBES[i]; b.t += dt; b.o.position.x += b.vx * dt; b.o.position.z += b.vz * dt; b.o.children[0].scale.setScalar(2 + Math.sin(b.t * 30) * 0.3);
     { const o = b.o.position, H = 2.42 * K; part(FOGO, o.x, o.y, o.z, 0, 0, 0, 0.08, 0.75 * H, 0.5 * H, 0xfff2b0, 0xff7a1a, 0.9); for (let k = 0; k < 3; k++) part(FUMA, o.x + rnd(-0.1, 0.1), o.y + rnd(-0.1, 0.1), o.z + rnd(-0.1, 0.1), -b.vx * 0.05 + rnd(-0.5, 0.5), rnd(0.2, 1.2), -b.vz * 0.05 + rnd(-0.5, 0.5), rnd(0.25, 0.4), 0.42 * H, 0.08 * H, 0xff9a1a, 0x5a0d02, 0.85, 1.5, 0.5); for (let k = 0; k < 3; k++) part(FOGO, o.x + rnd(-0.08, 0.08), o.y + rnd(-0.08, 0.08), o.z + rnd(-0.08, 0.08), -b.vx * 0.08 + rnd(-0.4, 0.4), rnd(0, 0.8), -b.vz * 0.08 + rnd(-0.4, 0.4), rnd(0.25, 0.45), 0.3 * H, 0.04 * H, 0xffd27a, 0xff3a0a, 0.9, 1.5, 0.5); if (Math.random() < 0.3) part(FUMA, o.x, o.y, o.z, 0, 0.4, 0, 0.8, 0.15 * H, 0.45 * H, 0x6a6470, 0x4a4650, 0.35, 0.3, 1) }
     const alvo = alvos().find(a => Math.hypot(b.o.position.x - a.x, b.o.position.z - a.z) < 0.25 + a.r), bate = !!alvo;
-    if (bate) { acerta(alvo, 150 + Math.random() * 60 | 0, Math.random() < 0.3, b.vx, b.vz, 0xffb35a); const o = b.o.position, H = 2.42 * K; fxSurto(o.x, o.y, o.z, 30, 0xfff2b0, 0xff5a12, 7); part(FOGO, o.x, o.y, o.z, 0, 0, 0, 0.3, 0.6 * H, 1.4 * H, 0xffffff, 0xff7a1a, 0.9); fumacaChao(o.x, Math.max(0, o.y - 0.7 * H), o.z, 0.5 * H, 10, 0x77707e); luzFlash = Math.max(luzFlash, 0.6) }
+    if (bate) { acerta(alvo, 150 + Math.random() * 60 | 0, Math.random() < 0.3, b.vx, b.vz, 0xffb35a); const o = b.o.position, H = 2.42 * K; fxSurto(o.x, o.y, o.z, 30, 0xfff2b0, 0xff5a12, 7); part(FOGO, o.x, o.y, o.z, 0, 0, 0, 0.3, 0.6 * H, 1.4 * H, 0xffffff, 0xff7a1a, 0.9); fumacaChao(o.x, Math.max(0, o.y - 0.7 * H), o.z, 0.5 * H, 10, 0x77707e); luzFlash = Math.max(luzFlash, 0.6); estrondo(0.45) }
     if (bate || b.t > 1.5) { sc.remove(b.o); ORBES.splice(i, 1) }
   }
 }
@@ -677,7 +777,7 @@ function fxConjura(tipo) { // começo da magia: círculo no chão, coluna de luz
   for (let i = 0; i < 36; i++) { const a = i / 36 * 6.283; labareda(P.x + Math.cos(a) * FXC.r * 0.9, P.y + 0.05, P.z + Math.sin(a) * FXC.r * 0.9, cb, cc, 1.6) }
   for (let i = 0; i < 24; i++) { const a = Math.random() * 6.283, d = FXC.r * Math.sqrt(Math.random()) * 0.8; labareda(P.x + Math.cos(a) * d, P.y + 0.05, P.z + Math.sin(a) * d, cb, cc, 1.2) }
   fxSurto(P.x, P.y + 0.1, P.z, 40, cb, cc, 7); luzFlash = Math.max(luzFlash, 0.9); tremor = Math.max(tremor, 0.1);
-  poeira(P.x, P.y, P.z, FXC.r, 40);
+  poeira(P.x, P.y, P.z, FXC.r, 40); som('circulo', 0.45, ehMagia(tipo) ? 0.7 : 0.55); vush(0.6, 200, 1800, 0.4); setTimeout(() => som('gelo', 0.25, 1.4), 250);
 }
 // poeira que sobe do círculo: brasinhas de fogo e cristais azuis de gelo
 function poeira(x, y, z, r, n) {
@@ -689,7 +789,7 @@ function poeira(x, y, z, r, n) {
 }
 function fxArea(x, y, z, r, tipo) { // magia de área explodindo: círculo gigante, fogo, fumaça, clarão
   const [cb, cc] = FXCOR[tipo] || FXCOR.magchao, H = 2.42 * K;
-  FXA.t = 0; FXA.r = r; FXA.m.position.set(x, y + 0.06, z); FXA.m.material.color.set(cc); FXA.m.visible = true; luzFlash = 1; luzMagia.color.set(cc);
+  som('explosao', 0.7, 0.55); estrondo(tipo === 'magchao' ? 0.9 : 0.5); FXA.t = 0; FXA.r = r; FXA.m.position.set(x, y + 0.06, z); FXA.m.material.color.set(cc); FXA.m.visible = true; luzFlash = 1; luzMagia.color.set(cc);
   const nf = tipo === 'magchao' ? 70 : 40;
   for (let i = 0; i < nf; i++) { const a = Math.random() * 6.283, d = r * Math.sqrt(Math.random()); labareda(x + Math.cos(a) * d, y + 0.05, z + Math.sin(a) * d, cb, cc, tipo === 'magchao' ? 1.7 : 1.1) }
   if (tipo === 'magonda') for (let i = 0; i < 60; i++) { const a = i / 60 * 6.283, v = r * 2.6; part(FOGO, x + Math.cos(a) * 0.4, y + 0.3 * H, z + Math.sin(a) * 0.4, Math.cos(a) * v, 0, Math.sin(a) * v, 0.45, 0.35 * H, 0.15 * H, cb, cc, 1, 0, 1.2) }
@@ -697,7 +797,7 @@ function fxArea(x, y, z, r, tipo) { // magia de área explodindo: círculo gigan
   part(FOGO, x, y + 0.5 * H, z, 0, 0, 0, 0.3, r * 0.7, r * 1.4, 0xffffff, cc, 0.6); // clarão
 }
 function fxCura(x, y, z) { // espiral verde subindo e cruzinhas de luz
-  const [cb, cc] = FXCOR.magcura, H = 2.42 * K; luzFlash = 0.8; luzMagia.color.set(cc);
+  som('circulo', 0.4, 1.3); som('gelo', 0.3, 1.1); const [cb, cc] = FXCOR.magcura, H = 2.42 * K; luzFlash = 0.8; luzMagia.color.set(cc);
   for (let i = 0; i < 46; i++) { const a = i * 0.55, d = 0.45 * H; part(FOGO, x + Math.cos(a) * d, y + i * 0.018 * H, z + Math.sin(a) * d, -Math.sin(a) * 0.6, rnd(1.4, 2.4) * K, Math.cos(a) * 0.6, rnd(0.9, 1.4), 0.16 * H, 0.04 * H, cb, cc, 1, 0.4, 0.4) }
   part(FOGO, x, y + 0.5 * H, z, 0, 0, 0, 0.5, 0.6 * H, 1.6 * H, 0xffffff, cc, 0.7);
 }
@@ -730,6 +830,7 @@ function fxPasso(dt) {
   lotePasso(FOGO, dt); lotePasso(FUMA, dt);
 }
 function acerta(alvo, v, crit, dx, dz, cor) { // um alvo (boneco ou bicho) recebe o golpe
+  som(alvo === BON ? 'boneco' : crit ? 'critico' : 'acerto', crit ? 0.9 : 0.7, alvo.tipo === 'monstro' ? 0.8 : 1);
   pausa = crit ? 0.09 : 0.055; tremor = crit ? 0.16 : 0.09;
   if (alvo !== BON) { alvo.leva(v, crit, dx, dz); dano(v, crit, alvo.x, alvo.alt + 0.4, alvo.z); faiscas(alvo.x, alvo.alt * 0.6, alvo.z, crit ? 18 : 10, cor || alvo.cor); return }
   const l = Math.hypot(dx, dz) || 1; BON.vx += dz / l * (crit ? 5 : 3.2); BON.vz -= dx / l * (crit ? 5 : 3.2); BON.flash = 1;
@@ -743,7 +844,7 @@ Object.assign(P, { hp: 100, hpMax: 100, mp: 100, mpMax: 100, mpT: 9, hpT: 9 });
 const hpB = document.querySelector('#hpB i'), hpT = document.querySelector('#hpB span'), mpB = document.querySelector('#mpB i'), mpTx = document.querySelector('#mpB span'), dorEl = document.getElementById('dor');
 let hudV = '';
 function levaDano(v) {
-  if (P.modo !== 'normal') return; P.hp = Math.max(0, P.hp - v); P.hpT = 0;
+  if (P.modo !== 'normal') return; P.hp = Math.max(0, P.hp - v); P.hpT = 0; som('dor', 0.6); RODADA.levou = true; if (P.hp <= 0) som('fim', 0.8);
   dorEl.style.transition = 'none'; dorEl.style.opacity = 1; void dorEl.offsetWidth; dorEl.style.transition = ''; dorEl.style.opacity = 0;
   dano(v, false, P.x, P.y + 2 * K / 0.68, P.z);
   if (P.hp <= 0) { // caiu: anima a queda e volta no começo
@@ -833,7 +934,7 @@ function barraHP(b, w, h) {
   f.scale.set(w + 0.04, 0.11, 1); v.scale.set(w, 0.07, 1); v.position.z = 0.001; f.renderOrder = 10; v.renderOrder = 11; g.add(f, v); g.position.y = h; g.visible = false;
   b.g.add(g); b.barra = g; b.barraV = v; b.barraW = w;
 }
-function novoBicho(tipo, x, z, cor) {
+function novoBicho(tipo, x, z, cor, nome) {
   const b = { tipo, casa: [x, z], x, z, y: 0, vy: 0, face: Math.random() * 6.28, g: new THREE.Group(), corpo: new THREE.Group(), vivo: true, est: 'anda', t: Math.random() * 2,
     kx: 0, kz: 0, flash: 0, morto: 0, mats: [], cor, alvoX: x, alvoZ: z, fase: 0, atkT: 0, cd: 0 };
   b.g.add(b.corpo); sc.add(b.g);
@@ -846,6 +947,16 @@ function novoBicho(tipo, x, z, cor) {
     add(new THREE.SphereGeometry(0.025, 6, 4), brilhoMat, -0.13, 0.51, 0.42, b.corpo, false); add(new THREE.SphereGeometry(0.025, 6, 4), brilhoMat, 0.17, 0.51, 0.42, b.corpo, false);
     add(new THREE.SphereGeometry(0.08, 8, 6), brilhoMat, -0.18, 0.62, 0.18, b.corpo, false).scale.set(1, 0.6, 1);
     barraHP(b, 0.7, 1.05);
+  } else if (tipo === 'monstro') { // monstro animado do pacote Ultimate Monsters
+    Object.assign(b, { hp: 1400, max: 1400, r: 0.7, alt: 1.8, vel: 1.3, veCaca: 3.4, peso: 3.2 });
+    _gl.load('monstros/' + nome + '.glb', g => {
+      const c = g.scene; c.scale.setScalar(0.62 * K / 0.64); b.corpo.add(c);
+      c.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; o.material = o.material.clone(); o.material.emissive = new THREE.Color(0); b.mats.push(o.material) } });
+      b.mix = new THREE.AnimationMixer(c); b.acts = {}; for (const a of g.animations) b.acts[a.name] = b.mix.clipAction(a);
+    });
+    b.anima = n => { if (!b.acts || b.atual === n || !b.acts[n]) return; const a = b.acts[n], u = b.acts[b.atual]; a.reset(); const uma = n === 'Death' || n === 'HitReact' || n === 'Punch';
+      a.setLoop(uma ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = uma; a.timeScale = n === 'Punch' ? 1.5 : 1; a.play(); if (u) a.crossFadeFrom(u, 0.15, false); b.atual = n };
+    barraHP(b, 1.1, 2.25 * K / 0.64);
   } else { // lobo
     Object.assign(b, { hp: 800, max: 800, r: 0.55, alt: 0.95, vel: 1.6, veCaca: 4.6, peso: 2.4 });
     const pelo = M(cor), claro = M(0xd9d4cc), esc = M(0x2b2b30); pelo.emissive = new THREE.Color(0); claro.emissive = new THREE.Color(0); b.mats.push(pelo, claro);
@@ -872,8 +983,18 @@ function novoBicho(tipo, x, z, cor) {
   };
   b.g.position.set(x, 0, z); BICHOS.push(b); return b;
 }
-for (const [x, z, c] of [[-2, 17, 0x6fd16a], [0.5, 18.5, 0x6fb8ff], [-4.5, 18.5, 0xff8fc8], [15, 8, 0x6fd16a], [17, 11, 0xffc65a], [14, 12, 0x6fb8ff]]) novoBicho('slime', x, z, c);
-for (const [x, z, c] of [[-15, -7, 0x8b8f99], [-16.5, -4.5, 0x6d5a4a]]) novoBicho('lobo', x, z, c);
+if (MAPA === 'vila') {
+  for (const [x, z, c] of [[-2, 17, 0x6fd16a], [0.5, 18.5, 0x6fb8ff], [-4.5, 18.5, 0xff8fc8], [15, 8, 0x6fd16a], [17, 11, 0xffc65a], [14, 12, 0x6fb8ff]]) novoBicho('slime', x, z, c);
+  for (const [x, z, c] of [[-15, -7, 0x8b8f99], [-16.5, -4.5, 0x6d5a4a]]) novoBicho('lobo', x, z, c);
+} else for (const [x, z, c, n] of [[-5, -1, 0x7fd36a, 'Orc'], [5, -6, 0xff5a4a, 'Demon'], [-4, -13, 0xbfe6ff, 'Yeti'], [10, 2, 0xd98cff, 'MushroomKing']]) novoBicho('monstro', x, z, c, n);
+// rodada na floresta: grito de "lute" quando um monstro vem atrás, e de vitória quando todos caem
+const RODADA = { lutou: false, fim: false, levou: false };
+function rodadaPasso() {
+  if (MAPA !== 'floresta') return; const vivos = BICHOS.filter(b => b.vivo).length;
+  if (!RODADA.lutou && BICHOS.some(b => b.est === 'caca')) { RODADA.lutou = true; som('lute', 0.9) }
+  if (!vivos && !RODADA.fim) { RODADA.fim = true; som(RODADA.levou ? 'venceu' : 'perfeito', 0.9); setTimeout(() => som('vitoria', 0.6), 900) }
+  if (vivos === BICHOS.length && RODADA.fim) Object.assign(RODADA, { lutou: false, fim: false, levou: false });
+}
 function bichosPasso(dt) {
   for (const b of BICHOS) {
     b.t += dt; b.cd = Math.max(0, b.cd - dt); b.flash = Math.max(0, b.flash - dt * 6); b.mostra = Math.max(0, (b.mostra || 0) - dt);
@@ -882,8 +1003,8 @@ function bichosPasso(dt) {
     let mx = 0, mz = 0, sq = 1; // movimento desejado e o "amassa" do slime
     if (b.est === 'morre') {
       b.morto += dt; b.x += b.kx * dt; b.z += b.kz * dt; b.kx *= 0.9; b.kz *= 0.9;
-      const k = Math.max(0, 1 - Math.max(0, b.morto - 0.25) / 0.3); b.g.scale.setScalar(k);
-      if (b.morto > 0.25 && !b.puf) { b.puf = true; faiscas(b.x, 0.4, b.z, 24, b.cor) }
+      const ate = b.tipo === 'monstro' ? 1.7 : 0.25, k = Math.max(0, 1 - Math.max(0, b.morto - ate) / 0.3); b.g.scale.setScalar(k);
+      if (b.morto > ate && !b.puf) { b.puf = true; faiscas(b.x, 0.4, b.z, 24, b.cor); if (b.tipo === 'monstro') { fumacaChao(b.x, 0, b.z, 0.8, 14, 0x77707e); som('queda', 0.8, 0.7) } }
       if (b.morto > 6) { // volta pra casa
         Object.assign(b, { vivo: true, est: 'anda', hp: b.max, x: b.casa[0], z: b.casa[1], y: 0, vy: 0, kx: 0, kz: 0, puf: false, nasce: 0 }); b.barra.visible = false;
       }
@@ -892,8 +1013,8 @@ function bichosPasso(dt) {
       if (b.t > 0.45 && b.y <= 0.001) { b.est = 'caca' }
     } else if (b.est === 'ataca') { // bote: prepara, pula pra frente e volta
       const u = b.t / 0.7;
-      if (u < 0.35) sq = 1 - u * 0.6; else if (u < 0.65) { const v = (b.tipo === 'lobo' ? 7 : 5); mx = Math.sin(b.face) * v; mz = Math.cos(b.face) * v; if (!b.pulou) { b.pulou = true; b.vy = b.tipo === 'lobo' ? 2.2 : 3.5 } }
-      if (u > 0.5 && !b.bateu && dp < b.r + 0.55 && P.modo === 'normal' && P.dash <= 0) { b.bateu = true; P.empurra = [Math.sin(b.face) * 3.2, Math.cos(b.face) * 3.2, 0.25]; tremor = 0.08; faiscas(P.x, P.y + 0.9, P.z, 6, 0xff7a6a); levaDano(b.tipo === 'lobo' ? 14 : 8) }
+      if (u < 0.35) sq = 1 - u * 0.6; else if (u < 0.65) { const v = (b.tipo === 'lobo' ? 7 : b.tipo === 'monstro' ? 2.5 : 5); mx = Math.sin(b.face) * v; mz = Math.cos(b.face) * v; if (!b.pulou) { b.pulou = true; b.vy = b.tipo === 'lobo' ? 2.2 : b.tipo === 'monstro' ? 0 : 3.5 } }
+      if (u > 0.5 && !b.bateu && dp < b.r + 0.55 && P.modo === 'normal' && P.dash <= 0) { b.bateu = true; P.empurra = [Math.sin(b.face) * 3.2, Math.cos(b.face) * 3.2, 0.25]; tremor = 0.08; faiscas(P.x, P.y + 0.9, P.z, 6, 0xff7a6a); levaDano(b.tipo === 'monstro' ? 16 : b.tipo === 'lobo' ? 14 : 8) }
       if (u >= 1) { b.est = 'caca'; b.cd = 1.2 + Math.random() }
     } else {
       if (dp < 7 && longeCasa < 13 && P.modo === 'normal' && P.y < 1) b.est = 'caca'; else if (b.est === 'caca' && (dp > 10 || longeCasa > 14 || P.modo === 'caido')) { b.est = 'anda'; b.alvoX = b.casa[0]; b.alvoZ = b.casa[1] }
@@ -924,6 +1045,8 @@ function bichosPasso(dt) {
       b.amassa = Math.max(0, (b.amassa || 0) - dt); const am = b.amassa > 0 ? b.amassa / 0.18 : 0, no = b.y > 0.01 ? 0.15 : 0;
       const sy = sq * (1 + no - am * 0.35 + Math.sin(b.t * 5) * 0.03); b.corpo.scale.set(1 / Math.sqrt(sy), sy, 1 / Math.sqrt(sy));
       b.corpo.rotation.x = b.est === 'leva' ? -0.4 : 0;
+    } else if (b.tipo === 'monstro') {
+      if (b.mix) { const rapido = Math.hypot(mx, mz); b.anima(b.est === 'morre' ? 'Death' : b.est === 'leva' ? 'HitReact' : b.est === 'ataca' ? 'Punch' : rapido > 2.2 ? 'Run' : rapido > 0.1 ? 'Walk' : 'Idle'); b.mix.update(dt) }
     } else {
       const rapido = Math.hypot(mx, mz), ph = b.t * (rapido > 3 ? 14 : 8), am = rapido > 0.1 ? (rapido > 3 ? 0.75 : 0.45) : 0;
       b.pernas[0].rotation.x = b.pernas[3].rotation.x = Math.sin(ph) * am; b.pernas[1].rotation.x = b.pernas[2].rotation.x = -Math.sin(ph) * am;
@@ -969,7 +1092,7 @@ function semMana(tipo) {
   const b = document.getElementById('bS' + (SLOT.indexOf(tipo) + 1)) || document.body, mb = document.getElementById('mpB');
   for (const e of [b, mb]) { e.classList.remove('semmana', 'pisca'); void e.offsetWidth } b.classList.add('semmana'); mb.classList.add('pisca');
 }
-let comboN = 0, comboT = 9;
+let comboN = 0, comboT = 9, passoD = 0;
 function atacar(tipo) {
   if (!R || P.modo !== 'normal' || P.dash > 0 || P.climb > 0) return;
   if (P.atk) { if (tipo === 'combo' && P.atk.tipo === 'combo' && P.atk.t > P.atk.g.dur * 0.25) P.atkFila = true; return }
@@ -981,6 +1104,7 @@ function atacar(tipo) {
   let mira = null, md = 4.5; for (const a of alvos()) { const d = Math.hypot(a.x - P.x, a.z - P.z) - a.r; if (d < md) { md = d; mira = a } }
   if (mira) P.face = Math.atan2(mira.x - P.x, mira.z - P.z); // mira no alvo mais perto
   P.atk = { tipo, g, t: 0, feitos: new Set() }; P.extra = null; P.land = 0; P.sp = 0; cur = null;
+  if (!ehMagia(tipo) && espadaT <= 0) som('saca', 0.35);
   if (comFx(tipo)) fxConjura(tipo);
 }
 function ataquePasso(dt) {
@@ -992,7 +1116,7 @@ function ataquePasso(dt) {
   if (g.raiz) { const c = curva(g.a); if (c) { const z1 = naCurva(c, A.t)[1], z0 = naCurva(c, A.t - dt)[1], dz = z1 - z0; if (!(colado && dz > 0)) { P.x += Math.sin(P.face) * dz; P.z += Math.cos(P.face) * dz } } }
   if (g.anda && !colado && x > g.anda[0] && x < g.anda[1]) { const u = (x - g.anda[0]) / (g.anda[1] - g.anda[0]), v = g.anda[2] * K / 0.68 * dt * (g.anda[3] ? (1 - u) * (1 - u) : 1); P.x += Math.sin(P.face) * v; P.z += Math.cos(P.face) * v }
   (g.hits || []).forEach((h, i) => {
-    if (A.feitos.has(i) || x < h) return; A.feitos.add(i);
+    if (A.feitos.has(i) || x < h) return; A.feitos.add(i); som('corte', 0.55, A.tipo === 'combo' ? 1.1 : 0.9);
     for (const a of alvos()) {
       const dx = a.x - P.x, dz = a.z - P.z, d = Math.hypot(dx, dz), frente = (dx * Math.sin(P.face) + dz * Math.cos(P.face)) / (d || 1);
       if (d < g.alc * K / 0.68 + 0.05 + a.r && (g.roda || frente > 0.3 || d < a.r + 0.3)) { const ult = i === g.hits.length - 1; acerta(a, g.dano[0] + Math.random() * (g.dano[1] - g.dano[0]) | 0, g.crit && ult, dx, dz) }
@@ -1182,10 +1306,11 @@ function passo(dt) {
   P.y += P.vy * dt; const g = chaoEm(P.x, P.z, P.y);
   if (P.y <= g) {
     if (!P.chao && ESTILO.pulo === 'mixamo' && P.dash <= 0 && P.vy < -3 * K) { P.landN = P.vy < -11 * K && R.act.Land_B ? 'Land_B' : 'Land_A'; P.land = R.act[P.landN] ? R.act[P.landN].getClip().duration : 0 }
-    P.y = g; P.vy = 0; P.chao = true; P.pulos = 0; P.flip = 0;
+    if (!P.chao && P.vy < -4 * K) som('aterrissa', Math.min(0.8, -P.vy / (20 * K))); P.y = g; P.vy = 0; P.chao = true; P.pulos = 0; P.flip = 0;
   }
   else if (P.y - g > 0.08 || P.vy > 0) P.chao = false;
   else P.y = g; // descendo degrau
+  if (P.chao && P.dash <= 0 && !P.atk && P.sp > 0.4) { passoD += P.sp * dt; if (passoD > (P.sp > 2.5 * K ? 1.15 : 0.75) * K / 0.64) { passoD = 0; som('passo', P.sp > 2.5 * K ? 0.4 : 0.25) } }
   if (P.flip > 0) { P.flip += dt; if (P.flip > P.flipT) P.flip = 0 }
   if (P.extra) P.extraT += dt;
   P.jt += dt; if (P.land > 0) { P.land -= dt; if (P.sp > 2.6 * K && P.land < (R.act[P.landN] ? R.act[P.landN].getClip().duration : 0) - 0.15) P.land = 0 }
@@ -1255,6 +1380,6 @@ window.VILA = { P, get cur() { return cur }, get R() { return R }, get K() { ret
 setTimeout(() => { const h = document.getElementById('help'); if (h) h.style.opacity = 0 }, 12000); // a dica some sozinha
 r.setAnimationLoop(() => {
   const real = Math.min(0.05, relogio.getDelta()), dt = real * lento;
-  if (R) passo(dt); anima(dt); boneco(dt); bichosPasso(dt); vidaPasso(dt); aneisPasso(dt); faiscasPasso(dt); orbesPasso(dt); fxPasso(dt); camera(real); numsPasso(dt); r.render(sc, cam);
+  if (R) passo(dt); anima(dt); boneco(dt); bichosPasso(dt); vidaPasso(dt); aneisPasso(dt); faiscasPasso(dt); orbesPasso(dt); fxPasso(dt); rodadaPasso(); if (vagalumes) vagalumes(dt); camera(real); numsPasso(dt); r.render(sc, cam);
 });
 </script></body></html>
