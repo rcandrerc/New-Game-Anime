@@ -225,6 +225,11 @@ function padrao() {
 let S; try { S = Object.assign(padrao(), JSON.parse(localStorage.getItem(CHAVE) || 'null') || {}) } catch (e) { S = padrao() }
 if (!S.attr) { S.attr = { for: 0, des: 0, vid: 0, est: 0, mag: 0 }; S.pontos = PTS_NIVEL * S.nv } // começa com 3 pontos (e quem já tinha nível ganha os dele)
 if (!S.lib) { S.lib = 1; S.est = 1; S.ok = {} }
+function zeraProgresso() { // nível, pontos, ouro, equipamento e missão voltam ao começo; as tarefas e as escolhas ficam
+  const fica = {}; for (const k of ['pers', 'hab', 'diar', 'afz', 'aba', 'dia', 'auto', 'cheio', 'repete']) if (k in S) fica[k] = S[k];
+  for (const k in S) delete S[k]; Object.assign(S, padrao(), fica); S.attr = { for: 0, des: 0, vid: 0, est: 0, mag: 0 }; S.pontos = PTS_NIVEL; S.zerado = 1;
+}
+if (S.zerado !== 1) { zeraProgresso(); try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} } // o André pediu pra recomeçar do zero (uma vez só)
 function salva() { try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} }
 const A_ = k => S.attr[k] || 0;
 const hpMax = () => 100 + 8 * (S.nv - 1) + 15 * A_('vid');
@@ -1264,7 +1269,8 @@ function heroina() {
   s3.append(g); listaEl.append(s3);
   const s4 = el('div', 'sec'); s4.append(el('h3', null, 'Como funciona'));
   const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 10 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede uns 2 níveis a mais que o anterior (o nível aparece no mapa). Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. Ela luta sozinha (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Os monstros dão ouro pra loja. Hábito ruim e diária esquecida tiram vida; se zerar, ela perde e recomeça o estágio. Tudo fica salvo neste celular.';
-  s4.append(p); const z = el('button', null, 'Começar do zero'); z.style.marginTop = '8px'; z.onclick = () => { if (confirm('Apagar todo o progresso e as tarefas?')) { localStorage.removeItem(CHAVE); location.reload() } }; s4.append(z);
+  s4.append(p); const zn = el('button', null, 'Zerar nível e missão (mantém as tarefas)'); zn.style.marginTop = '8px'; zn.onclick = () => { if (confirm('Voltar pro nível 1 e pro estágio 1? As tarefas ficam.')) { zeraProgresso(); salva(); location.reload() } }; s4.append(zn);
+  const z = el('button', null, 'Começar do zero'); z.style.marginTop = '8px'; z.onclick = () => { if (confirm('Apagar todo o progresso e as tarefas?')) { localStorage.removeItem(CHAVE); location.reload() } }; s4.append(z);
   listaEl.append(s4);
 }
 const nTxt = document.getElementById('nTxt'), nPos = document.getElementById('nPos'), nNeg = document.getElementById('nNeg');
