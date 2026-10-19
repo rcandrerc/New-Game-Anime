@@ -81,7 +81,9 @@
   #mapa .info div{flex:1;min-width:0;font:700 14.5px/1.2 Georgia,serif;color:#ffe9b8}
   #mapa .info small{display:block;font:600 11.5px/1.25 system-ui,sans-serif;color:#e6d2a8}
   #mapa .jogar{flex:none;padding:10px 15px;border-radius:10px;font:900 15px system-ui,sans-serif;background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border:2px solid #fff3c4;box-shadow:0 3px 0 #7a4a00}
-  #mapa .tarefas{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#5a3a1e;color:#ffe9b8;border:2px solid #8a5a24}
+  #mapa .repete{flex:none;padding:10px 10px;border-radius:10px;font:800 15px system-ui,sans-serif;background:#3a2a1a;color:#ffe9b8;border:2px solid #6a4a24;opacity:.7}
+  #mapa .repete.on{opacity:1;background:#2f6a3a;border-color:#8fe0a0}
+  #mapa .tarefas{flex:none;padding:10px 10px;font-size:15px !important;border-radius:10px;font:800 13px system-ui,sans-serif;background:#5a3a1e;color:#ffe9b8;border:2px solid #8a5a24}
   @keyframes pulsa{0%,100%{box-shadow:0 3px 0 #0006,0 0 0 3px #ffe06655}50%{box-shadow:0 3px 0 #0006,0 0 0 9px #ffe06633,0 0 18px #ffe066}}
   #carga{position:absolute;inset:0;display:grid;place-content:center;gap:10px;justify-items:center;background:rgba(10,14,24,.6);font-weight:700;text-shadow:0 1px 3px #000;pointer-events:none;z-index:5}
   #carga.fora{display:none} #carga .bar{width:200px} #carga .bar i{background:var(--accent);transform:scaleX(0)}
@@ -161,7 +163,6 @@
       <div class="chip" id="hOuro">🪙 0</div>
       <button id="bEst" aria-label="Abrir o mapa de estágios">⚔ Estágio 1<small>0/5</small></button>
       <button id="bPocao" hidden>🧪 0</button>
-      <button id="bMus" aria-label="Ligar ou desligar a música">🎵</button>
     </div>
   </div>
   <div id="ctl"><div id="stick"><div id="knob"></div></div><button id="bAtk">Atacar</button></div>
@@ -184,7 +185,7 @@
 </div>
 <div id="aviso"></div>
 <div id="mapa"><div class="rolo"><div class="folha"><canvas aria-hidden="true"></canvas></div></div><div class="topo"><b>Mapa da Missão</b><small></small></div>
-  <div class="info"><div></div><button class="tarefas" aria-label="Ver as tarefas">📋 Tarefas</button><button class="jogar">▶ Jogar</button></div></div>
+  <div class="info"><div></div><button class="tarefas" aria-label="Ver as tarefas">📋</button><button class="repete" aria-pressed="false" aria-label="Repetir o mesmo estágio depois de vencer">🔁</button><button class="jogar">▶ Jogar</button></div></div>
 <script src="js/three.min.js"></script>
 <script src="js/GLTFLoader.js"></script>
 <script src="js/vrm_char.js"></script>
@@ -239,10 +240,10 @@ const defesa = () => Math.min(0.6, 0.07 * S.armad); // fração do dano dos mons
 const EST = [ // nome, tempo do dia
   ['Trilha do Vale', 0], ['Beira do Lago', 0], ['Bosque Dourado', 1], ['Colina das Pedras', 1], ['Campo das Flores', 2],
   ['Pinheiral', 2], ['Vale ao Entardecer', 3], ['Trilha do Crepúsculo', 3], ['Floresta Escura', 4], ['Covil do Demônio', 4]];
-const N_EST = EST.length; let HPM = 60, DNM = 7, KH = 0.08, KD = 0.08, LEST = [75, 8];
+const N_EST = EST.length; let HPM = 75, DNM = 9, KH = 0.065, KD = 0.065, LEST = [75, 8];
 // os monstros do estágio n crescem junto com a força de uma heroína no nível sugerido (e um pouco mais a cada estágio)
-const forcaM = n => { const L = 1 + 1.5 * (n - 1); return [(6 + 7 * L) / 13 * (1 + KH * (n - 1)), (92 + 17 * L) / 109 * (1 + KD * (n - 1))] };
-const nvSugerido = n => Math.round(1 + 1.5 * (n - 1)); // nível com que dá pra passar com folga
+const forcaM = n => { const L = nvSugerido(n); return [(6 + 7 * L) / 13 * (1 + KH * (n - 1)), (92 + 17 * L) / 109 * (1 + KD * (n - 1))] };
+const nvSugerido = n => 1 + 2 * (n - 1); // nível mínimo pra passar: uns 2 níveis (e as tarefas que eles pedem) por estágio
 const perigo = () => F.n;
 const F = { n: 1, ini: 0, L: 60, G: 5, pos: [], prox: 0, feitos: 0, prog: 0, fim: false, t: 0 };
 
@@ -443,7 +444,6 @@ function somLiga() {
   SOM.ctx = new AC(); SOM.vol = SOM.ctx.createGain(); SOM.vol.gain.value = 0.7; SOM.vol.connect(SOM.ctx.destination);
   for (const lista of Object.values(SONS)) for (const n of lista) fetch('sons/' + n + '.ogg').then(x => x.arrayBuffer()).then(a => SOM.ctx.decodeAudioData(a, b => SOM.buf[n] = b)).catch(() => {});
   const n = SOM.ctx.sampleRate, b = SOM.ctx.createBuffer(1, n, n), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; SOM.ruido = b;
-  tocaMusica();
 }
 // ---------------- música épica (composta pro jogo; o código que gera ela fica em tools/musica_epica.js) ----------------
 const MUS = { buf: null, fonte: null, vol: null, gerando: false };
@@ -872,7 +872,7 @@ function venceEstagio() {
   S.ok[n] = true; if (n < N_EST) S.lib = Math.max(S.lib, n + 1); S.ouro += bonus; S.hp = hpMax(); P.en = enMax();
   som('vitoria', 0.8); brilho(0xffe066); comemora();
   faixa(n === N_EST ? 'Missão cumprida!' : 'Estágio ' + n + ' concluído!', '+' + bonus + ' 🪙' + (primeira && n < N_EST ? ' · estágio ' + (n + 1) + ' liberado' : ''), 3);
-  salva(); hud(); setTimeout(() => { if (F.fim && F.n === n) abreMapa('venceu', Math.min(n + 1, S.lib)) }, 4200); // volta pro mapa, como no Eternium
+  salva(); hud(); setTimeout(() => { if (F.fim && F.n === n) abreMapa('venceu', S.repete ? n : Math.min(n + 1, S.lib)) }, 4200); // volta pro mapa, como no Eternium
 }
 function bichosPasso(dt) {
   for (let i = BICHOS.length - 1; i >= 0; i--) {
@@ -928,7 +928,6 @@ cv.addEventListener('pointerup', solta); cv.addEventListener('pointercancel', so
 const tecla = new Set(); addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; tecla.add(e.key.toLowerCase()); if (e.key === 'j') atacar('combo') }); addEventListener('keyup', e => tecla.delete(e.key.toLowerCase()));
 const toque = (b, f) => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); somLiga(); f() });
 toque(document.getElementById('bAtk'), () => atacar('combo'));
-toque(document.getElementById('bMus'), () => { S.musica = S.musica === false; salva(); hud(); if (S.musica) tocaMusica(); else paraMusica() });
 toque(document.getElementById('bModo'), () => { S.auto = !S.auto; salva(); hud(); aviso(S.auto ? 'Automático: ela segue a trilha e luta sozinha.' : 'Manual: joystick à esquerda, Atacar e as skills à direita.') });
 toque(document.getElementById('bPocao'), bebePocao);
 // botões das skills liberadas, em dois arcos em volta do Atacar (até 4 no de dentro, o resto no de fora)
@@ -1147,12 +1146,14 @@ function abreMapa(motivo, sel) { // motivo: 'venceu' ou 'perdeu' (aí no Auto el
 }
 function infoMapa() {
   const n = selN, i = mapaEl.querySelector('.info div'); i.textContent = 'Estágio ' + n + ' · ' + EST[n - 1][0];
-  i.append(Object.assign(document.createElement('small'), { textContent: (S.ok[n] ? 'Vencido · jogue de novo' : 'Sugerido: nível ' + nvSugerido(n) + ' (você: ' + S.nv + ')') + ' · chefe no fim' }));
+  i.append(Object.assign(document.createElement('small'), { textContent: S.repete ? '🔁 Repetindo este estágio pra juntar ouro' : S.ok[n] ? 'Vencido · repita pra juntar ouro' : 'Precisa nível ' + nvSugerido(n) + ' (você: ' + S.nv + ') · chefe no fim' }));
+  const rb = mapaEl.querySelector('.repete'); rb.classList.toggle('on', !!S.repete); rb.setAttribute('aria-pressed', !!S.repete);
   mapaEl.querySelector('.jogar').textContent = '▶ Jogar' + (contaN ? ' (' + contaN + ')' : '');
 }
 function joga() { clearInterval(contaT); contaN = 0; fechaMapa(); comecaEstagio(selN) }
 function fechaMapa() { clearInterval(contaT); contaN = 0; mapaEl.classList.remove('on') }
 mapaEl.querySelector('.jogar').onclick = joga;
+mapaEl.querySelector('.repete').onclick = () => { S.repete = !S.repete; salva(); infoMapa(); aviso(S.repete ? 'Repetir ligado: depois de vencer, ela joga este mesmo estágio de novo (bom pra juntar ouro).' : 'Repetir desligado: depois de vencer, vai pro próximo estágio.') };
 mapaEl.querySelector('.tarefas').onclick = fechaMapa;
 document.getElementById('bEst').addEventListener('click', () => mapaEl.classList.contains('on') ? (F.fim || F.perdeu || fechaMapa()) : abreMapa());
 
@@ -1165,7 +1166,6 @@ function hud() {
   document.querySelector('#hpB i').style.transform = 'scaleX(' + S.hp / m + ')'; document.querySelector('#hpB span').textContent = 'Vida ' + Math.ceil(S.hp) + '/' + m;
   document.querySelector('#xpB i').style.transform = 'scaleX(' + S.xp / xpProx() + ')'; document.querySelector('#xpB span').textContent = 'XP ' + S.xp + '/' + xpProx();
   document.getElementById('hOuro').textContent = '🪙 ' + S.ouro; const be = document.getElementById('bEst'); be.textContent = F.fim || F.perdeu ? '🗺 Mapa' : '⚔ Estágio ' + F.n; if (!F.fim && !F.perdeu) be.append(Object.assign(document.createElement('small'), { textContent: F.feitos + '/' + F.G }));
-  const bu = document.getElementById('bMus'); bu.textContent = S.musica === false ? '🔇' : '🎵'; bu.classList.toggle('off', S.musica === false);
   const bm = document.getElementById('bModo'); bm.textContent = S.auto ? '▶ Auto' : '🕹 Manual'; bm.classList.toggle('manual', !S.auto); document.body.classList.toggle('manual', !S.auto);
   const bp = document.getElementById('bPocao'); bp.hidden = S.pocoes <= 0; bp.textContent = '🧪 ' + S.pocoes;
   const pend = S.diar.filter(d => !d.ok).length; document.querySelector('[data-aba="diar"]').innerHTML = 'Diárias' + (pend ? '<b>' + pend + '</b>' : '');
@@ -1263,7 +1263,7 @@ function heroina() {
     b.append(im, el('span', null, nome)); b.onclick = () => { S.pers = i; salva(); carregar(i); lista(); hud() }; g.append(b) });
   s3.append(g); listaEl.append(s3);
   const s4 = el('div', 'sec'); s4.append(el('h3', null, 'Como funciona'));
-  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 10 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um é mais difícil que o outro: o nível sugerido aparece no mapa. Ela luta sozinha (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Os monstros dão ouro pra loja. Hábito ruim e diária esquecida tiram vida; se zerar, ela perde e recomeça o estágio. Tudo fica salvo neste celular.';
+  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 10 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede uns 2 níveis a mais que o anterior (o nível aparece no mapa). Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. Ela luta sozinha (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Os monstros dão ouro pra loja. Hábito ruim e diária esquecida tiram vida; se zerar, ela perde e recomeça o estágio. Tudo fica salvo neste celular.';
   s4.append(p); const z = el('button', null, 'Começar do zero'); z.style.marginTop = '8px'; z.onclick = () => { if (confirm('Apagar todo o progresso e as tarefas?')) { localStorage.removeItem(CHAVE); location.reload() } }; s4.append(z);
   listaEl.append(s4);
 }
