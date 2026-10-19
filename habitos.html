@@ -55,6 +55,24 @@
   #barras div i{display:block;height:100%;background:#ff5a4a;transform-origin:left}
   #barras div.chefe{width:80px;margin-left:-40px;height:8px} #barras div.chefe i{background:#c86bff}
   #dor{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 46px 12px rgba(220,30,20,.45);opacity:0;transition:opacity .35s}
+  #bEst{font-weight:800;font-size:12.5px;padding:5px 10px;border-radius:999px;background:linear-gradient(#5b3a8a,#3a2560);border-color:#b98cff;white-space:nowrap}
+  #bEst small{font-weight:700;opacity:.85;margin-left:4px}
+  #mapa{position:absolute;inset:0;z-index:6;display:none;background:radial-gradient(120% 90% at 50% 100%,#3c5a3a 0%,#25331f 55%,#141b14 100%);overflow:hidden}
+  #mapa.on{display:block}
+  #mapa h2{position:absolute;left:12px;top:8px;margin:0;font:900 17px system-ui,sans-serif;color:#ffe9a8;text-shadow:0 2px 0 #5a3a10}
+  #mapa h2 small{display:block;font-size:11.5px;font-weight:600;color:#e6dcc0;text-shadow:none;margin-top:1px}
+  #mapa .fecha{position:absolute;right:10px;top:8px;width:36px;height:36px;border-radius:50%;padding:0;font-size:18px;background:rgba(0,0,0,.4)}
+  #mapa svg{position:absolute;inset:0;width:100%;height:100%}
+  #mapa .no{position:absolute;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;padding:0;font:900 18px system-ui,sans-serif;display:grid;place-items:center;
+    background:radial-gradient(circle at 35% 30%,#ffe9a0,#d99a22 60%,#8a5a10);color:#4a2a00;border:3px solid #fff3c4;box-shadow:0 3px 0 #0006,0 0 0 3px #0003}
+  #mapa .no.feito{background:radial-gradient(circle at 35% 30%,#b9ffb0,#3fae4a 60%,#1d5a22);color:#0d2a10;border-color:#d8ffd0}
+  #mapa .no.atual{animation:pulsa 1.2s ease-in-out infinite}
+  #mapa .no.tranc{background:radial-gradient(circle at 35% 30%,#8a8f9a,#4a4f5a 65%,#2a2d33);color:#c8ccd4;border-color:#8a8f9a;font-size:16px}
+  #mapa .no.chefe{width:58px;height:58px;margin:-29px 0 0 -29px;font-size:24px}
+  #mapa .rot{position:absolute;transform:translate(-50%,0);margin-top:27px;font:700 10.5px/1.15 system-ui,sans-serif;color:#fff;text-shadow:0 1px 2px #000;text-align:center;white-space:nowrap;pointer-events:none}
+  #mapa .rot small{display:block;font-weight:600;color:#ffe08a;font-size:10px}
+  #mapa .rot small.ok{color:#9dff9a}
+  @keyframes pulsa{0%,100%{box-shadow:0 3px 0 #0006,0 0 0 3px #ffe06655}50%{box-shadow:0 3px 0 #0006,0 0 0 9px #ffe06633,0 0 18px #ffe066}}
   #carga{position:absolute;inset:0;display:grid;place-content:center;gap:10px;justify-items:center;background:rgba(10,14,24,.6);font-weight:700;text-shadow:0 1px 3px #000;pointer-events:none;z-index:5}
   #carga.fora{display:none} #carga .bar{width:200px} #carga .bar i{background:var(--accent);transform:scaleX(0)}
   /* ---------- painel de tarefas (metade de baixo) ---------- */
@@ -127,13 +145,14 @@
     <div class="dir">
       <button id="bModo" aria-label="Trocar entre automático e manual">▶ Auto</button>
       <div class="chip" id="hOuro">🪙 0</div>
-      <div class="chip" id="hPerigo">Perigo 1</div>
+      <button id="bEst" aria-label="Abrir o mapa de estágios">⚔ Estágio 1<small>0/5</small></button>
       <button id="bPocao" hidden>🧪 0</button>
     </div>
   </div>
   <div id="ctl"><div id="stick"><div id="knob"></div></div><button id="bAtk">Atacar</button></div>
   <div id="barras"></div><div id="nums"></div><div id="dor"></div>
   <div id="faixa"></div>
+  <div id="mapa"><svg aria-hidden="true"></svg><h2>Missão: os 10 estágios<small>Fique forte com as tarefas pra passar de cada um</small></h2><button class="fecha" aria-label="Fechar o mapa">✕</button></div>
   <div id="carga"><b>Carregando…</b><div class="bar"><i></i></div></div>
 </div>
 <div id="painel">
@@ -180,13 +199,14 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 const CHAVE = 'nga-habitos-v1';
 function padrao() {
   const t = (txt, d, x) => Object.assign({ id: uid(), t: txt, d }, x);
-  return { pers: 0, nv: 1, xp: 0, hp: 100, ouro: 0, espada: 0, armad: 0, pocoes: 1, dist: 0, auto: true, aba: 'diar', dia: hoje(), feitos: 0, mortos: 0,
+  return { pers: 0, nv: 1, xp: 0, hp: 100, ouro: 0, espada: 0, armad: 0, pocoes: 1, dist: 0, lib: 1, est: 1, ok: {}, auto: true, aba: 'diar', dia: hoje(), feitos: 0, mortos: 0,
     hab: [t('Beber um copo de água', 'f', { pos: true, neg: false, c: 0, cn: 0 }), t('Fazer exercício', 'm', { pos: true, neg: false, c: 0, cn: 0 }), t('Comer besteira', 'm', { pos: false, neg: true, c: 0, cn: 0 })],
     diar: [t('Arrumar a cama', 'f', { ok: false }), t('Ler 10 páginas', 'm', { ok: false }), t('Estudar 30 minutos', 'd', { ok: false })],
     afz: [t('Organizar a mesa', 'm', {}), t('Marcar o dentista', 'f', {})] };
 }
 let S; try { S = Object.assign(padrao(), JSON.parse(localStorage.getItem(CHAVE) || 'null') || {}) } catch (e) { S = padrao() }
 if (!S.attr) { S.attr = { for: 0, des: 0, vid: 0, est: 0, mag: 0 }; S.pontos = PTS_NIVEL * S.nv } // começa com 3 pontos (e quem já tinha nível ganha os dele)
+if (!S.lib) { S.lib = 1; S.est = 1; S.ok = {} }
 function salva() { try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} }
 const A_ = k => S.attr[k] || 0;
 const hpMax = () => 100 + 8 * (S.nv - 1) + 15 * A_('vid');
@@ -198,7 +218,16 @@ const atkMag = () => 8 + 2 * (S.nv - 1) + 3.5 * A_('mag');
 const critChance = () => Math.min(0.5, 0.06 + 0.015 * A_('des'));
 const velAtk = () => 1 + Math.min(0.6, 0.035 * A_('des'));
 const defesa = () => Math.min(0.6, 0.07 * S.armad); // fração do dano dos monstros que a armadura segura
-const perigo = () => 1 + Math.floor(S.dist / 120);
+// ---------------- estágios (a missão é passar dos 10; cada um mais difícil que o outro) ----------------
+const EST = [ // nome, tempo do dia
+  ['Trilha do Vale', 0], ['Beira do Lago', 0], ['Bosque Dourado', 1], ['Colina das Pedras', 1], ['Campo das Flores', 2],
+  ['Pinheiral', 2], ['Vale ao Entardecer', 3], ['Trilha do Crepúsculo', 3], ['Floresta Escura', 4], ['Covil do Demônio', 4]];
+const N_EST = EST.length; let HPM = 60, DNM = 7, KH = 0.08, KD = 0.08, LEST = [75, 8];
+// os monstros do estágio n crescem junto com a força de uma heroína no nível sugerido (e um pouco mais a cada estágio)
+const forcaM = n => { const L = 1 + 1.5 * (n - 1); return [(6 + 7 * L) / 13 * (1 + KH * (n - 1)), (92 + 17 * L) / 109 * (1 + KD * (n - 1))] };
+const nvSugerido = n => Math.round(1 + 1.5 * (n - 1)); // nível com que dá pra passar com folga
+const perigo = () => F.n;
+const F = { n: 1, ini: 0, L: 60, G: 5, pos: [], prox: 0, feitos: 0, prog: 0, fim: false, t: 0 };
 
 // ---------------- cena ----------------
 const arena = document.getElementById('arena');
@@ -224,6 +253,19 @@ const CEU = (() => { const m = new THREE.ShaderMaterial({ side: THREE.BackSide, 
     fragmentShader: 'uniform vec3 cima; uniform vec3 meio; uniform vec3 sol; varying vec3 vd; void main(){ float h = clamp(vd.y * 2.2, 0.0, 1.0); vec3 c = mix(meio, cima, pow(h, 0.7));' +
       'float s = max(dot(vd, sol), 0.0); c += vec3(1.0, 0.8, 0.5) * pow(s, 80.0) * 1.3 + vec3(1.0, 0.6, 0.3) * pow(s, 6.0) * 0.22; gl_FragColor = vec4(c, 1.0); }' });
   const c = new THREE.Mesh(new THREE.SphereGeometry(90, 24, 12), m); c.renderOrder = -1; c.frustumCulled = false; sc.add(c); return c })();
+
+// hora do dia de cada par de estágios: manhã dourada, dia claro, tarde, entardecer e noite
+const CLIMAS = [
+  { nev: 0xf0c9a0, cima: 0x6f9fd8, ceu: 0xffe6c8, chao: 0x45603a, hi: 0.72, sol: 0xffc890, si: 1.0, f: [18, 52] },
+  { nev: 0xd6e4ee, cima: 0x4f8fe0, ceu: 0xfff6e6, chao: 0x4a6a3a, hi: 0.82, sol: 0xfff0d8, si: 1.1, f: [20, 56] },
+  { nev: 0xf2b886, cima: 0x7a98cc, ceu: 0xffd8b0, chao: 0x4a5a34, hi: 0.7, sol: 0xffa864, si: 1.05, f: [18, 50] },
+  { nev: 0xc97a78, cima: 0x3e3f8a, ceu: 0xffa898, chao: 0x302a38, hi: 0.5, sol: 0xff6a40, si: 0.8, f: [16, 46] },
+  { nev: 0x1c2440, cima: 0x060a1c, ceu: 0x7088c8, chao: 0x0c1220, hi: 0.3, sol: 0x9ab4ff, si: 0.42, f: [10, 36] }];
+function ambiente(k) {
+  const c = CLIMAS[k]; sc.background.set(c.nev); sc.fog.color.set(c.nev); sc.fog.near = c.f[0]; sc.fog.far = c.f[1];
+  CEU.material.uniforms.cima.value.set(c.cima); CEU.material.uniforms.meio.value.set(c.nev);
+  hemi.color.set(c.ceu); hemi.groundColor.set(c.chao); hemi.intensity = c.hi; sol.color.set(c.sol); sol.intensity = c.si;
+}
 
 // ---------------- trilha e terreno ----------------
 // a trilha é uma volta fechada pelo vale: ela anda sem parar e a volta recomeça sozinha (depois dá pra crescer o mapa)
@@ -709,10 +751,9 @@ function anda(dx, dz) { // move a heroína sem entrar em árvore/pedra e sem sai
 const TIPOS = ['MushroomKing', 'Orc', 'Yeti', 'Demon'], BUF = {}, BICHOS = [];
 function carregaMonstros() { for (const n of TIPOS) { BUF[n] = fetch('monstros/' + n + '.glb').then(x => { if (!x.ok) throw 0; return x.arrayBuffer() }); BUF[n].catch(() => {}) } }
 const barrasEl = document.getElementById('barras');
-let grupos = 0, ultimoGrupo = null;
 function novoBicho(tipo, x, z, chefe) {
-  const p = perigo(), k = K / 0.64 * (chefe ? 1.5 : 1), b = { tipo, x, z, y: altura(x, z), face: Math.atan2(P.x - x, P.z - z), vivo: true, est: 'parado', t: 0, cd: 1 + Math.random(), nasce: 0, morto: 0, chefe,
-    max: Math.round((40 + 22 * (p - 1)) * (chefe ? 4 : 1)), dano: Math.round((5 + 2 * (p - 1)) * (chefe ? 1.6 : 1)), g: new THREE.Group(), mats: [], kx: 0, kz: 0,
+  const p = perigo(), k = K / 0.64 * (chefe ? (p === N_EST ? 1.9 : 1.5) : 1), b = { tipo, x, z, y: altura(x, z), face: Math.atan2(P.x - x, P.z - z), vivo: true, est: 'parado', t: 0, cd: 1 + Math.random(), nasce: 0, morto: 0, chefe,
+    max: Math.round(HPM * forcaM(p)[0] * (chefe ? 4.5 : 1)), dano: Math.round(DNM * forcaM(p)[1] * (chefe ? 1.6 : 1)), g: new THREE.Group(), mats: [], kx: 0, kz: 0,
     r: 0.55 * k, alt: 1.75 * k, peso: chefe ? 4 : 2.2, ouro: Math.round((3 + p) * (chefe ? 6 : 1)) };
   b.hp = b.max; b.g.position.set(x, b.y, z); b.g.scale.setScalar(0.001); sc.add(b.g);
   b.bar = document.createElement('div'); b.bar.innerHTML = '<i></i>'; if (chefe) b.bar.className = 'chefe'; barrasEl.appendChild(b.bar);
@@ -726,22 +767,44 @@ function novoBicho(tipo, x, z, chefe) {
     a.setLoop(uma ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = uma; a.timeScale = nm === 'Punch' ? 1.4 : 1; a.play(); if (u) a.crossFadeFrom(u, 0.15, false); b.atual = nm };
   b.leva = (v, crit, dx, dz) => {
     if (!b.vivo) return; b.hp -= v; b.flash = 1; b.bravo = true; const l = Math.hypot(dx, dz) || 1, f = (crit ? 4 : 2) / b.peso * 2; b.kx = dx / l * f; b.kz = dz / l * f;
-    if (b.hp <= 0) { b.vivo = false; b.est = 'morre'; b.morto = 0; b.anima('Death'); som('queda', 0.6, 0.8); S.ouro += b.ouro; numero('+' + b.ouro + ' 🪙', b.x, b.y + b.alt + 0.6, b.z, 'ouro'); S.mortos = (S.mortos || 0) + 1; hud(); salva() }
+    if (b.hp <= 0) { b.vivo = false; b.est = 'morre'; b.morto = 0; b.anima('Death'); som('queda', 0.6, 0.8); S.ouro += b.ouro; numero('+' + b.ouro + ' 🪙', b.x, b.y + b.alt + 0.6, b.z, 'ouro'); S.mortos = (S.mortos || 0) + 1; grupoMorto(b); hud(); salva() }
     else if (b.est !== 'ataca') { b.est = 'leva'; b.t = 0; b.anima('HitReact') }
   };
   BICHOS.push(b); return b;
 }
 function some(b) { b.fora = true; sc.remove(b.g); b.bar.remove(); BICHOS.splice(BICHOS.indexOf(b), 1) }
-function grupoNovo(s) { // um grupo de monstros parado na trilha à frente
-  const p = perigo(), chefe = ++grupos % 8 === 0, q = chefe ? 1 : Math.min(3, 1 + ((Math.random() * (1 + p / 2)) | 0)), i = ((s % NT) + NT) % NT, j = (i + 4) % NT;
+function grupoNovo(g) { // grupo g do estágio, parado na trilha; o último é o chefe
+  const n = F.n, chefe = g === F.G - 1, i = (F.ini + Math.round(F.pos[g] / TPASSO)) % NT, j = (i + 4) % NT;
+  const q = chefe ? (n >= 3 ? 1 + Math.min(2, (n / 4) | 0) : 1) : Math.min(4, 1 + ((Math.random() * (1.6 + n / 3)) | 0));
   const tx = TP[j][0] - TP[i][0], tz = TP[j][1] - TP[i][1], tl = Math.hypot(tx, tz) || 1, nx = -tz / tl, nz = tx / tl;
-  for (let k = 0; k < q; k++) { const o = (k - (q - 1) / 2) * 1.6 + rnd(-0.4, 0.4), f = rnd(-1, 1); novoBicho(chefe ? 'Demon' : TIPOS[(grupos + k) % TIPOS.length], TP[i][0] + nx * o + tx / tl * f, TP[i][1] + nz * o + tz / tl * f, chefe) }
-  ultimoGrupo = i;
+  for (let k = 0; k < q; k++) { const o = (k - (q - 1) / 2) * 1.6 + rnd(-0.4, 0.4), f = rnd(-1, 1), ch = chefe && k === ((q - 1) / 2 | 0);
+    const tipo = ch ? (n === N_EST ? 'Demon' : TIPOS[(n - 1) % TIPOS.length]) : TIPOS[(g + k + n) % TIPOS.length];
+    novoBicho(tipo, TP[i][0] + nx * o + tx / tl * f * (ch ? 0 : 1), TP[i][1] + nz * o + tz / tl * f * (ch ? 0 : 1), ch).grupo = g }
 }
-function manteGrupos() { // sempre um grupo de monstros esperando um pouco à frente na trilha
-  if (!R || !BUF.Orc) return;
-  const frente = ultimoGrupo == null ? -1 : ((ultimoGrupo - P.si) % NT + NT) % NT * TPASSO;
-  if (ultimoGrupo == null || frente < 10 || frente > TL - 30) grupoNovo(P.si + Math.round(rnd(17, 25) / TPASSO));
+function manteGrupos() { // os grupos aparecem conforme ela avança no estágio
+  if (!R || !BUF.Orc || F.fim) return;
+  while (F.prox < F.G && F.prog >= F.pos[F.prox] - 22) grupoNovo(F.prox++);
+}
+function grupoMorto(b) {
+  if (b.grupo == null || F.fim || BICHOS.some(o => o.vivo && o.grupo === b.grupo)) return;
+  F.feitos++; hud(); if (F.feitos >= F.G) venceEstagio();
+}
+function comecaEstagio(n) {
+  n = Math.max(1, Math.min(n, S.lib, N_EST)); S.est = n; salva();
+  for (const b of [...BICHOS]) some(b);
+  const L = LEST[0] + LEST[1] * n; // metros de trilha
+  Object.assign(F, { n, ini: Math.round((n - 1) * NT * 0.37) % NT, L, G: 4 + Math.ceil(n / 3), prox: 0, feitos: 0, prog: 0, fim: false, t: 0 });
+  F.pos = []; for (let g = 0; g < F.G; g++) F.pos.push(14 + (L - 14) * (g / (F.G - 1)));
+  P.x = TP[F.ini][0]; P.z = TP[F.ini][1]; P.y = altura(P.x, P.z); P.si = ultimoSi = F.ini; P.atk = null;
+  const j = (F.ini + 20) % NT; P.face = Math.atan2(TP[j][0] - P.x, TP[j][1] - P.z); yaw = P.face + Math.PI; camAlvo.set(P.x, P.y, P.z);
+  ambiente(EST[n - 1][1]); faixa('Estágio ' + n, EST[n - 1][0] + (n === N_EST ? ' · chefe final' : ''), 2.2); hud(); if (mapaEl.classList.contains('on')) abreMapa();
+}
+function venceEstagio() {
+  F.fim = true; const n = F.n, primeira = !S.ok[n], bonus = primeira ? 25 * n : 5 * n;
+  S.ok[n] = true; if (n < N_EST) S.lib = Math.max(S.lib, n + 1); S.ouro += bonus; S.hp = hpMax(); P.en = enMax();
+  som('vitoria', 0.8); setTimeout(() => som('perfeito', 0.7), 900); brilho(0xffe066); comemora();
+  faixa(n === N_EST ? 'Missão cumprida!' : 'Estágio ' + n + ' concluído!', '+' + bonus + ' 🪙' + (primeira && n < N_EST ? ' · estágio ' + (n + 1) + ' liberado' : ''), 3);
+  salva(); hud(); setTimeout(() => { if (F.fim && F.n === n) comecaEstagio(Math.min(n + 1, S.lib)) }, 4200);
 }
 function bichosPasso(dt) {
   for (let i = BICHOS.length - 1; i >= 0; i--) {
@@ -749,7 +812,6 @@ function bichosPasso(dt) {
     if (b.flash > 0) { b.flash = Math.max(0, b.flash - dt * 5); for (const m of b.mats) m.emissive.setRGB(b.flash * 0.8, b.flash * 0.25, b.flash * 0.2) }
     const dx = P.x - b.x, dz = P.z - b.z, d = Math.hypot(dx, dz);
     if (b.est === 'morre') { b.morto += dt; const k = Math.max(0, 1 - Math.max(0, b.morto - 1.4) / 0.3); b.g.scale.setScalar(k); if (b.morto > 1.8) some(b); continue }
-    if (d > 38) { some(b); continue } // ficou muito pra trás
     b.nasce = Math.min(1, b.nasce + dt * 2); b.g.scale.setScalar(b.nasce);
     const perto = 0.95 * K / 0.64 * (b.chefe ? 1.3 : 1); let mv = 0;
     if (b.est === 'leva') { if (b.t > 0.35) b.est = 'anda' }
@@ -772,11 +834,10 @@ function levaDano(v, b) {
 }
 function desmaia() {
   P.desm = 6; P.atk = null; FXC.vivo = false; tocar('Death_A', 1, 0.1); som('fim', 0.7);
-  S.dist = Math.max(0, S.dist - 120); faixa('Desmaiou…', 'levanta já já, com o perigo um nível abaixo', 2.5); salva(); hud();
+  faixa('Derrota…', 'faça suas tarefas pra ficar mais forte e tente de novo', 2.8); salva(); hud();
 }
 function levanta() {
-  P.desm = 0; S.hp = Math.max(S.hp, Math.round(hpMax() * 0.4)); P.en = enMax(); hud(); salva();
-  for (const b of [...BICHOS]) if (Math.hypot(b.x - P.x, b.z - P.z) < 14) some(b); ultimoGrupo = null;
+  P.desm = 0; S.hp = Math.max(S.hp, Math.round(hpMax() * 0.5)); P.en = enMax(); comecaEstagio(F.n); // volta pro começo do estágio
 }
 
 // ---------------- controle: automático (segue a trilha) ou joystick ----------------
@@ -837,7 +898,7 @@ function heroiPasso(dt) {
     const l = Math.hypot(ix, iy); if (l > 0.12) { const k = Math.min(1, l), fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
       mx = (rx * ix - fx * iy) / l * k * RUN; mz = (rz * ix - fz * iy) / l * k * RUN }
   } else {
-    const alvo = maisPerto(7.5);
+    const alvo = maisPerto(F.prox >= F.G && F.prog > F.L - 4 ? 40 : 7.5);
     if (alvo) { const dx = alvo.x - P.x, dz = alvo.z - P.z, dc = Math.hypot(dx, dz) || 1, d = dc - alvo.r, alc = 0.9 * K / 0.64;
       if (!P.atk) { const tiro = d > 2.5 && d < 8 && liberada('magbola') && CD.magbola <= 0 && P.en >= SKILLS.magbola.en;
         if (d > alc && !tiro) { mx = dx / dc * RUN; mz = dz / dc * RUN } else { P.face = Math.atan2(dx, dz); autoLuta(alvo, d) } } }
@@ -852,7 +913,8 @@ function heroiPasso(dt) {
   P.y = altura(P.x, P.z);
   // anda na trilha: conta a distância (só pra frente) e mantém monstros à frente
   const [si] = pertoTrilha(P.x, P.z, P.si, 120); let ds = si - ultimoSi; if (ds < -NT / 2) ds += NT; if (ds > NT / 2) ds -= NT;
-  if (ds > 0 && ds < 40) { const antes = perigo(); S.dist += ds * TPASSO; if (perigo() > antes) { faixa('Perigo ' + perigo(), 'os monstros daqui pra frente são mais fortes', 1.8); hud() } }
+  if (ds > 0 && ds < 40) { S.dist += ds * TPASSO; F.prog += ds * TPASSO }
+  F.t += dt;
   P.si = ultimoSi = si; manteGrupos();
   if (P.atk) tocar(P.atk.g.a, gvel(P.atk.g), 0.06);
   else if (!(P.hit > 0) && !(P.comem > 0)) { if (v > 0.3) tocar(v > RUN * 0.55 ? 'Running_A' : 'Walking_A', v > RUN * 0.55 ? v / RUN : 1); else tocar(BICHOS.some(b => b.vivo && b.bravo) && R.act.Sword_Idle ? 'Sword_Idle' : 'Idle_A', 1) }
@@ -914,6 +976,32 @@ function viraDia() { // diárias esquecidas tiram vida ao virar o dia; contadore
 }
 viraDia(); setInterval(() => { viraDia(); if (aba === 'diar') lista() }, 60000);
 
+// ---------------- mapa de estágios (estilo Eternium) ----------------
+const mapaEl = document.getElementById('mapa');
+const NOS = [[16, 86], [50, 89], [84, 84], [80, 62], [48, 66], [16, 62], [18, 40], [50, 43], [82, 39], [50, 20]];
+function abreMapa() {
+  mapaEl.classList.add('on'); mapaEl.querySelectorAll('.no,.rot').forEach(e => e.remove());
+  const svg = mapaEl.querySelector('svg'), W = mapaEl.clientWidth || 1, H = mapaEl.clientHeight || 1; svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const pt = ([x, y]) => [x / 100 * W, y / 100 * H]; let d = '';
+  NOS.forEach((q, i) => { const [x, y] = pt(q); if (!i) { d = `M${x},${y}`; return } const [px, py] = pt(NOS[i - 1]); d += ` Q${(px + x) / 2 + (i % 2 ? 22 : -22)},${(py + y) / 2} ${x},${y}` });
+  let enf = ''; for (let i = 0; i < 26; i++) { const x = (i * 37.7 % 100) / 100 * W, y = (12 + (i * 53.3 % 88)) / 100 * H, t = 9 + (i * 7 % 6); enf += `<path d="M${x},${y - t * 1.6} L${x - t * 0.7},${y} L${x + t * 0.7},${y} Z" fill="#1f3a22" opacity=".8"/>` }
+  svg.innerHTML = enf + `<path d="${d}" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="12" stroke-linecap="round"/>` +
+    `<path d="${d}" fill="none" stroke="#c9a46a" stroke-width="7" stroke-linecap="round" stroke-dasharray="1 12"/>`;
+  NOS.forEach((q, i) => {
+    const n = i + 1, [x, y] = pt(q), lib = n <= S.lib, b = document.createElement('button'), rot = document.createElement('div');
+    b.className = 'no' + (S.ok[n] ? ' feito' : '') + (lib ? '' : ' tranc') + (n === F.n ? ' atual' : '') + (n === N_EST ? ' chefe' : '');
+    b.textContent = lib ? (n === N_EST ? '👹' : n) : '🔒'; b.style.left = x + 'px'; b.style.top = y + 'px';
+    b.setAttribute('aria-label', 'Estágio ' + n + ': ' + EST[i][0] + (lib ? '' : ' (trancado)'));
+    b.onclick = () => { if (!lib) { aviso('Passe do estágio ' + (n - 1) + ' pra liberar este.'); return } fechaMapa(); comecaEstagio(n) };
+    rot.className = 'rot'; rot.style.left = x + 'px'; rot.style.top = y + (n === N_EST ? 5 : 0) + 'px'; rot.textContent = EST[i][0];
+    rot.append(Object.assign(document.createElement('small'), S.ok[n] ? { textContent: '✓ vencido', className: 'ok' } : { textContent: 'nível ' + nvSugerido(n) + '+' }));
+    mapaEl.append(b, rot) });
+  mapaEl.classList.add('on');
+}
+function fechaMapa() { mapaEl.classList.remove('on') }
+mapaEl.querySelector('.fecha').onclick = fechaMapa;
+document.getElementById('bEst').addEventListener('click', () => mapaEl.classList.contains('on') ? fechaMapa() : abreMapa());
+
 // ---------------- HUD ----------------
 function hud() {
   document.getElementById('hNome').firstChild.textContent = PERS[S.pers][1];
@@ -922,7 +1010,7 @@ function hud() {
   const m = hpMax(); S.hp = Math.min(S.hp, m);
   document.querySelector('#hpB i').style.transform = 'scaleX(' + S.hp / m + ')'; document.querySelector('#hpB span').textContent = 'Vida ' + Math.ceil(S.hp) + '/' + m;
   document.querySelector('#xpB i').style.transform = 'scaleX(' + S.xp / xpProx() + ')'; document.querySelector('#xpB span').textContent = 'XP ' + S.xp + '/' + xpProx();
-  document.getElementById('hOuro').textContent = '🪙 ' + S.ouro; document.getElementById('hPerigo').textContent = 'Perigo ' + perigo();
+  document.getElementById('hOuro').textContent = '🪙 ' + S.ouro; const be = document.getElementById('bEst'); be.textContent = '⚔ Estágio ' + F.n; be.append(Object.assign(document.createElement('small'), { textContent: F.feitos + '/' + F.G }));
   const bm = document.getElementById('bModo'); bm.textContent = S.auto ? '▶ Auto' : '🕹 Manual'; bm.classList.toggle('manual', !S.auto); document.body.classList.toggle('manual', !S.auto);
   const bp = document.getElementById('bPocao'); bp.hidden = S.pocoes <= 0; bp.textContent = '🧪 ' + S.pocoes;
   const pend = S.diar.filter(d => !d.ok).length; document.querySelector('[data-aba="diar"]').innerHTML = 'Diárias' + (pend ? '<b>' + pend + '</b>' : '');
@@ -996,7 +1084,7 @@ function heroina() {
   const st = el('div', 'stats'); const lin = (k, v) => { const d = el('div'); d.append(el('span', null, k), el('b', null, v)); st.append(d) };
   lin('Vida', Math.ceil(S.hp) + '/' + hpMax()); lin('Energia', enMax()); lin('Dano espada', atkEsp()); lin('Dano magia', Math.round(atkMag()));
   lin('Crítico', Math.round(critChance() * 100) + '%'); lin('Velocidade', '+' + Math.round((velAtk() - 1) * 100) + '%'); lin('Defesa', Math.round(defesa() * 100) + '%'); lin('Ouro', '🪙 ' + S.ouro);
-  lin('Caminhou', Math.round(S.dist) + ' m'); lin('Monstros', S.mortos || 0);
+  lin('Estágios vencidos', Object.keys(S.ok).length + ' de ' + N_EST); lin('Caminhou', Math.round(S.dist) + ' m'); lin('Monstros', S.mortos || 0);
   s1.append(st); listaEl.append(s1);
   // loja
   const s2 = el('div', 'sec'); s2.append(el('h3', null, 'Loja')); const lj = el('div', 'loja');
@@ -1012,7 +1100,7 @@ function heroina() {
     b.append(im, el('span', null, nome)); b.onclick = () => { S.pers = i; salva(); carregar(i); lista(); hud() }; g.append(b) });
   s3.append(g); listaEl.append(s3);
   const s4 = el('div', 'sec'); s4.append(el('h3', null, 'Como funciona'));
-  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. Ela segue a trilha do vale e luta com o que encontrar: sozinha (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Quanto mais longe ela vai, maior o perigo; os monstros dão ouro pra loja. Hábito ruim e diária esquecida tiram vida; se zerar, ela desmaia e o perigo cai um nível. Tudo fica salvo neste celular.';
+  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 10 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um é mais difícil que o outro: o nível sugerido aparece no mapa. Ela luta sozinha (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Os monstros dão ouro pra loja. Hábito ruim e diária esquecida tiram vida; se zerar, ela perde e recomeça o estágio. Tudo fica salvo neste celular.';
   s4.append(p); const z = el('button', null, 'Começar do zero'); z.style.marginTop = '8px'; z.onclick = () => { if (confirm('Apagar todo o progresso e as tarefas?')) { localStorage.removeItem(CHAVE); location.reload() } }; s4.append(z);
   listaEl.append(s4);
 }
@@ -1060,7 +1148,7 @@ function quadro(t) {
   numsPasso(dt); r.render(sc, cam);
 }
 new ResizeObserver(tam).observe(arena);
-trocaAba(aba); hud(); carregar(S.pers); requestAnimationFrame(quadro);
-window.HAB = { cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
+comecaEstagio(S.est || 1); trocaAba(aba); hud(); carregar(S.pers); requestAnimationFrame(quadro);
+window.HAB = { sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
 </script>
 </body></html>
