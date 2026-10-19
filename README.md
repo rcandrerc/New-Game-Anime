@@ -14,7 +14,7 @@ embaixo; em cima a heroína joga a missão: 10 estágios (estilo Eternium). O jo
 dura de 1 a 3 minutos e cada um é mais difícil. Vencendo ou perdendo, volta pro mapa (no Auto a próxima fase começa sozinha depois de uns segundos).
 Ela luta sozinha (Auto) ou com joystick e botões de skill (Manual). Só as tarefas dão XP; cada nível dá 3 pontos pra Força, Destreza, Vida,
 Estamina e Magia (aba Heroína). Sem classe: Força libera as skills de espada e Magia as de magia, dá pra fazer híbrido. Monstros e estágios dão
-ouro pra loja (poção, espada, armadura). Hábito ruim e diária esquecida tiram vida; se zerar, ela perde e recomeça o estágio. Tudo salvo no próprio celular.
+ouro pra loja (poção, espada, armadura). Hábito ruim e diária esquecida tiram vida; se zerar, ela perde e recomeça o estágio. Música épica própria (botão 🎵 liga e desliga) e um puxador em cima das tarefas: toque ou arraste pra baixo e o jogo ocupa a tela toda. Tudo salvo no próprio celular.
 
 **Galeria:** https://rcandrerc.github.io/New-Game-Anime/galeria.html — personagem parado no centro, um botão por animação.
 

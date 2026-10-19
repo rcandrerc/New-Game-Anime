@@ -1,0 +1,10 @@
+<!doctype html><meta charset="utf-8"><title>Gerar música épica</title>
+<button id="b">Gerar e baixar musica_epica.wav</button><pre id="o"></pre>
+<script src="musica_epica.js"></script>
+<script>
+function wav(buf) { const L = buf.getChannelData(0), R = buf.getChannelData(1), n = L.length, dv = new DataView(new ArrayBuffer(44 + n * 4)), w = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)) };
+  w(0, 'RIFF'); dv.setUint32(4, 36 + n * 4, true); w(8, 'WAVE'); w(12, 'fmt '); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 2, true); dv.setUint32(24, buf.sampleRate, true); dv.setUint32(28, buf.sampleRate * 4, true); dv.setUint16(32, 4, true); dv.setUint16(34, 16, true); w(36, 'data'); dv.setUint32(40, n * 4, true);
+  let pk = 0; for (let i = 0; i < n; i++) pk = Math.max(pk, Math.abs(L[i]), Math.abs(R[i])); const k = 0.89 / pk;
+  for (let i = 0; i < n; i++) { dv.setInt16(44 + i * 4, L[i] * k * 32767, true); dv.setInt16(46 + i * 4, R[i] * k * 32767, true) } return new Blob([dv.buffer], { type: 'audio/wav' }) }
+document.getElementById('b').onclick = () => compoeMusica().then(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(wav(b)); a.download = 'musica_epica.wav'; a.click(); document.getElementById('o').textContent = 'pronto: ' + b.duration.toFixed(1) + ' s' });
+</script>
