@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#141a28">
+<title>New Game Anime — hábitos</title>
+<style>
+  :root{--bg:#141a28;--fg:#f4f6fb;--fg2:#b9c2d6;--glass:rgba(20,26,40,.6);--card:#1e2638;--card2:#263049;--line:rgba(255,255,255,.14);--accent:#f0a83a;--ink:#16130e;
+    --hp:#ff5a4a;--xp:#ffd23a;--bom:#5fd18a;--ruim:#ff6b5a;color-scheme:dark}
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:15px system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+  body{display:flex;flex-direction:column;height:100dvh}
+  button{font:inherit;cursor:pointer;color:var(--fg);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+  button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  button.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
+  /* ---------- arena (metade de cima) ---------- */
+  #arena{position:relative;flex:0 0 46%;min-height:280px;overflow:hidden;background:#9fc7e8;touch-action:none}
+  #arena canvas{display:block;touch-action:none}
+  #hud{position:absolute;left:0;right:0;top:0;padding:calc(8px + env(safe-area-inset-top,0px)) 10px 0;display:flex;gap:8px;align-items:flex-start;pointer-events:none}
+  #hud .esq{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;filter:drop-shadow(0 1px 2px #0009)}
+  #hud .nome{font-weight:800;font-size:15px;text-shadow:0 1px 2px #000}
+  #hud .nome small{font-weight:600;opacity:.9;margin-left:6px}
+  .bar{position:relative;height:15px;border-radius:8px;background:rgba(10,12,20,.65);border:1px solid rgba(255,255,255,.35);overflow:hidden;max-width:230px}
+  .bar i{position:absolute;inset:0;transform-origin:left;transition:transform .25s}
+  #hpB i{background:linear-gradient(90deg,#c9302c,#ff6b5a)} #xpB i{background:linear-gradient(90deg,#d9a21b,#ffe066)}
+  .bar span{position:absolute;inset:0;font:700 10.5px/15px system-ui,sans-serif;padding-left:7px;text-shadow:0 1px 1px #000;white-space:nowrap}
+  #hud .dir{display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:auto}
+  #hud .chip{background:var(--glass);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-weight:700;font-size:13px;backdrop-filter:blur(4px)}
+  #bModo{font-weight:800;font-size:13px;padding:6px 12px;border-radius:999px;background:var(--glass);backdrop-filter:blur(4px)}
+  #bModo.manual{background:#8a3cc8;border-color:#b87af0}
+  #bPocao{font-size:13px;padding:5px 10px;border-radius:999px;background:var(--glass)}
+  #bPocao[hidden]{display:none}
+  #ctl{position:absolute;inset:0;pointer-events:none;display:none}
+  body.manual #ctl{display:block}
+  #stick{position:absolute;left:18px;bottom:18px;width:110px;height:110px;border-radius:50%;background:var(--glass);border:1px solid var(--line)}
+  #knob{position:absolute;left:33px;top:33px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.8)}
+  #ctl .ac{position:absolute;pointer-events:auto;border-radius:50%;padding:0;display:grid;place-items:center;font-weight:800;font-size:12.5px;backdrop-filter:blur(4px)}
+  #bAtk{right:18px;bottom:20px;width:76px;height:76px;background:rgba(150,40,40,.7)}
+  #bMag{right:104px;bottom:14px;width:56px;height:56px;background:rgba(60,40,140,.7)}
+  #bMag[data-cd]::after{content:attr(data-cd);position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;font-size:16px}
+  #faixa{position:absolute;left:0;right:0;top:24%;text-align:center;font:900 30px system-ui,sans-serif;color:#ffe066;text-shadow:0 3px 0 #a5560f,0 0 14px #000a;pointer-events:none;opacity:0;transition:opacity .4s,transform .4s;transform:scale(.8)}
+  #faixa.on{opacity:1;transform:scale(1)}
+  #faixa small{display:block;font-size:14px;color:#fff;text-shadow:0 1px 3px #000;font-weight:700;margin-top:4px}
+  #nums div{position:absolute;left:0;top:0;font:800 18px system-ui,sans-serif;color:#fff;text-shadow:0 2px 0 #b2321f,0 0 6px #000a;pointer-events:none;white-space:nowrap;will-change:transform}
+  #nums div.crit{color:#ffd23a;font-size:24px}
+  #nums div.xp{color:#ffe066;text-shadow:0 2px 0 #8a5a00,0 0 6px #000a;font-size:17px}
+  #nums div.ouro{color:#ffd86b;text-shadow:0 2px 0 #6b4a00,0 0 6px #000a;font-size:15px}
+  #nums div.dor{color:#ff8a7a;text-shadow:0 2px 0 #5a0000,0 0 6px #000a}
+  #nums div.cura{color:#8dffb0;text-shadow:0 2px 0 #0a5a2a,0 0 6px #000a}
+  #barras div{position:absolute;left:0;top:0;width:54px;height:6px;margin-left:-27px;border-radius:3px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.5);overflow:hidden;pointer-events:none}
+  #barras div i{display:block;height:100%;background:#ff5a4a;transform-origin:left}
+  #barras div.chefe{width:80px;margin-left:-40px;height:8px} #barras div.chefe i{background:#c86bff}
+  #dor{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 70px 24px rgba(220,30,20,.55);opacity:0;transition:opacity .35s}
+  #carga{position:absolute;inset:0;display:grid;place-content:center;gap:10px;justify-items:center;background:rgba(10,14,24,.6);font-weight:700;text-shadow:0 1px 3px #000;pointer-events:none;z-index:5}
+  #carga.fora{display:none} #carga .bar{width:200px} #carga .bar i{background:var(--accent);transform:scaleX(0)}
+  /* ---------- painel de tarefas (metade de baixo) ---------- */
+  #painel{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg);border-top:1px solid var(--line)}
+  #abas{display:flex;gap:4px;padding:6px 6px 0}
+  #abas button{flex:1;padding:9px 2px;font-size:13.5px;font-weight:700;border-radius:10px 10px 0 0;border-bottom:none;background:var(--card);color:var(--fg2)}
+  #abas button.on{background:var(--card2);color:var(--fg);box-shadow:inset 0 -3px 0 var(--accent)}
+  #abas button b{display:inline-block;min-width:18px;margin-left:4px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--ink);font-size:11px}
+  #lista{flex:1;overflow-y:auto;padding:8px 8px 4px;background:var(--card2);-webkit-overflow-scrolling:touch;touch-action:pan-y}
+  .vazio{opacity:.7;text-align:center;padding:24px 10px;font-size:14px;line-height:1.4}
+  .item{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px;margin-bottom:6px;transition:opacity .4s,transform .4s}
+  .item.some{opacity:0;transform:translateX(40px)}
+  .item .txt{flex:1;min-width:0;padding:6px 2px;line-height:1.25}
+  .item .txt small{display:block;color:var(--fg2);font-size:12px;margin-top:2px}
+  .item .chk{width:40px;height:40px;flex:none;border-radius:10px;padding:0;font-size:20px;font-weight:900;display:grid;place-items:center;background:#2f3a55;border:2px solid #4b5878}
+  .item.feito .chk{background:var(--bom);border-color:var(--bom);color:#0b2416}
+  .item.feito .txt{opacity:.55;text-decoration:line-through}
+  .item .mais{background:#1f6b45;border-color:#2f9a64} .item .menos{background:#7a2a2a;border-color:#b04444}
+  .item .x{width:30px;height:30px;padding:0;flex:none;border-radius:8px;background:none;border:none;color:var(--fg2);font-size:15px}
+  .tag{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:6px;margin-right:4px;background:#39445f;color:#d7def0}
+  .tag.f{background:#2e5a44} .tag.m{background:#5a4a24} .tag.d{background:#6a2f3a}
+  #novo{display:flex;gap:6px;padding:8px;background:var(--card2);border-top:1px solid var(--line);padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+  #novo input{flex:1;min-width:0;font:inherit;font-size:15px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;user-select:text;-webkit-user-select:text}
+  #novo select{font:inherit;font-size:13px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:0 4px}
+  #novo .tipo{padding:0 10px;font-weight:900;font-size:17px}
+  #novo .tipo.off{opacity:.35}
+  #novo #nAdd{font-weight:800;background:var(--accent);color:var(--ink);border-color:var(--accent);padding:0 14px;font-size:20px}
+  #novo[hidden]{display:none}
+  /* aba Heroína */
+  .sec{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px}
+  .sec h3{margin:0 0 8px;font-size:14px;color:#ffe7a8}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:14px}
+  .stats span{color:var(--fg2)} .stats b{float:right}
+  .loja{display:flex;flex-direction:column;gap:6px}
+  .loja button{display:flex;justify-content:space-between;align-items:center;text-align:left;gap:10px}
+  .loja button small{display:block;color:var(--fg2);font-size:12px}
+  .loja button:disabled{opacity:.45}
+  .loja .preco{font-weight:800;color:#ffd86b;white-space:nowrap}
+  #pers{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  #pers button{padding:0;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;background:#2f3a55}
+  #pers button img{width:100%;aspect-ratio:4/5;object-fit:cover;display:block;background:linear-gradient(#3a4a6a,#24304a)}
+  #pers button span{font-size:10.5px;padding:3px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #pers button.on{outline:3px solid var(--accent);outline-offset:-2px}
+  .dica{font-size:12.5px;color:var(--fg2);line-height:1.4;margin:0}
+  #aviso{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);max-width:calc(100vw - 30px);background:#0d111c;border:1px solid var(--line);
+    border-radius:12px;padding:10px 14px;font-size:14px;box-shadow:0 6px 24px #000a;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:20;text-align:center}
+  #aviso.on{opacity:1;transform:translateX(-50%)}
+</style></head>
+<body>
+<div id="arena">
+  <div id="hud">
+    <div class="esq">
+      <div class="nome" id="hNome">Shino<small id="hNv">Nível 1</small></div>
+      <div class="bar" id="hpB"><i></i><span>Vida 100/100</span></div>
+      <div class="bar" id="xpB"><i></i><span>XP 0/40</span></div>
+    </div>
+    <div class="dir">
+      <button id="bModo" aria-label="Trocar entre automático e manual">▶ Auto</button>
+      <div class="chip" id="hOuro">🪙 0</div>
+      <div class="chip" id="hOnda">Onda 1</div>
+      <button id="bPocao" hidden>🧪 0</button>
+    </div>
+  </div>
+  <div id="ctl"><div id="stick"><div id="knob"></div></div><button class="ac" id="bMag">Magia</button><button class="ac" id="bAtk">Atacar</button></div>
+  <div id="barras"></div><div id="nums"></div><div id="dor"></div>
+  <div id="faixa"></div>
+  <div id="carga"><b>Carregando…</b><div class="bar"><i></i></div></div>
+</div>
+<div id="painel">
+  <div id="abas">
+    <button data-aba="hab">Hábitos</button><button data-aba="diar">Diárias</button><button data-aba="afz">Afazeres</button><button data-aba="her">Heroína</button>
+  </div>
+  <div id="lista"></div>
+  <div id="novo">
+    <input id="nTxt" placeholder="Nova tarefa…" maxlength="80" enterkeyhint="done">
+    <button class="tipo" id="nPos" aria-label="Hábito bom (+)">+</button><button class="tipo" id="nNeg" aria-label="Hábito ruim (−)">−</button>
+    <select id="nDif" aria-label="Dificuldade"><option value="f">Fácil</option><option value="m" selected>Médio</option><option value="d">Difícil</option></select>
+    <button id="nAdd" aria-label="Adicionar">+</button>
+  </div>
+</div>
+<div id="aviso"></div>
+<script src="js/three.min.js"></script>
+<script src="js/GLTFLoader.js"></script>
+<script src="js/vrm_char.js"></script>
+<script>
+// Esboço do jogo de hábitos (estilo Habitica) com os personagens do New Game Anime, pro celular em pé.
+// Em cima: a arena, onde a heroína luta sozinha (Auto) ou com joystick (Manual).
+// Embaixo: hábitos, diárias e afazeres. Só as tarefas dão XP e sobem o nível; os monstros dão ouro, que compra poção e equipamento.
+const PERS = [ // arquivo, nome
+  ['sendagaya_shino', 'Shino'], ['sendagaya_shibu', 'Shibu'], ['darkness_shibu', 'Darkness Shibu'], ['sakurada_fumiriya', 'Fumiriya'],
+  ['victoria_rubin', 'Victoria Rubin'], ['vita', 'Vita'], ['vivi', 'Vivi'], ['hairsample_female', 'Moça (moletom)'], ['hairsample_male', 'Rapaz (moletom)'],
+  ['avatarsample_a', 'Avatar A'], ['avatarsample_b', 'Avatar B'], ['avatarsample_c', 'Avatar C'],
+];
+// recompensa por dificuldade: XP, ouro e vida perdida (hábito ruim ou diária esquecida)
+const DIF = { f: { n: 'Fácil', xp: 10, ouro: 3, dor: 6 }, m: { n: 'Médio', xp: 20, ouro: 6, dor: 12 }, d: { n: 'Difícil', xp: 35, ouro: 10, dor: 20 } };
+const AFZ_X = 1.5; // afazer (tarefa única) vale 50% a mais
+const hoje = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') };
+const uid = () => Math.random().toString(36).slice(2, 9);
+const hpMax = () => 100 + 10 * (S.nv - 1);
+const xpProx = () => 40 + 20 * (S.nv - 1);
+const ataque = () => 10 + 3 * (S.nv - 1) + 4 * S.espada;
+const defesa = () => Math.min(0.6, 0.07 * S.armad); // fração do dano dos monstros que a armadura segura
+
+// ---------------- estado salvo no aparelho ----------------
+const CHAVE = 'nga-habitos-v1';
+function padrao() {
+  const t = (txt, d, x) => Object.assign({ id: uid(), t: txt, d }, x);
+  return { pers: 0, nv: 1, xp: 0, hp: 100, ouro: 0, espada: 0, armad: 0, pocoes: 1, onda: 1, recorde: 1, auto: true, aba: 'diar', dia: hoje(), feitos: 0,
+    hab: [t('Beber um copo de água', 'f', { pos: true, neg: false, c: 0, cn: 0 }), t('Fazer exercício', 'm', { pos: true, neg: false, c: 0, cn: 0 }), t('Comer besteira', 'm', { pos: false, neg: true, c: 0, cn: 0 })],
+    diar: [t('Arrumar a cama', 'f', { ok: false }), t('Ler 10 páginas', 'm', { ok: false }), t('Estudar 30 minutos', 'd', { ok: false })],
+    afz: [t('Organizar a mesa', 'm', {}), t('Marcar o dentista', 'f', {})] };
+}
+let S; try { S = Object.assign(padrao(), JSON.parse(localStorage.getItem(CHAVE) || 'null') || {}) } catch (e) { S = padrao() }
+function salva() { try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} }
+
+// ---------------- cena ----------------
+const arena = document.getElementById('arena');
+const r = new THREE.WebGLRenderer({ antialias: true }); r.setPixelRatio(Math.min(1.5, devicePixelRatio)); r.outputEncoding = THREE.sRGBEncoding;
+r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; arena.prepend(r.domElement);
+r.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); let ja = false; try { ja = sessionStorage.getItem('nga-hrec') === '1'; sessionStorage.setItem('nga-hrec', '1') } catch (x) {} if (!ja) setTimeout(() => location.reload(), 600) });
+const sc = new THREE.Scene(); sc.background = new THREE.Color(0xf2c597); sc.fog = new THREE.Fog(0xe6b88e, 14, 34);
+const hemi = new THREE.HemisphereLight(0xffe2c0, 0x3d5a2a, 0.72); sc.add(hemi);
+const sol = new THREE.DirectionalLight(0xffc48a, 0.95); sol.castShadow = true; sol.shadow.mapSize.set(1024, 1024);
+Object.assign(sol.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 40 }); sol.shadow.bias = -0.0005; sc.add(sol, sol.target);
+const cam = new THREE.PerspectiveCamera(48, 1, 0.05, 80);
+function tam() { const w = arena.clientWidth, h = arena.clientHeight; r.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix() }
+addEventListener('resize', tam); tam();
+const M = c => new THREE.MeshLambertMaterial({ color: new THREE.Color(c).convertSRGBToLinear() });
+{ const chao = new THREE.Mesh(new THREE.CircleGeometry(40, 48), M(0x6a9446)); chao.rotation.x = -Math.PI / 2; chao.receiveShadow = true; sc.add(chao);
+  const clareira = new THREE.Mesh(new THREE.CircleGeometry(8.5, 40), M(0x7aa452)); clareira.rotation.x = -Math.PI / 2; clareira.position.y = 0.005; clareira.receiveShadow = true; sc.add(clareira) }
+const RAIO = 8; // a arena: a heroína e os monstros ficam dentro desse círculo
+const _gl = new THREE.GLTFLoader(), _mA = new THREE.Matrix4(), _vA = new THREE.Vector3(), _qA = new THREE.Quaternion(), _sA = new THREE.Vector3(), _Y = new THREE.Vector3(0, 1, 0);
+function espalha(nome, lista, sombra) { // várias cópias de um modelo do cenário numa malha instanciada; lista de [x, z, giro, escala]
+  _gl.load('cenario/' + nome + '.glb', g => {
+    g.scene.updateMatrixWorld(true); g.scene.traverse(m => {
+      if (!m.isMesh) return; m.material.normalMap = null;
+      const im = new THREE.InstancedMesh(m.geometry, m.material, lista.length);
+      lista.forEach(([x, z, rot, s], i) => { _mA.compose(_vA.set(x, 0, z), _qA.setFromAxisAngle(_Y, rot), _sA.set(s, s, s)).multiply(m.matrixWorld); im.setMatrixAt(i, _mA) });
+      im.castShadow = sombra; im.receiveShadow = true; sc.add(im);
+    });
+  });
+}
+function cenario() { // anel de árvores em volta da clareira, umas pedras e mato
+  let sd = 11; const rd = () => { sd = (sd * 16807) % 2147483647; return (sd - 1) / 2147483646 }, ru = (a, b) => a + rd() * (b - a);
+  const arv = { Pine_1: [], Pine_2: [], CommonTree_1: [], CommonTree_2: [], CommonTree_3: [] }, nomes = Object.keys(arv);
+  for (let i = 0; i < 22; i++) { const a = i / 22 * Math.PI * 2 + ru(-0.1, 0.1), rr = ru(10.5, 13.5); arv[nomes[i % nomes.length]].push([Math.cos(a) * rr, Math.sin(a) * rr, ru(0, 6.28), ru(0.5, 0.68)]) }
+  for (const n in arv) espalha(n, arv[n], true);
+  const pedras = [], mato = [], flores = [];
+  for (let i = 0; i < 6; i++) { const a = ru(0, 6.28), rr = ru(9, 10.5); pedras.push([Math.cos(a) * rr, Math.sin(a) * rr, ru(0, 6.28), ru(0.5, 0.9)]) }
+  for (let i = 0; i < 22; i++) { const a = ru(0, 6.28), rr = ru(6.5, 10.5); mato.push([Math.cos(a) * rr, Math.sin(a) * rr, ru(0, 6.28), ru(0.3, 0.45)]) }
+  for (let i = 0; i < 12; i++) { const a = ru(0, 6.28), rr = ru(4, 9); flores.push([Math.cos(a) * rr, Math.sin(a) * rr, ru(0, 6.28), ru(0.25, 0.35)]) }
+  espalha('Rock_Medium_1', pedras, true); espalha('Grass_Common_Tall', mato, false); espalha('Flower_3_Group', flores, false);
+}
+
+// ---------------- sons (Kenney, CC0) ----------------
+const SOM = { ctx: null, buf: {}, vol: null };
+const SONS = { acerto: ['acerto1', 'acerto2', 'acerto3'], critico: ['critico1', 'critico2'], queda: ['queda'], metal: ['metal1', 'metal2'], dor: ['dor'],
+  lute: ['voz_lute'], venceu: ['voz_venceu'], perfeito: ['voz_perfeito'], fim: ['voz_fim'], vitoria: ['jingle_vitoria'], pulo: ['pulo1', 'pulo2'] };
+function somLiga() {
+  if (SOM.ctx) return; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+  SOM.ctx = new AC(); SOM.vol = SOM.ctx.createGain(); SOM.vol.gain.value = 0.7; SOM.vol.connect(SOM.ctx.destination);
+  for (const lista of Object.values(SONS)) for (const n of lista) fetch('sons/' + n + '.ogg').then(x => x.arrayBuffer()).then(a => SOM.ctx.decodeAudioData(a, b => SOM.buf[n] = b)).catch(() => {});
+}
+addEventListener('pointerup', somLiga, { capture: true });
+function som(nome, vol = 1, vel = 1) {
+  if (!SOM.ctx) return; const lista = SONS[nome], b = lista && SOM.buf[lista[Math.random() * lista.length | 0]]; if (!b) return;
+  const s = SOM.ctx.createBufferSource(), g = SOM.ctx.createGain(); s.buffer = b; s.playbackRate.value = vel * (0.94 + Math.random() * 0.12); g.gain.value = vol;
+  s.connect(g); g.connect(SOM.vol); s.start();
+}
+function plim(nota = 0, vol = 0.25) { // sininho de tarefa feita (sintetizado)
+  if (!SOM.ctx) return; const c = SOM.ctx, t = c.currentTime;
+  [0, 0.09].forEach((d, i) => { const o = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o.frequency.value = 880 * Math.pow(2, (nota + i * 4) / 12);
+    g.gain.setValueAtTime(0.0001, t + d); g.gain.exponentialRampToValueAtTime(vol, t + d + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.35); o.connect(g); g.connect(SOM.vol); o.start(t + d); o.stop(t + d + 0.4) });
+}
+
+// ---------------- heroína ----------------
+const H = { x: 0, z: 0, face: 0, atk: null, combo: 0, atkCd: 0, magCd: 2, desm: 0, comem: 0, flash: 0 };
+const player = new THREE.Group(); sc.add(player);
+let R = null, mix = null, cur = null, pedido = 0, K = 0.64, ALT = 1.55, RUN = 2.9; const cache = {};
+const ONCE = new Set(['Sword_A', 'Sword_B', 'Sword_C', 'Spell_Shoot', 'Hit_A', 'Death_A', 'Ranged_Magic_Raise', 'Ranged_Magic_Summon', 'Interact', 'Flip_Front', 'Jump_Full_Short']);
+function tocar(n, rate = 1, fade = 0.15) {
+  const a = R && R.act[n]; if (!a) return;
+  if (cur !== n) {
+    a.reset(); a.setLoop(ONCE.has(n) ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = true; a.enabled = true; a.setEffectiveWeight(1); a.play(); if (fade > 0) a.fadeIn(fade);
+    for (const k in R.act) { const b = R.act[k]; if (b !== a && b.isScheduled() && b.getEffectiveWeight() > 0.001) fade > 0 ? b.fadeOut(fade) : b.stop() }
+    cur = n;
+  }
+  a.timeScale = rate;
+}
+const dur = n => (R && R.act[n] ? R.act[n].getClip().duration : 0.6);
+function carga(txt, f) { const c = document.getElementById('carga'); c.classList.toggle('fora', !txt); if (!txt) return; c.querySelector('b').textContent = txt; c.querySelector('i').style.transform = 'scaleX(' + (f || 0) + ')' }
+let cenarioPronto = false;
+function carregar(i) {
+  const [arq, nome] = PERS[i] || PERS[0], meu = ++pedido; carga(R ? null : 'Carregando ' + nome + '…', 0);
+  (cache[arq] || (cache[arq] = new Promise((ok, erro) => _gl.load('personagens/' + arq + '.glb', ok, e => { if (e.total && meu === pedido && !R) carga('Carregando ' + nome + '…', e.loaded / e.total) }, erro)))).then(gl => {
+    if (meu !== pedido) return;
+    if (R) { player.remove(R.root); mix.stopAllAction() }
+    if (!gl.__A) gl.__A = VRMC.prep(gl);
+    const A = gl.__A, root = A.gl.scene; player.add(root); root.userData.vrm.J = null;
+    root.traverse(o => { if (o.isMesh) { o.castShadow = !o.material.transparent; o.receiveShadow = true } });
+    mix = new THREE.AnimationMixer(root); R = { root, act: {} }; cur = null;
+    for (const c of A.an.animations) R.act[c.name] = mix.clipAction(c.clone());
+    root.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(root); ALT = Math.max(0.8, bb.max.y - bb.min.y); K = ALT / 2.42; RUN = 4.6 * K;
+    VRMC.fix(R, RUN, 2.2 * K);
+    poeEspada(); H.atk = null; carga(null); hud();
+    if (!cenarioPronto) { cenarioPronto = true; cenario(); carregaMonstros() }
+  }).catch(() => { if (meu === pedido) { if (!R) { carga('A internet falhou. Toque pra tentar de novo.', 0); addEventListener('pointerup', () => carregar(i), { once: true }) } } delete cache[arq] });
+}
+let espada = null;
+function poeEspada() { // espada na mão direita, sempre à mostra na arena
+  espada = new THREE.Group(); const aco = new THREE.MeshStandardMaterial({ color: 0xdfe6ee, metalness: 0.6, roughness: 0.25, emissive: 0x223344 }), cabo = M(0x3b2a1e), ouro = M(0xd4a640);
+  const L = 0.95 * K / 0.68, add = (geo, m, y) => { const o = new THREE.Mesh(geo, m); o.position.y = y; o.castShadow = true; espada.add(o); return o };
+  add(new THREE.BoxGeometry(0.055, L, 0.012), aco, 0.12 + L / 2); add(new THREE.ConeGeometry(0.04, 0.12, 4), aco, 0.12 + L + 0.05).rotation.y = Math.PI / 4;
+  add(new THREE.BoxGeometry(0.22, 0.035, 0.05), ouro, 0.1); add(new THREE.CylinderGeometry(0.02, 0.022, 0.2, 8), cabo, 0); add(new THREE.SphereGeometry(0.032, 8, 6), ouro, -0.11);
+  let mao = null; R.root.traverse(o => { if (o.name === 'handslotr' || o.name === 'handslot.r') mao = o }); if (!mao) R.root.traverse(o => { if (!mao && /^handr$|^hand\.?r$/.test(o.name)) mao = o });
+  if (mao) { const ws = new THREE.Vector3(); mao.parent.updateWorldMatrix(true, false); mao.getWorldScale(ws); espada.scale.setScalar(1 / ws.x); mao.add(espada) }
+  espada.userData.aco = aco; corEspada();
+}
+function corEspada() { if (espada) espada.userData.aco.emissive.set(S.espada >= 3 ? 0x6a3a00 : S.espada >= 1 ? 0x3a4a6a : 0x223344) }
+
+// ---------------- monstros (Ultimate Monsters da Quaternius, CC0) ----------------
+const TIPOS = ['MushroomKing', 'Orc', 'Yeti', 'Demon'], BUF = {}, BICHOS = [];
+function carregaMonstros() { for (const n of TIPOS) BUF[n] = fetch('monstros/' + n + '.glb').then(x => { if (!x.ok) throw 0; return x.arrayBuffer() }) }
+const barrasEl = document.getElementById('barras');
+function novoBicho(tipo, x, z, chefe) {
+  const n = S.onda, b = { tipo, x, z, face: Math.atan2(-x, -z), vivo: true, est: 'anda', t: 0, cd: 1 + Math.random(), nasce: 0, morto: 0, chefe,
+    max: Math.round((32 + 14 * (n - 1)) * (chefe ? 3 : 1)), dano: Math.round((4 + 1.6 * (n - 1)) * (chefe ? 1.6 : 1)), g: new THREE.Group(), mats: [], kx: 0, kz: 0 };
+  b.hp = b.max; b.g.position.set(x, 0, z); b.g.scale.setScalar(0.001); sc.add(b.g);
+  b.bar = document.createElement('div'); b.bar.innerHTML = '<i></i>'; if (chefe) b.bar.className = 'chefe'; barrasEl.appendChild(b.bar);
+  BUF[tipo].then(buf => _gl.parse(buf, '', g => {
+    if (!b.vivo && b.morto > 1.5) return;
+    const c = g.scene; c.scale.setScalar(0.62 * K / 0.64 * (chefe ? 1.45 : 1)); b.g.add(c);
+    c.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; o.material.emissive = new THREE.Color(0); b.mats.push(o.material) } });
+    b.mix = new THREE.AnimationMixer(c); b.acts = {}; for (const a of g.animations) b.acts[a.name] = b.mix.clipAction(a);
+  })).catch(() => {});
+  b.anima = nm => { if (!b.acts || b.atual === nm || !b.acts[nm]) return; const a = b.acts[nm], u = b.acts[b.atual]; a.reset(); const uma = nm === 'Death' || nm === 'HitReact' || nm === 'Punch';
+    a.setLoop(uma ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = uma; a.timeScale = nm === 'Punch' ? 1.4 : 1; a.play(); if (u) a.crossFadeFrom(u, 0.15, false); b.atual = nm };
+  BICHOS.push(b); return b;
+}
+let ondaT = 2.5; // tempo até a próxima onda
+function chamaOnda() {
+  const n = S.onda, chefe = n % 5 === 0, q = chefe ? 1 : Math.min(4, 1 + Math.floor((n - 1) / 2));
+  for (let i = 0; i < q; i++) { const a = Math.random() * Math.PI * 2, rr = RAIO - 0.8; novoBicho(chefe ? 'Demon' : TIPOS[(n + i) % TIPOS.length], Math.cos(a) * rr + H.x * 0.2, Math.sin(a) * rr + H.z * 0.2, chefe) }
+  faixa(chefe ? 'Chefe!' : 'Onda ' + n, chefe ? 'um monstro grandão' : null, 1.3); if (n === 1 || chefe) som('lute', 0.7);
+}
+function bateNoBicho(b, v, crit, dx, dz) {
+  if (!b.vivo) return; b.hp -= v; b.flash = 1; const l = Math.hypot(dx, dz) || 1, f = (crit ? 4 : 2) / (b.chefe ? 3 : 1); b.kx = dx / l * f; b.kz = dz / l * f;
+  numero(crit ? v + '!' : '' + v, b.x, 1.6 * K / 0.64 * (b.chefe ? 1.4 : 1), b.z, crit ? 'crit' : '');
+  som(crit ? 'critico' : 'acerto', crit ? 0.9 : 0.7, 0.9);
+  if (b.hp <= 0) {
+    b.vivo = false; b.est = 'morre'; b.morto = 0; b.anima('Death'); som('queda', 0.6, 0.8);
+    const ganho = Math.round((2 + S.onda) * (b.chefe ? 5 : 1)); S.ouro += ganho; numero('+' + ganho + ' 🪙', b.x, 2 * K / 0.64, b.z, 'ouro'); hud(); salva();
+  } else if (b.est !== 'ataca') { b.est = 'leva'; b.t = 0; b.anima('HitReact') }
+}
+function bichosPasso(dt) {
+  let vivos = 0;
+  for (let i = BICHOS.length - 1; i >= 0; i--) {
+    const b = BICHOS[i]; b.t += dt; b.cd -= dt; if (b.mix) b.mix.update(dt);
+    if (b.flash > 0) { b.flash = Math.max(0, b.flash - dt * 5); for (const m of b.mats) m.emissive.setRGB(b.flash * 0.8, b.flash * 0.25, b.flash * 0.2) }
+    if (b.est === 'morre') {
+      b.morto += dt; const k = Math.max(0, 1 - Math.max(0, b.morto - 1.4) / 0.3); b.g.scale.setScalar(k);
+      if (b.morto > 1.8) { sc.remove(b.g); b.bar.remove(); BICHOS.splice(i, 1) } continue;
+    }
+    vivos++;
+    b.nasce = Math.min(1, b.nasce + dt * 2); b.g.scale.setScalar(b.nasce);
+    const dx = H.x - b.x, dz = H.z - b.z, d = Math.hypot(dx, dz), perto = 0.95 * K / 0.64 * (b.chefe ? 1.3 : 1);
+    let mv = 0;
+    if (b.est === 'leva') { if (b.t > 0.35) b.est = 'anda' }
+    else if (b.est === 'ataca') {
+      if (!b.bateu && b.t > 0.38) { b.bateu = true; if (d < perto + 0.5 && !H.desm) levaDano(b.dano, b) }
+      if (b.t > 0.9) { b.est = 'anda'; b.cd = (b.chefe ? 1.4 : 1.7) + Math.random() * 0.5 }
+    } else if (H.desm) { b.anima('Idle') }
+    else if (d > perto) { mv = b.chefe ? 1.2 : 1.6; b.face = Math.atan2(dx, dz); b.anima('Walk') }
+    else { b.face = Math.atan2(dx, dz); if (b.cd <= 0) { b.est = 'ataca'; b.t = 0; b.bateu = false; b.anima('Punch') } else b.anima('Idle') }
+    b.x += (Math.sin(b.face) * mv + b.kx) * dt; b.z += (Math.cos(b.face) * mv + b.kz) * dt; b.kx *= Math.pow(0.02, dt); b.kz *= Math.pow(0.02, dt);
+    for (const o of BICHOS) if (o !== b && o.vivo) { const ex = b.x - o.x, ez = b.z - o.z, e = Math.hypot(ex, ez), m = 1.0 * K / 0.64; if (e < m && e > 1e-4) { b.x += ex / e * (m - e) * 0.5; b.z += ez / e * (m - e) * 0.5 } }
+    const rr = Math.hypot(b.x, b.z); if (rr > RAIO) { b.x *= RAIO / rr; b.z *= RAIO / rr }
+    b.g.position.set(b.x, 0, b.z); b.g.rotation.y = b.face;
+  }
+  if (!H.desm && R && vivos === 0 && !BICHOS.some(b => b.est !== 'morre')) {
+    if (ondaT > 0) { const antes = ondaT; ondaT -= dt; if (antes > 0 && ondaT <= 0) { chamaOnda(); ondaT = -1 } }
+  }
+  if (ondaT < 0 && BICHOS.length === 0) { // onda vencida
+    S.onda++; S.recorde = Math.max(S.recorde, S.onda); ondaT = 2.5; S.hp = Math.min(hpMax(), S.hp + Math.round(hpMax() * 0.06)); salva(); hud(); // respira entre as ondas
+    if ((S.onda - 1) % 5 === 0) { som('venceu', 0.7); faixa('Chefe derrotado!', '+ouro', 1.6) }
+  }
+}
+function levaDano(v, b) {
+  const real = Math.max(1, Math.round(v * (1 - defesa()) * (0.85 + Math.random() * 0.3)));
+  S.hp = Math.max(0, S.hp - real); numero('-' + real, H.x, ALT + 0.2, H.z, 'dor'); som('dor', 0.5); doi(); hud();
+  if (S.hp <= 0) desmaia(); else if (!H.atk && b) { H.hit = 0.3; tocar('Hit_A', 1.3, 0.08) }
+}
+function desmaia() {
+  H.desm = 6; H.atk = null; tocar('Death_A', 1, 0.1); som('fim', 0.7);
+  S.onda = Math.max(1, S.onda - 2); faixa('Desmaiou…', 'volta em instantes, umas ondas atrás', 2.5); salva();
+}
+function levanta() {
+  H.desm = 0; S.hp = Math.max(S.hp, Math.round(hpMax() * 0.4)); H.x = 0; H.z = 0; H.face = 0; ondaT = 2.5; hud(); salva();
+  for (const b of BICHOS) { sc.remove(b.g); b.bar.remove() } BICHOS.length = 0;
+}
+
+// ---------------- ataques da heroína ----------------
+const GOLPES = [{ a: 'Sword_A', hit: 0.45, alc: 1.5 }, { a: 'Sword_B', hit: 0.5, alc: 1.6 }, { a: 'Sword_C', hit: 0.4, alc: 1.8, forte: 1.6 }];
+const ORBES = [];
+function atacar() {
+  if (!R || H.atk || H.desm || H.atkCd > 0) return;
+  const g = GOLPES[H.combo % GOLPES.length]; H.combo++; H.atk = { g, t: 0, dur: dur(g.a) / 1.15, feito: false }; tocar(g.a, 1.15, 0.08);
+  const alvo = maisPerto(); if (alvo && Math.hypot(alvo.x - H.x, alvo.z - H.z) < 3) H.face = Math.atan2(alvo.x - H.x, alvo.z - H.z);
+}
+function magia() {
+  if (!R || H.atk || H.desm || H.magCd > 0) return;
+  H.atk = { mag: true, t: 0, dur: dur('Spell_Shoot'), feito: false }; H.magCd = 5; tocar('Spell_Shoot', 1, 0.08);
+  const alvo = maisPerto(); if (alvo) H.face = Math.atan2(alvo.x - H.x, alvo.z - H.z);
+}
+function maisPerto() { let m = null, md = 1e9; for (const b of BICHOS) if (b.vivo) { const d = Math.hypot(b.x - H.x, b.z - H.z); if (d < md) { md = d; m = b } } return m }
+const orbeGeo = new THREE.SphereGeometry(0.16, 12, 8);
+function atkPasso(dt) {
+  H.atkCd -= dt; H.magCd -= dt; const A = H.atk; if (!A) return; A.t += dt;
+  if (!A.feito && A.t >= (A.mag ? 0.3 : A.g.hit) * A.dur) {
+    A.feito = true;
+    if (A.mag) {
+      const o = new THREE.Mesh(orbeGeo, new THREE.MeshBasicMaterial({ color: 0x9fd8ff })); const luz = new THREE.PointLight(0x7fc8ff, 1.2, 3); o.add(luz);
+      o.position.set(H.x + Math.sin(H.face) * 0.5, ALT * 0.6, H.z + Math.cos(H.face) * 0.5); sc.add(o); ORBES.push({ o, vx: Math.sin(H.face) * 9, vz: Math.cos(H.face) * 9, t: 0 }); som('pulo', 0.5, 1.6);
+    } else {
+      const alc = A.g.alc * K / 0.64; let acertou = false;
+      for (const b of BICHOS) { if (!b.vivo) continue; const dx = b.x - H.x, dz = b.z - H.z, d = Math.hypot(dx, dz); if (d > alc + (b.chefe ? 0.4 : 0)) continue;
+        const ang = Math.abs(((Math.atan2(dx, dz) - H.face + Math.PI * 3) % (Math.PI * 2)) - Math.PI); if (ang > 1.4 && d > 0.6) continue;
+        const crit = Math.random() < 0.12, v = Math.round(ataque() * (A.g.forte || 1) * (0.85 + Math.random() * 0.3) * (crit ? 2 : 1)); bateNoBicho(b, v, crit, dx, dz); acertou = true }
+      if (!acertou) som('metal', 0.12, 0.7);
+    }
+  }
+  if (A.t >= A.dur) { H.atk = null; H.atkCd = A.mag ? 0.2 : 0.12; if (H.combo % 3 === 0) H.atkCd = 0.45 }
+}
+function orbesPasso(dt) {
+  for (let i = ORBES.length - 1; i >= 0; i--) {
+    const O = ORBES[i]; O.t += dt; O.o.position.x += O.vx * dt; O.o.position.z += O.vz * dt; O.o.scale.setScalar(1 + Math.sin(O.t * 30) * 0.15);
+    let bateu = null; for (const b of BICHOS) if (b.vivo && Math.hypot(b.x - O.o.position.x, b.z - O.o.position.z) < 0.7 * (b.chefe ? 1.4 : 1)) { bateu = b; break }
+    if (bateu) { bateNoBicho(bateu, Math.round(ataque() * 2.4 * (0.9 + Math.random() * 0.2)), true, O.vx, O.vz); faiscas(O.o.position, 0x9fd8ff, 18) }
+    if (bateu || O.t > 1.4) { sc.remove(O.o); ORBES.splice(i, 1) }
+  }
+}
+
+// ---------------- controle: automático ou joystick ----------------
+const stick = { id: null, x0: 0, y0: 0, dx: 0, dy: 0 }, knob = document.getElementById('knob'), stickEl = document.getElementById('stick');
+let yaw = 0, pitch = 0.55, arrasta = null;
+const cv = r.domElement;
+cv.addEventListener('pointerdown', e => {
+  cv.setPointerCapture(e.pointerId); const rc = arena.getBoundingClientRect(), x = e.clientX - rc.left, y = e.clientY - rc.top;
+  if (!S.auto && stick.id == null && x < rc.width * 0.5 && y > rc.height * 0.35) {
+    Object.assign(stick, { id: e.pointerId, x0: e.clientX, y0: e.clientY, dx: 0, dy: 0 }); stickEl.style.left = (x - 55) + 'px'; stickEl.style.top = (y - 55) + 'px'; stickEl.style.bottom = 'auto';
+  } else arrasta = { id: e.pointerId, x: e.clientX, y: e.clientY };
+});
+cv.addEventListener('pointermove', e => {
+  if (e.pointerId === stick.id) { let dx = e.clientX - stick.x0, dy = e.clientY - stick.y0; const l = Math.hypot(dx, dy), mx = 44; if (l > mx) dx *= mx / l, dy *= mx / l;
+    stick.dx = dx / mx; stick.dy = dy / mx; knob.style.transform = `translate(${dx}px,${dy}px)`; return }
+  if (arrasta && e.pointerId === arrasta.id) { yaw -= (e.clientX - arrasta.x) * 0.008; pitch = Math.min(1.1, Math.max(0.15, pitch + (e.clientY - arrasta.y) * 0.005)); arrasta.x = e.clientX; arrasta.y = e.clientY }
+});
+const solta = e => { if (e.pointerId === stick.id) { stick.id = null; stick.dx = stick.dy = 0; knob.style.transform = ''; stickEl.style.left = '18px'; stickEl.style.top = ''; stickEl.style.bottom = '18px' } if (arrasta && e.pointerId === arrasta.id) arrasta = null };
+cv.addEventListener('pointerup', solta); cv.addEventListener('pointercancel', solta);
+const tecla = new Set(); addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; tecla.add(e.key.toLowerCase()); if (e.key === 'j') atacar(); if (e.key === 'k') magia() }); addEventListener('keyup', e => tecla.delete(e.key.toLowerCase()));
+const toque = (id, f) => document.getElementById(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); somLiga(); f() });
+toque('bAtk', atacar); toque('bMag', magia);
+toque('bModo', () => { S.auto = !S.auto; salva(); hud(); aviso(S.auto ? 'Automático: ela luta sozinha.' : 'Manual: joystick à esquerda, Atacar e Magia à direita.') });
+toque('bPocao', bebePocao);
+function bebePocao() {
+  if (S.pocoes <= 0 || S.hp >= hpMax() || H.desm) return; S.pocoes--; const c = Math.min(hpMax() - S.hp, 50); S.hp += c; numero('+' + c, H.x, ALT + 0.2, H.z, 'cura'); brilho(0x8dffb0); salva(); hud(); if (aba === 'her') lista();
+}
+
+function heroiPasso(dt) {
+  if (!R) return;
+  if (H.desm) { H.desm -= dt; if (H.desm <= 0) levanta(); return }
+  if (H.hit > 0) H.hit -= dt;
+  if (S.auto && S.pocoes > 0 && S.hp < hpMax() * 0.3) bebePocao(); // no automático ela toma poção sozinha
+  let mx = 0, mz = 0;
+  if (!S.auto) {
+    let ix = stick.dx, iy = stick.dy;
+    if (tecla.has('a')) ix -= 1; if (tecla.has('d')) ix += 1; if (tecla.has('w')) iy -= 1; if (tecla.has('s')) iy += 1;
+    const l = Math.hypot(ix, iy); if (l > 0.12) { const k = Math.min(1, l), fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
+      mx = (rx * ix - fx * iy) / l * k * RUN; mz = (rz * ix - fz * iy) / l * k * RUN }
+  } else {
+    const alvo = maisPerto();
+    if (alvo) { const dx = alvo.x - H.x, dz = alvo.z - H.z, d = Math.hypot(dx, dz), alc = 1.25 * K / 0.64 + (alvo.chefe ? 0.35 : 0);
+      if (d > alc && !H.atk) { mx = dx / d * RUN; mz = dz / d * RUN }
+      else if (d <= alc) { if (!H.atk) H.face = Math.atan2(dx, dz); if (H.magCd <= 0 && (BICHOS.filter(b => b.vivo).length > 1 || alvo.chefe)) magia(); else atacar() }
+      else if (d > 4 && H.magCd <= 0) magia();
+    } else { const d = Math.hypot(H.x, H.z); if (d > 0.6) { mx = -H.x / d * RUN * 0.45; mz = -H.z / d * RUN * 0.45 } }
+  }
+  if (H.atk) { mx *= 0.15; mz *= 0.15 }
+  const v = Math.hypot(mx, mz);
+  if (v > 0.05) { H.x += mx * dt; H.z += mz * dt; if (!H.atk) { const alvo = H.face, nv = Math.atan2(mx, mz); let d = ((nv - alvo + Math.PI * 3) % (Math.PI * 2)) - Math.PI; H.face += d * Math.min(1, dt * 12) } }
+  const rr = Math.hypot(H.x, H.z); if (rr > RAIO) { H.x *= RAIO / rr; H.z *= RAIO / rr }
+  for (const b of BICHOS) if (b.vivo) { const ex = H.x - b.x, ez = H.z - b.z, e = Math.hypot(ex, ez), m = 0.75 * K / 0.64 * (b.chefe ? 1.3 : 1); if (e < m && e > 1e-4) { H.x += ex / e * (m - e); H.z += ez / e * (m - e) } }
+  atkPasso(dt);
+  if (!H.atk && !(H.hit > 0) && !H.comem) { if (v > 0.3) tocar(v > RUN * 0.6 ? 'Running_A' : 'Walking_A', 1); else tocar(BICHOS.some(b => b.vivo) && R.act.Sword_Idle ? 'Sword_Idle' : 'Idle_A', 1) }
+  if (H.comem > 0) { H.comem -= dt; if (H.comem <= 0) H.comem = 0 }
+}
+
+// ---------------- efeitos ----------------
+const numsEl = document.getElementById('nums'), NUMS = [], _p = new THREE.Vector3();
+function numero(txt, x, y, z, cls) { const el = document.createElement('div'); el.textContent = txt; if (cls) el.className = cls; numsEl.appendChild(el); NUMS.push({ el, x: x + (Math.random() - 0.5) * 0.3, y, z, t: 0 }) }
+function numsPasso(dt) {
+  const w = arena.clientWidth, h = arena.clientHeight;
+  for (let i = NUMS.length - 1; i >= 0; i--) { const n = NUMS[i]; n.t += dt; if (n.t > 1.3) { n.el.remove(); NUMS.splice(i, 1); continue }
+    _p.set(n.x, n.y + n.t * 0.9, n.z).project(cam); n.el.style.transform = `translate(${(_p.x + 1) / 2 * w}px,${(1 - _p.y) / 2 * h}px) translate(-50%,-50%) scale(${n.t < 0.12 ? 0.6 + n.t * 3.3 : 1})`; n.el.style.opacity = n.t > 0.9 ? (1.3 - n.t) / 0.4 : 1 }
+  for (const b of BICHOS) { if (!b.vivo || b.nasce < 1) { b.bar.style.display = 'none'; continue } b.bar.style.display = '';
+    _p.set(b.x, 1.85 * K / 0.64 * (b.chefe ? 1.45 : 1), b.z).project(cam); b.bar.style.transform = `translate(${(_p.x + 1) / 2 * w}px,${(1 - _p.y) / 2 * h}px)`; b.bar.firstChild.style.transform = 'scaleX(' + Math.max(0, b.hp / b.max) + ')' }
+}
+const FX = [], fxGeo = new THREE.SphereGeometry(0.05, 6, 4);
+function faiscas(p, cor, n) { for (let i = 0; i < n; i++) { const m = new THREE.Mesh(fxGeo, new THREE.MeshBasicMaterial({ color: cor, transparent: true })); m.position.copy(p); sc.add(m);
+  FX.push({ m, vx: (Math.random() - 0.5) * 5, vy: Math.random() * 4, vz: (Math.random() - 0.5) * 5, t: 0, vida: 0.5 + Math.random() * 0.3 }) } }
+function brilho(cor) { // anel de luz subindo em volta da heroína (tarefa feita, cura, nível novo)
+  const anel = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.04, 6, 32), new THREE.MeshBasicMaterial({ color: cor, transparent: true }));
+  anel.rotation.x = Math.PI / 2; anel.position.set(H.x, 0.1, H.z); sc.add(anel); FX.push({ m: anel, anel: true, t: 0, vida: 0.9 });
+  for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2, m = new THREE.Mesh(fxGeo, new THREE.MeshBasicMaterial({ color: cor, transparent: true })); m.position.set(H.x + Math.cos(a) * 0.5, 0.2, H.z + Math.sin(a) * 0.5); sc.add(m);
+    FX.push({ m, vx: Math.cos(a) * 0.3, vy: 2 + Math.random(), vz: Math.sin(a) * 0.3, t: 0, vida: 0.9 + Math.random() * 0.3, leve: true }) }
+}
+function fxPasso(dt) {
+  for (let i = FX.length - 1; i >= 0; i--) { const f = FX[i]; f.t += dt; const k = f.t / f.vida;
+    if (k >= 1) { sc.remove(f.m); f.m.material.dispose(); if (f.anel) f.m.geometry.dispose(); FX.splice(i, 1); continue }
+    if (f.anel) { f.m.position.set(H.x, 0.1 + k * ALT * 1.1, H.z); f.m.scale.setScalar(1 + k * 0.4) }
+    else { f.m.position.x += f.vx * dt; f.m.position.y += f.vy * dt; f.m.position.z += f.vz * dt; if (!f.leve) f.vy -= 9 * dt }
+    f.m.material.opacity = 1 - k }
+}
+const dorEl = document.getElementById('dor'); let dorT = 0; function doi() { dorT = 0.35; dorEl.style.opacity = 1 }
+const faixaEl = document.getElementById('faixa'); let faixaT = 0;
+function faixa(txt, sub, t = 1.5) { faixaEl.innerHTML = ''; faixaEl.append(txt); if (sub) { const s = document.createElement('small'); s.textContent = sub; faixaEl.append(s) } faixaEl.classList.add('on'); faixaT = t }
+const avisoEl = document.getElementById('aviso'); let avisoT = 0;
+function aviso(txt, t = 2.6) { avisoEl.textContent = txt; avisoEl.classList.add('on'); clearTimeout(avisoT); avisoT = setTimeout(() => avisoEl.classList.remove('on'), t * 1000) }
+
+// ---------------- recompensas das tarefas (a única fonte de XP) ----------------
+function ganha(xp, ouro, cura) {
+  S.xp += xp; S.ouro += ouro; if (cura) S.hp = Math.min(hpMax(), S.hp + cura);
+  numero('+' + xp + ' XP', H.x, ALT + 0.35, H.z, 'xp'); if (ouro) setTimeout(() => numero('+' + ouro + ' 🪙', H.x, ALT + 0.1, H.z, 'ouro'), 180);
+  brilho(0xffe066); plim(0); comemora();
+  let subiu = false; while (S.xp >= xpProx()) { S.xp -= xpProx(); S.nv++; subiu = true }
+  if (subiu) { S.hp = hpMax(); som('vitoria', 0.8); setTimeout(() => som('perfeito', 0.7), 900); faixa('Nível ' + S.nv + '!', 'mais vida e mais força; vida cheia', 2.2); setTimeout(() => brilho(0xffffff), 250) }
+  salva(); hud();
+}
+function perde(xp, ouro) { // desmarcou uma tarefa: devolve o que tinha ganhado (não desce de nível)
+  S.xp = Math.max(0, S.xp - xp); S.ouro = Math.max(0, S.ouro - ouro); salva(); hud();
+}
+function machuca(v, motivo) {
+  S.hp = Math.max(0, S.hp - v); numero('-' + v, H.x, ALT + 0.2, H.z, 'dor'); doi(); som('dor', 0.6); if (motivo) aviso(motivo);
+  if (S.hp <= 0 && !H.desm) desmaia(); salva(); hud();
+}
+function comemora() { if (!R || H.atk || H.desm || BICHOS.some(b => b.vivo)) return; H.comem = dur('Ranged_Magic_Raise') * 0.9; tocar('Ranged_Magic_Raise', 1.1, 0.1) }
+function viraDia() { // diárias esquecidas tiram vida ao virar o dia; contadores dos hábitos zeram
+  if (S.dia === hoje()) return;
+  const falt = S.diar.filter(d => !d.ok), dano = falt.reduce((s, d) => s + DIF[d.d].dor, 0);
+  for (const d of S.diar) d.ok = false; for (const h of S.hab) { h.c = 0; h.cn = 0 } S.dia = hoje(); salva();
+  if (dano) setTimeout(() => machuca(dano, falt.length === 1 ? 'Ontem ficou 1 diária sem fazer: −' + dano + ' de vida.' : 'Ontem ficaram ' + falt.length + ' diárias sem fazer: −' + dano + ' de vida.'), 1500);
+  else if (falt.length === 0) setTimeout(() => aviso('Dia novo! As diárias voltaram.'), 1500);
+}
+viraDia(); setInterval(() => { viraDia(); if (aba === 'diar') lista() }, 60000);
+
+// ---------------- HUD ----------------
+function hud() {
+  document.getElementById('hNome').firstChild.textContent = PERS[S.pers][1];
+  document.getElementById('hNv').textContent = 'Nível ' + S.nv;
+  const m = hpMax(); S.hp = Math.min(S.hp, m);
+  document.querySelector('#hpB i').style.transform = 'scaleX(' + S.hp / m + ')'; document.querySelector('#hpB span').textContent = 'Vida ' + Math.ceil(S.hp) + '/' + m;
+  document.querySelector('#xpB i').style.transform = 'scaleX(' + S.xp / xpProx() + ')'; document.querySelector('#xpB span').textContent = 'XP ' + S.xp + '/' + xpProx();
+  document.getElementById('hOuro').textContent = '🪙 ' + S.ouro; document.getElementById('hOnda').textContent = (S.onda % 5 === 0 ? 'Chefe · ' : '') + 'Onda ' + S.onda;
+  const bm = document.getElementById('bModo'); bm.textContent = S.auto ? '▶ Auto' : '🕹 Manual'; bm.classList.toggle('manual', !S.auto); document.body.classList.toggle('manual', !S.auto);
+  const bp = document.getElementById('bPocao'); bp.hidden = S.pocoes <= 0; bp.textContent = '🧪 ' + S.pocoes;
+  const mg = document.getElementById('bMag'); if (H.magCd > 0) mg.dataset.cd = Math.ceil(H.magCd); else delete mg.dataset.cd;
+  const pend = S.diar.filter(d => !d.ok).length; document.querySelector('[data-aba="diar"]').innerHTML = 'Diárias' + (pend ? '<b>' + pend + '</b>' : '');
+}
+
+// ---------------- lista de tarefas ----------------
+let aba = S.aba || 'diar', novoPos = true, novoNeg = false;
+const listaEl = document.getElementById('lista');
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e };
+function trocaAba(a) { aba = a; S.aba = a; salva(); for (const b of document.querySelectorAll('#abas button')) b.classList.toggle('on', b.dataset.aba === a); lista() }
+for (const b of document.querySelectorAll('#abas button')) b.onclick = () => trocaAba(b.dataset.aba);
+function texto(t, sub) { const d = el('div', 'txt'); d.append(t.t); const s = el('small'); const tg = el('span', 'tag ' + t.d, DIF[t.d].n); s.append(tg); if (sub) s.append(sub); d.append(s);
+  d.onclick = () => { const n = prompt('Mudar o nome da tarefa:', t.t); if (n && n.trim()) { t.t = n.trim().slice(0, 80); salva(); lista() } }; return d }
+function apaga(lst, t) { const b = el('button', 'x', '✕'); b.setAttribute('aria-label', 'Apagar'); b.onclick = () => { if (confirm('Apagar "' + t.t + '"?')) { lst.splice(lst.indexOf(t), 1); salva(); lista(); hud() } }; return b }
+function lista() {
+  listaEl.innerHTML = ''; const nv = document.getElementById('novo'); nv.hidden = aba === 'her';
+  document.getElementById('nPos').style.display = document.getElementById('nNeg').style.display = aba === 'hab' ? '' : 'none';
+  document.getElementById('nTxt').placeholder = aba === 'hab' ? 'Novo hábito…' : aba === 'diar' ? 'Nova diária…' : 'Novo afazer…';
+  if (aba === 'hab') {
+    if (!S.hab.length) listaEl.append(el('div', 'vazio', 'Hábitos são coisas que você faz várias vezes, boas (+) ou ruins (−). Toque em + quando fizer uma boa; em − quando cair numa ruim.'));
+    for (const t of S.hab) {
+      const it = el('div', 'item');
+      if (t.neg) { const b = el('button', 'chk menos', '−'); b.setAttribute('aria-label', 'Fiz o hábito ruim'); b.onclick = () => { t.cn = (t.cn || 0) + 1; machuca(DIF[t.d].dor, null); lista() }; it.append(b) }
+      it.append(texto(t, (t.c ? ' +' + t.c : '') + (t.cn ? ' −' + t.cn : '') + (t.c || t.cn ? ' hoje' : '')));
+      if (t.pos) { const b = el('button', 'chk mais', '+'); b.setAttribute('aria-label', 'Fiz o hábito bom'); b.onclick = () => { t.c = (t.c || 0) + 1; ganha(DIF[t.d].xp, DIF[t.d].ouro); lista() }; it.append(b) }
+      it.append(apaga(S.hab, t)); listaEl.append(it);
+    }
+  } else if (aba === 'diar') {
+    if (!S.diar.length) listaEl.append(el('div', 'vazio', 'Diárias são as tarefas de todo dia. Se ficar alguma sem fazer, a heroína perde vida quando o dia vira.'));
+    for (const t of S.diar) {
+      const it = el('div', 'item' + (t.ok ? ' feito' : '')), b = el('button', 'chk', t.ok ? '✓' : ''); b.setAttribute('aria-label', t.ok ? 'Desmarcar' : 'Marcar como feita');
+      b.onclick = () => { t.ok = !t.ok; if (t.ok) ganha(DIF[t.d].xp, DIF[t.d].ouro, 5); else perde(DIF[t.d].xp, DIF[t.d].ouro); lista(); hud() };
+      it.append(b, texto(t), apaga(S.diar, t)); listaEl.append(it);
+    }
+    const p = el('p', 'dica'); p.style.padding = '4px 6px'; p.textContent = 'Diária esquecida tira vida quando o dia vira. Tarefa feita dá XP, ouro e um pouco de vida.'; listaEl.append(p);
+  } else if (aba === 'afz') {
+    if (!S.afz.length) listaEl.append(el('div', 'vazio', 'Afazeres são tarefas de uma vez só. Valem 50% a mais de XP e somem quando você marca.'));
+    for (const t of S.afz) {
+      const it = el('div', 'item'), b = el('button', 'chk', ''); b.setAttribute('aria-label', 'Concluir');
+      b.onclick = () => { if (it.classList.contains('feito')) return; it.classList.add('feito'); b.textContent = '✓'; ganha(Math.round(DIF[t.d].xp * AFZ_X), Math.round(DIF[t.d].ouro * AFZ_X), 5); S.feitos++;
+        setTimeout(() => { it.classList.add('some'); setTimeout(() => { S.afz.splice(S.afz.indexOf(t), 1); salva(); if (aba === 'afz') lista() }, 400) }, 500) };
+      it.append(b, texto(t), apaga(S.afz, t)); listaEl.append(it);
+    }
+  } else heroina();
+}
+function heroina() {
+  const s1 = el('div', 'sec'); s1.append(el('h3', null, PERS[S.pers][1] + ' · Nível ' + S.nv));
+  const st = el('div', 'stats'); const lin = (k, v) => { const d = el('div'); d.append(el('span', null, k), el('b', null, v)); st.append(d) };
+  lin('Vida', Math.ceil(S.hp) + '/' + hpMax()); lin('Ataque', ataque()); lin('Defesa', Math.round(defesa() * 100) + '%'); lin('XP', S.xp + '/' + xpProx());
+  lin('Ouro', '🪙 ' + S.ouro); lin('Melhor onda', S.recorde); lin('Afazeres feitos', S.feitos); lin('Poções', S.pocoes);
+  s1.append(st); listaEl.append(s1);
+  const s2 = el('div', 'sec'); s2.append(el('h3', null, 'Loja (o ouro vem dos monstros e das tarefas)')); const lj = el('div', 'loja');
+  const item = (nome, desc, preco, ok, f) => { const b = el('button'); const e = el('div'); e.append(nome, el('small', null, desc)); b.append(e, el('span', 'preco', '🪙 ' + preco)); b.disabled = S.ouro < preco || !ok;
+    b.onclick = () => { if (S.ouro < preco) return; S.ouro -= preco; f(); salva(); hud(); lista(); plim(5) }; lj.append(b) };
+  item('Poção de vida', 'recupera 50 de vida (botão 🧪 na arena)', 15, true, () => { S.pocoes++ });
+  const pe = 40 + 35 * S.espada; item('Espada melhor (' + (S.espada + 1) + ')', '+4 de ataque', pe, S.espada < 10, () => { S.espada++; corEspada(); aviso('Espada melhorada!') });
+  const pa = 35 + 30 * S.armad; item('Armadura (' + (S.armad + 1) + ')', 'segura +7% do dano dos monstros', pa, S.armad < 8, () => { S.armad++; aviso('Armadura melhorada!') });
+  s2.append(lj); listaEl.append(s2);
+  const s3 = el('div', 'sec'); s3.append(el('h3', null, 'Personagem')); const g = el('div'); g.id = 'pers';
+  PERS.forEach(([arq, nome], i) => { const b = el('button'); b.classList.toggle('on', i === S.pers); const im = el('img'); im.src = 'personagens/fotos/' + arq + '.png'; im.alt = ''; im.loading = 'lazy';
+    b.append(im, el('span', null, nome)); b.onclick = () => { S.pers = i; salva(); carregar(i); lista(); hud() }; g.append(b) });
+  s3.append(g); listaEl.append(s3);
+  const s4 = el('div', 'sec'); s4.append(el('h3', null, 'Como funciona'));
+  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. Nível novo = mais vida e mais ataque. Na arena ela luta sozinha (Auto, e toma poção quando a vida fica baixa) ou você controla (Manual); monstros dão ouro pra loja e cada onda vencida devolve um pouco de vida. Hábito ruim e diária esquecida tiram vida; se a vida zerar ela desmaia e volta umas ondas. Tudo fica salvo neste celular.';
+  s4.append(p); const z = el('button', null, 'Começar do zero'); z.style.marginTop = '8px'; z.onclick = () => { if (confirm('Apagar todo o progresso e as tarefas?')) { localStorage.removeItem(CHAVE); location.reload() } }; s4.append(z);
+  listaEl.append(s4);
+}
+// adicionar tarefa
+const nTxt = document.getElementById('nTxt'), nPos = document.getElementById('nPos'), nNeg = document.getElementById('nNeg');
+function tiposHab() { nPos.classList.toggle('off', !novoPos); nNeg.classList.toggle('off', !novoNeg) }
+nPos.onclick = () => { novoPos = !novoPos; if (!novoPos && !novoNeg) novoNeg = true; tiposHab() }; nNeg.onclick = () => { novoNeg = !novoNeg; if (!novoPos && !novoNeg) novoPos = true; tiposHab() }; tiposHab();
+function adiciona() {
+  const t = nTxt.value.trim(); if (!t) { nTxt.focus(); return } const d = document.getElementById('nDif').value, base = { id: uid(), t: t.slice(0, 80), d };
+  if (aba === 'hab') S.hab.push(Object.assign(base, { pos: novoPos, neg: novoNeg, c: 0, cn: 0 })); else if (aba === 'diar') S.diar.push(Object.assign(base, { ok: false })); else S.afz.push(base);
+  nTxt.value = ''; salva(); lista(); hud(); listaEl.scrollTop = listaEl.scrollHeight;
+}
+document.getElementById('nAdd').onclick = adiciona; nTxt.addEventListener('keydown', e => { if (e.key === 'Enter') { adiciona(); nTxt.blur() } });
+
+// ---------------- laço ----------------
+let t0 = performance.now(), camX = 0, camZ = 0, hudT = 0;
+function quadro(t) {
+  requestAnimationFrame(quadro); const dt = Math.min(0.05, (t - t0) / 1000); t0 = t;
+  if (R) { heroiPasso(dt); bichosPasso(dt); orbesPasso(dt); fxPasso(dt);
+    player.position.set(H.x, 0, H.z); player.rotation.y = H.face; mix.update(dt); VRMC.tick(R, dt) }
+  // câmera atrás e acima da heroína, um pouco de longe pra ver a briga toda
+  camX += (H.x - camX) * Math.min(1, dt * 4); camZ += (H.z - camZ) * Math.min(1, dt * 4);
+  const D = ALT * 4.3 + (cam.aspect < 0.9 ? 1.2 : 0);
+  cam.position.set(camX + Math.sin(yaw) * Math.cos(pitch) * D, ALT * 0.5 + Math.sin(pitch) * D, camZ + Math.cos(yaw) * Math.cos(pitch) * D); cam.lookAt(camX, ALT * 0.45, camZ);
+  sol.position.set(camX + 5, 12, camZ + 4); sol.target.position.set(camX, 0, camZ);
+  if (dorT > 0) { dorT -= dt; if (dorT <= 0) dorEl.style.opacity = 0 }
+  if (faixaT > 0) { faixaT -= dt; if (faixaT <= 0) faixaEl.classList.remove('on') }
+  hudT -= dt; if (hudT <= 0) { hudT = 0.25; const mg = document.getElementById('bMag'); if (H.magCd > 0) mg.dataset.cd = Math.ceil(H.magCd); else delete mg.dataset.cd }
+  numsPasso(dt); r.render(sc, cam);
+}
+new ResizeObserver(tam).observe(arena);
+trocaAba(aba); hud(); carregar(S.pers); requestAnimationFrame(quadro);
+window.HAB = { S, H, BICHOS, ganha, machuca, atacar, magia, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { heroiPasso(dt); bichosPasso(dt); orbesPasso(dt); fxPasso(dt) } } }; // pra testes
+</script>
+</body></html>

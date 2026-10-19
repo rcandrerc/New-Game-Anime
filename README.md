@@ -8,6 +8,10 @@ joystick virtual (ou WASD), arrastar a tela gira a câmera, pinça aproxima/afas
 boneco de treino de palha (balança e mostra o dano), espada na mão com Atacar (combo de 3 cortes), Salto giratório, Investida e Magia (bola de energia), com recarga nos botões; casinhas, árvores, fonte, caixotes e uma escadinha pra testar pulo e degrau. Os números de velocidade, pulo, cambalhota e dash
 são os mesmos do Quimera Sandbox.
 
+**Hábitos (esboço, celular em pé):** https://rcandrerc.github.io/New-Game-Anime/habitos.html — jogo estilo Habitica: hábitos (+/−), diárias e afazeres
+embaixo; em cima a heroína luta numa clareira contra ondas de monstros, sozinha (Auto) ou com joystick (Manual). Só as tarefas dão XP e sobem o nível
+(mais vida e ataque); os monstros dão ouro pra loja (poção, espada, armadura). Hábito ruim e diária esquecida tiram vida. Tudo salvo no próprio celular.
+
 **Galeria:** https://rcandrerc.github.io/New-Game-Anime/galeria.html — personagem parado no centro, um botão por animação.
 
 ## O que tem aqui
@@ -18,6 +22,7 @@ são os mesmos do Quimera Sandbox.
 | `js/vrm_char.js` | Código (Three.js) que prepara o modelo (material com luz e sombra no estilo anime) e roda a física do cabelo/roupa a cada quadro (`VRMC.prep`, `VRMC.tick`) |
 | `index.html` | A vila de teste (jogável) |
 | `galeria.html` | A galeria (ver cada animação parado) |
+| `habitos.html` | Esboço do jogo de hábitos (estilo Habitica), em modo retrato |
 | `tools/` | Ferramentas pra refazer a personagem ou trocar animações (`build_vrm.py`, leitor de FBX do Mixamo `fbxio.py`) |
 
 ## Personagens
