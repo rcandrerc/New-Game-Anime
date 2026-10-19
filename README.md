@@ -9,8 +9,10 @@ boneco de treino de palha (balança e mostra o dano), espada na mão com Atacar 
 são os mesmos do Quimera Sandbox.
 
 **Hábitos (esboço, celular em pé):** https://rcandrerc.github.io/New-Game-Anime/habitos.html — jogo estilo Habitica: hábitos (+/−), diárias e afazeres
-embaixo; em cima a heroína luta numa clareira contra ondas de monstros, sozinha (Auto) ou com joystick (Manual). Só as tarefas dão XP e sobem o nível
-(mais vida e ataque); os monstros dão ouro pra loja (poção, espada, armadura). Hábito ruim e diária esquecida tiram vida. Tudo salvo no próprio celular.
+embaixo; em cima a heroína anda sem parar por uma trilha no vale (lago, flores, árvores) e luta com os grupos de monstros que encontra, sozinha (Auto)
+ou com joystick e botões de skill (Manual). Só as tarefas dão XP; cada nível dá 3 pontos pra Força, Destreza, Vida, Estamina e Magia (aba Heroína).
+Sem classe: Força libera as skills de espada e Magia as de magia (com pentagrama e fogo da vila), dá pra fazer híbrido. Quanto mais longe na trilha,
+maior o Perigo. Monstros dão ouro pra loja (poção, espada, armadura). Hábito ruim e diária esquecida tiram vida. Tudo salvo no próprio celular.
 
 **Galeria:** https://rcandrerc.github.io/New-Game-Anime/galeria.html — personagem parado no centro, um botão por animação.
 
