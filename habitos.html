@@ -57,27 +57,30 @@
   #dor{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 46px 12px rgba(220,30,20,.45);opacity:0;transition:opacity .35s}
   #bEst{font-weight:800;font-size:12.5px;padding:5px 10px;border-radius:999px;background:linear-gradient(#5b3a8a,#3a2560);border-color:#b98cff;white-space:nowrap}
   #bEst small{font-weight:700;opacity:.85;margin-left:4px}
-  #mapa{position:absolute;inset:0;z-index:6;display:none;background:radial-gradient(120% 90% at 50% 100%,#3c5a3a 0%,#25331f 55%,#141b14 100%);overflow:hidden}
+  #mapa{position:fixed;inset:0;z-index:30;display:none;background:#1a120b}
   #mapa.on{display:block}
-  #mapa h2{position:absolute;left:12px;top:8px;margin:0;font:900 17px system-ui,sans-serif;color:#ffe9a8;text-shadow:0 2px 0 #5a3a10}
-  #mapa h2 small{display:block;font-size:11.5px;font-weight:600;color:#e6dcc0;text-shadow:none;margin-top:1px}
-  #mapa .fecha{position:absolute;right:10px;top:8px;width:36px;height:36px;border-radius:50%;padding:0;font-size:18px;background:rgba(0,0,0,.4)}
-  #mapa svg{position:absolute;inset:0;width:100%;height:100%}
-  #mapa .no{position:absolute;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;padding:0;font:900 18px system-ui,sans-serif;display:grid;place-items:center;
-    background:radial-gradient(circle at 35% 30%,#ffe9a0,#d99a22 60%,#8a5a10);color:#4a2a00;border:3px solid #fff3c4;box-shadow:0 3px 0 #0006,0 0 0 3px #0003}
-  #mapa .no.feito{background:radial-gradient(circle at 35% 30%,#b9ffb0,#3fae4a 60%,#1d5a22);color:#0d2a10;border-color:#d8ffd0}
+  #mapa .rolo{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  #mapa .folha{position:relative;width:100%;max-width:560px;margin:0 auto}
+  #mapa canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+  #mapa .topo{position:absolute;left:0;right:0;top:0;padding:10px 14px 18px;background:linear-gradient(#1a120bee,#1a120b00);pointer-events:none;text-align:center}
+  #mapa .topo b{display:inline-block;padding:6px 22px;font:700 19px Georgia,'Times New Roman',serif;letter-spacing:.5px;color:#4a2a10;background:linear-gradient(#f3e2b4,#d9bd7f);border:2px solid #8a5a24;border-radius:6px;box-shadow:0 3px 8px #0008}
+  #mapa .topo small{display:block;margin-top:5px;font:600 12px Georgia,serif;color:#f0dcae;text-shadow:0 1px 2px #000}
+  #mapa .no{position:absolute;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;padding:0;font:700 20px Georgia,serif;display:grid;place-items:center;
+    background:radial-gradient(circle at 35% 30%,#ffe9a0,#d99a22 60%,#8a5a10);color:#4a2a00;border:3px solid #fff3c4;box-shadow:0 3px 0 #0006,0 0 0 3px #5a3a1055}
+  #mapa .no.feito{background:radial-gradient(circle at 35% 30%,#e0584a,#a8231a 60%,#5a0e08);color:#ffe3a0;border-color:#e8b060}
   #mapa .no.atual{animation:pulsa 1.2s ease-in-out infinite}
-  #mapa .no.tranc{background:radial-gradient(circle at 35% 30%,#8a8f9a,#4a4f5a 65%,#2a2d33);color:#c8ccd4;border-color:#8a8f9a;font-size:16px}
-  #mapa .no.chefe{width:58px;height:58px;margin:-29px 0 0 -29px;font-size:24px}
-  #mapa .rot{position:absolute;transform:translate(-50%,0);margin-top:27px;font:700 10.5px/1.15 system-ui,sans-serif;color:#fff;text-shadow:0 1px 2px #000;text-align:center;white-space:nowrap;pointer-events:none}
-  #mapa .rot small{display:block;font-weight:600;color:#ffe08a;font-size:10px}
-  #mapa .rot small.ok{color:#9dff9a}
-  #mapa .no.sel{outline:3px solid #fff;outline-offset:3px}
-  #mapa .info{position:absolute;left:8px;right:8px;bottom:8px;display:flex;align-items:center;gap:10px;padding:7px 8px 7px 12px;border-radius:14px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15)}
-  #mapa .info div{flex:1;min-width:0;font:800 14px/1.2 system-ui,sans-serif;color:#fff}
-  #mapa .info small{display:block;font-weight:600;font-size:11.5px;color:#e6dcc0}
-  #mapa .jogar{flex:none;padding:9px 16px;border-radius:12px;font:900 15px system-ui,sans-serif;background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border:2px solid #fff3c4;box-shadow:0 3px 0 #7a4a00}
-  #mapa .fecha[hidden]{display:none}
+  #mapa .no.tranc{background:radial-gradient(circle at 35% 30%,#b8b0a0,#7a7264 65%,#4a443a);color:#efe6d0;border-color:#a89e88;font-size:17px}
+  #mapa .no.chefe{width:62px;height:62px;margin:-31px 0 0 -31px;font-size:27px}
+  #mapa .no.sel{outline:3px dashed #7a1a10;outline-offset:5px}
+  #mapa .rot{position:absolute;transform:translate(-50%,0);margin-top:29px;font:700 12px/1.15 Georgia,serif;color:#3a200c;text-shadow:0 0 3px #f3e2b4,0 0 6px #f3e2b4;text-align:center;white-space:nowrap;pointer-events:none}
+  #mapa .rot small{display:block;font-weight:600;color:#7a4a18;font-size:10.5px}
+  #mapa .rot small.ok{color:#8a1a10}
+  #mapa .info{position:absolute;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:544px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 12px;border-radius:12px;
+    background:linear-gradient(#3a2414f2,#24160cf2);border:2px solid #8a5a24;box-shadow:0 4px 14px #000a}
+  #mapa .info div{flex:1;min-width:0;font:700 14.5px/1.2 Georgia,serif;color:#ffe9b8}
+  #mapa .info small{display:block;font:600 11.5px/1.25 system-ui,sans-serif;color:#e6d2a8}
+  #mapa .jogar{flex:none;padding:10px 15px;border-radius:10px;font:900 15px system-ui,sans-serif;background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border:2px solid #fff3c4;box-shadow:0 3px 0 #7a4a00}
+  #mapa .tarefas{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#5a3a1e;color:#ffe9b8;border:2px solid #8a5a24}
   @keyframes pulsa{0%,100%{box-shadow:0 3px 0 #0006,0 0 0 3px #ffe06655}50%{box-shadow:0 3px 0 #0006,0 0 0 9px #ffe06633,0 0 18px #ffe066}}
   #carga{position:absolute;inset:0;display:grid;place-content:center;gap:10px;justify-items:center;background:rgba(10,14,24,.6);font-weight:700;text-shadow:0 1px 3px #000;pointer-events:none;z-index:5}
   #carga.fora{display:none} #carga .bar{width:200px} #carga .bar i{background:var(--accent);transform:scaleX(0)}
@@ -136,7 +139,7 @@
   #pers button.on{outline:3px solid var(--accent);outline-offset:-2px}
   .dica{font-size:12.5px;color:var(--fg2);line-height:1.4;margin:0}
   #aviso{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);max-width:calc(100vw - 30px);background:#0d111c;border:1px solid var(--line);
-    border-radius:12px;padding:10px 14px;font-size:14px;box-shadow:0 6px 24px #000a;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:20;text-align:center}
+    border-radius:12px;padding:10px 14px;font-size:14px;box-shadow:0 6px 24px #000a;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:40;text-align:center}
   #aviso.on{opacity:1;transform:translateX(-50%)}
 </style></head>
 <body>
@@ -158,7 +161,6 @@
   <div id="ctl"><div id="stick"><div id="knob"></div></div><button id="bAtk">Atacar</button></div>
   <div id="barras"></div><div id="nums"></div><div id="dor"></div>
   <div id="faixa"></div>
-  <div id="mapa"><svg aria-hidden="true"></svg><h2>Missão: os 10 estágios</h2><button class="fecha" aria-label="Voltar pra fase">✕</button><div class="info"><div></div><button class="jogar">▶ Jogar</button></div></div>
   <div id="carga"><b>Carregando…</b><div class="bar"><i></i></div></div>
 </div>
 <div id="painel">
@@ -174,6 +176,8 @@
   </div>
 </div>
 <div id="aviso"></div>
+<div id="mapa"><div class="rolo"><div class="folha"><canvas aria-hidden="true"></canvas></div></div><div class="topo"><b>Mapa da Missão</b><small></small></div>
+  <div class="info"><div></div><button class="tarefas" aria-label="Ver as tarefas">📋 Tarefas</button><button class="jogar">▶ Jogar</button></div></div>
 <script src="js/three.min.js"></script>
 <script src="js/GLTFLoader.js"></script>
 <script src="js/vrm_char.js"></script>
@@ -790,11 +794,12 @@ function anda(dx, dz) { // move a heroína sem entrar em árvore/pedra e sem sai
 }
 
 // ---------------- monstros (Ultimate Monsters da Quaternius, CC0) espalhados pela trilha ----------------
+const NOME_CHEFE = { MushroomKing: 'Rei Cogumelo', Orc: 'Orc Chefe', Yeti: 'Yeti Gigante', Demon: 'Senhor Demônio' };
 const TIPOS = ['MushroomKing', 'Orc', 'Yeti', 'Demon'], BUF = {}, BICHOS = [];
 function carregaMonstros() { for (const n of TIPOS) { BUF[n] = fetch('monstros/' + n + '.glb').then(x => { if (!x.ok) throw 0; return x.arrayBuffer() }); BUF[n].catch(() => {}) } }
 const barrasEl = document.getElementById('barras');
 function novoBicho(tipo, x, z, chefe) {
-  const p = perigo(), k = K / 0.64 * (chefe ? (p === N_EST ? 1.9 : 1.5) : 1), b = { tipo, x, z, y: altura(x, z), face: Math.atan2(P.x - x, P.z - z), vivo: true, est: 'parado', t: 0, cd: 1 + Math.random(), nasce: 0, morto: 0, chefe,
+  const p = perigo(), k = K / 0.64 * (chefe ? 1.4 + 0.055 * (p - 1) : 1), b = { tipo, x, z, y: altura(x, z), face: Math.atan2(P.x - x, P.z - z), vivo: true, est: 'parado', t: 0, cd: 1 + Math.random(), nasce: 0, morto: 0, chefe,
     max: Math.round(HPM * forcaM(p)[0] * (chefe ? 4.5 : 1)), dano: Math.round(DNM * forcaM(p)[1] * (chefe ? 1.6 : 1)), g: new THREE.Group(), mats: [], kx: 0, kz: 0,
     r: 0.55 * k, alt: 1.75 * k, peso: chefe ? 4 : 2.2, ouro: Math.round((3 + p) * (chefe ? 6 : 1)) };
   b.hp = b.max; b.g.position.set(x, b.y, z); b.g.scale.setScalar(0.001); sc.add(b.g);
@@ -831,7 +836,7 @@ function grupoMorto(b) {
   if (b.grupo == null || F.fim || BICHOS.some(o => o.vivo && o.grupo === b.grupo)) return;
   F.feitos++; hud(); if (F.feitos >= F.G) venceEstagio();
 }
-function comecaEstagio(n) {
+function comecaEstagio(n, quieto) { // quieto: só monta a fase e deixa ela parada (o mapa está aberto)
   n = Math.max(1, Math.min(n, S.lib, N_EST)); S.est = n; salva();
   for (const b of [...BICHOS]) some(b);
   montaMapa(n); const ini = 4, L = (NT - 3 - ini) * TPASSO; // o chefe espera na clareira do fim
@@ -839,7 +844,8 @@ function comecaEstagio(n) {
   F.pos = []; for (let g = 0; g < F.G; g++) F.pos.push(14 + (L - 14) * (g / (F.G - 1)));
   P.x = TP[F.ini][0]; P.z = TP[F.ini][1]; P.y = altura(P.x, P.z); P.si = ultimoSi = F.ini; P.atk = null;
   const j = F.ini + 20; P.face = Math.atan2(TP[j][0] - P.x, TP[j][1] - P.z); yaw = P.face + Math.PI; camAlvo.set(P.x, P.y, P.z);
-  ambiente(EST[n - 1][1]); faixa('Estágio ' + n, EST[n - 1][0] + (n === N_EST ? ' · chefe final' : ''), 2.2); hud();
+  ambiente(EST[n - 1][1]); if (quieto) { F.fim = true; hud(); return }
+  faixa('Estágio ' + n, EST[n - 1][0] + (n === N_EST ? ' · chefe final' : ''), 2.2); hud();
 }
 function venceEstagio() {
   F.fim = true; const n = F.n, primeira = !S.ok[n], bonus = primeira ? 25 * n : 5 * n;
@@ -861,7 +867,7 @@ function bichosPasso(dt) {
       if (!b.bateu && b.t > 0.38) { b.bateu = true; if (d < perto + 0.5 && !P.desm) levaDano(b.dano, b) }
       if (b.t > 0.9) { b.est = 'anda'; b.cd = (b.chefe ? 1.4 : 1.8) + Math.random() * 0.5 }
     } else if (P.desm || (!b.bravo && d > 7.5)) { b.anima('Idle'); b.est = 'parado'; if (P.desm) b.bravo = false }
-    else if (d > perto) { if (!b.avisou) { b.avisou = true; som('lute', 0.4) } b.est = 'anda'; mv = b.chefe ? 1.3 : 1.7; b.face = Math.atan2(dx, dz); b.anima('Walk'); b.bravo = true }
+    else if (d > perto) { if (!b.avisou) { b.avisou = true; som('lute', 0.4); if (b.chefe) faixa('Chefe!', NOME_CHEFE[b.tipo] + (F.n === N_EST ? ' · o chefe final' : ''), 2) } b.est = 'anda'; mv = b.chefe ? 1.3 : 1.7; b.face = Math.atan2(dx, dz); b.anima('Walk'); b.bravo = true }
     else { b.face = Math.atan2(dx, dz); b.bravo = true; if (b.cd <= 0) { b.est = 'ataca'; b.t = 0; b.bateu = false; b.anima('Punch') } else b.anima('Idle') }
     if (pausa > 0) mv = 0;
     b.x += (Math.sin(b.face) * mv + b.kx) * dt; b.z += (Math.cos(b.face) * mv + b.kz) * dt; b.kx *= Math.pow(0.02, dt); b.kz *= Math.pow(0.02, dt);
@@ -1018,40 +1024,115 @@ function viraDia() { // diárias esquecidas tiram vida ao virar o dia; contadore
 }
 viraDia(); setInterval(() => { viraDia(); if (aba === 'diar') lista() }, 60000);
 
-// ---------------- mapa de estágios (estilo Eternium) ----------------
-const mapaEl = document.getElementById('mapa');
-const NOS = [[16, 70], [50, 73], [84, 68], [80, 50], [48, 52], [16, 48], [18, 31], [50, 33], [82, 29], [50, 15]];
+// ---------------- mapa da missão: um pergaminho com os 10 estágios ligados por caminhos (estilo Eternium) ----------------
+const mapaEl = document.getElementById('mapa'), roloEl = mapaEl.querySelector('.rolo'), folhaEl = mapaEl.querySelector('.folha'), papelEl = folhaEl.querySelector('canvas');
+const VW = 400, VH = 1820; // tamanho do desenho (a folha estica pra largura da tela e rola na vertical)
+const NOS = [[112, 1655], [292, 1505], [118, 1350], [286, 1195], [112, 1040], [290, 885], [124, 730], [282, 575], [120, 420], [232, 238]];
+function desenhaPapel() {
+  const W = folhaEl.clientWidth || 400, px = Math.min(2, devicePixelRatio || 1), k = W / VW;
+  papelEl.width = Math.round(W * px); papelEl.height = Math.round(VH * k * px);
+  const g = papelEl.getContext('2d'); g.setTransform(k * px, 0, 0, k * px, 0, 0);
+  let sd = 77; const rr = () => { sd = (sd * 16807) % 2147483647; return (sd - 1) / 2147483646 }, ra = (a, b) => a + rr() * (b - a);
+  const tinta = 'rgba(70,42,18,', borda = (x, y) => Math.min(x, VW - x, y, VH - y);
+  // papel: base amarelada com manchas, fibras e as bordas queimadas e rasgadas
+  g.fillStyle = '#e9d5a1'; g.fillRect(0, 0, VW, VH);
+  for (let i = 0; i < 700; i++) { const x = ra(0, VW), y = ra(0, VH), r = ra(6, 46), gr = g.createRadialGradient(x, y, 0, x, y, r), esc = rr() < 0.6;
+    gr.addColorStop(0, esc ? 'rgba(150,105,50,' + ra(0.04, 0.1) + ')' : 'rgba(255,245,215,' + ra(0.05, 0.14) + ')'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2) }
+  g.lineWidth = 0.4; for (let i = 0; i < 500; i++) { const x = ra(0, VW), y = ra(0, VH), a = ra(0, 6.28), l = ra(3, 12); g.strokeStyle = 'rgba(120,85,40,' + ra(0.05, 0.12) + ')'; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke() }
+  // dobras do pergaminho
+  for (const y of [VH * 0.25, VH * 0.5, VH * 0.75]) { const gr = g.createLinearGradient(0, y - 8, 0, y + 8); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(0.5, 'rgba(110,70,30,.13)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, y - 8, VW, 16) }
+  // ---- desenhos a tinta de cada região ----
+  const linha = (a, w = 1) => { g.strokeStyle = tinta + a + ')'; g.lineWidth = w };
+  const pinheiro = (x, y, s, cor) => { g.fillStyle = cor || 'rgba(64,90,48,.55)'; g.beginPath(); g.moveTo(x, y - 14 * s); g.lineTo(x - 6 * s, y); g.lineTo(x + 6 * s, y); g.closePath(); g.fill(); linha(0.7, 0.9); g.stroke(); g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 3 * s); g.stroke() };
+  const arvore = (x, y, s, cor) => { linha(0.75, 0.9); g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 5 * s); g.stroke(); g.fillStyle = cor || 'rgba(98,130,60,.5)'; g.beginPath(); g.arc(x, y - 3 * s, 6 * s, 0, 7); g.fill(); g.stroke() };
+  const seca = (x, y, s) => { linha(0.8, 1.1); g.beginPath(); g.moveTo(x, y + 4 * s); g.lineTo(x, y - 9 * s); g.moveTo(x, y - 3 * s); g.lineTo(x - 5 * s, y - 8 * s); g.moveTo(x, y - 5 * s); g.lineTo(x + 5 * s, y - 11 * s); g.moveTo(x - 3 * s, y - 6 * s); g.lineTo(x - 5 * s, y - 12 * s); g.stroke() };
+  const monte = (x, y, s, neve) => { g.fillStyle = 'rgba(160,125,80,.35)'; g.beginPath(); g.moveTo(x - 18 * s, y); g.lineTo(x, y - 24 * s); g.lineTo(x + 18 * s, y); g.closePath(); g.fill(); linha(0.8, 1.1); g.stroke();
+    linha(0.45, 0.7); for (let i = 1; i < 6; i++) { g.beginPath(); g.moveTo(x + i * 2.4 * s, y - 24 * s + i * 3.2 * s); g.lineTo(x + i * 2.4 * s - 3 * s, y); g.stroke() }
+    if (neve) { g.fillStyle = 'rgba(255,255,250,.75)'; g.beginPath(); g.moveTo(x - 5 * s, y - 17 * s); g.lineTo(x, y - 24 * s); g.lineTo(x + 5 * s, y - 17 * s); g.lineTo(x + 1.5 * s, y - 19 * s); g.closePath(); g.fill() } };
+  const morro = (x, y, w) => { linha(0.55, 1); g.beginPath(); g.moveTo(x - w, y); g.quadraticCurveTo(x, y - w * 0.7, x + w, y); g.stroke(); linha(0.25, 0.7); g.beginPath(); g.moveTo(x - w * 0.5, y - 2); g.quadraticCurveTo(x, y - w * 0.45, x + w * 0.5, y - 2); g.stroke() };
+  const capim = (x, y) => { linha(0.45, 0.7); g.beginPath(); g.moveTo(x - 3, y); g.lineTo(x - 1, y - 4); g.moveTo(x, y); g.lineTo(x, y - 5); g.moveTo(x + 3, y); g.lineTo(x + 1, y - 4); g.stroke() };
+  const flor = (x, y, c) => { g.fillStyle = c; g.beginPath(); g.arc(x, y, 1.8, 0, 7); g.fill() };
+  const longe = (x, y, d) => NOS.every(([a, b]) => Math.hypot(a - x, b - y) > d); // não desenha em cima das bolinhas
+  // rio que desce do norte, passa pelo lago e sai no sul
+  { const rio = [[352, 0], [330, 160], [360, 330], [335, 520], [356, 720], [330, 980], [348, 1220], [320, 1420], [312, 1470], [260, 1600], [300, 1720], [270, VH]];
+    for (const [w, a] of [[9, 'rgba(120,160,170,.45)'], [1.2, tinta + '.6)']]) { g.strokeStyle = a; g.lineWidth = w; g.beginPath(); g.moveTo(...rio[0]); for (let i = 1; i < rio.length - 1; i++) g.quadraticCurveTo(rio[i][0], rio[i][1], (rio[i][0] + rio[i + 1][0]) / 2, (rio[i][1] + rio[i + 1][1]) / 2); g.lineTo(...rio[rio.length - 1]); g.stroke() } }
+  // 1 Trilha do Vale: casinhas do vilarejo, campo e arvorezinhas
+  for (const [x, y] of [[60, 1730], [82, 1745], [170, 1740]]) { g.fillStyle = 'rgba(190,120,80,.55)'; g.beginPath(); g.moveTo(x - 7, y - 6); g.lineTo(x, y - 13); g.lineTo(x + 7, y - 6); g.closePath(); g.fill(); linha(0.8, 0.9); g.stroke(); g.fillStyle = 'rgba(240,225,190,.8)'; g.fillRect(x - 5, y - 6, 10, 8); g.strokeRect(x - 5, y - 6, 10, 8) }
+  for (let i = 0; i < 40; i++) { const x = ra(20, 230), y = ra(1600, 1790); if (longe(x, y, 34)) capim(x, y) }
+  for (let i = 0; i < 9; i++) { const x = ra(20, 220), y = ra(1560, 1700); if (longe(x, y, 34)) arvore(x, y, ra(0.8, 1.1)) }
+  // 2 Beira do Lago
+  { g.fillStyle = 'rgba(110,160,175,.5)'; g.beginPath(); g.ellipse(318, 1450, 40, 22, -0.2, 0, 7); g.fill(); linha(0.8, 1.2); g.stroke(); linha(0.35, 0.7);
+    for (const [x, y] of [[305, 1445], [322, 1455], [330, 1440]]) { g.beginPath(); g.moveTo(x - 6, y); g.quadraticCurveTo(x - 3, y - 2, x, y); g.quadraticCurveTo(x + 3, y + 2, x + 6, y); g.stroke() }
+    for (let i = 0; i < 7; i++) arvore(ra(200, 250), ra(1460, 1560), ra(0.8, 1)) }
+  // 3 Bosque Dourado
+  for (let i = 0; i < 26; i++) { const x = ra(20, 230), y = ra(1290, 1430); if (longe(x, y, 32)) arvore(x, y, ra(0.8, 1.25), 'rgba(205,160,60,.6)') }
+  // 4 Colina das Pedras
+  for (const [x, y, s] of [[230, 1240, 1.1], [330, 1175, 1.3], [370, 1240, 0.9], [205, 1170, 0.8], [350, 1120, 0.9]]) monte(x, y, s, false);
+  for (let i = 0; i < 10; i++) { const x = ra(200, 380), y = ra(1130, 1270); if (longe(x, y, 32)) { g.fillStyle = 'rgba(150,140,125,.6)'; g.beginPath(); g.ellipse(x, y, 4, 2.6, 0, 0, 7); g.fill(); linha(0.7, 0.8); g.stroke() } }
+  // 5 Campo das Flores
+  for (let i = 0; i < 160; i++) { const x = ra(20, 230), y = ra(985, 1120); if (longe(x, y, 30)) flor(x, y, ['rgba(220,90,120,.7)', 'rgba(240,200,60,.8)', 'rgba(250,250,240,.85)', 'rgba(180,110,220,.7)'][i % 4]) }
+  for (let i = 0; i < 20; i++) { const x = ra(20, 230), y = ra(990, 1120); if (longe(x, y, 30)) capim(x, y) }
+  // 6 Pinheiral
+  for (let i = 0; i < 46; i++) { const x = ra(190, 390), y = ra(820, 960); if (longe(x, y, 30)) pinheiro(x, y, ra(0.8, 1.2)) }
+  // 7 Vale ao Entardecer: morros e um sol se pondo
+  for (const [x, y, w] of [[60, 780, 40], [160, 770, 46], [70, 700, 30], [210, 700, 34]]) morro(x, y, w);
+  { g.fillStyle = 'rgba(235,140,70,.35)'; g.beginPath(); g.arc(40, 690, 16, Math.PI, 0); g.fill(); linha(0.6, 0.9); g.stroke(); for (let i = 0; i < 7; i++) { const a = Math.PI + i / 6 * Math.PI; g.beginPath(); g.moveTo(40 + Math.cos(a) * 20, 690 + Math.sin(a) * 20); g.lineTo(40 + Math.cos(a) * 26, 690 + Math.sin(a) * 26); g.stroke() } }
+  for (let i = 0; i < 10; i++) { const x = ra(20, 230), y = ra(740, 830); if (longe(x, y, 30)) arvore(x, y, ra(0.7, 1), 'rgba(170,110,70,.5)') }
+  // 8 Trilha do Crepúsculo: árvores secas e pinheiros
+  for (let i = 0; i < 22; i++) { const x = ra(190, 390), y = ra(520, 650); if (longe(x, y, 30)) (rr() < 0.55 ? seca : pinheiro)(x, y, ra(0.8, 1.2)) }
+  // 9 Floresta Escura (com uma sombra por cima)
+  { const gr = g.createRadialGradient(120, 430, 10, 120, 430, 150); gr.addColorStop(0, 'rgba(40,40,30,.28)'); gr.addColorStop(1, 'rgba(40,40,30,0)'); g.fillStyle = gr; g.fillRect(0, 280, 300, 300) }
+  for (let i = 0; i < 70; i++) { const x = ra(15, 260), y = ra(340, 520); if (longe(x, y, 30)) pinheiro(x, y, ra(0.9, 1.3), 'rgba(40,60,36,.7)') }
+  // 10 Covil do Demônio: vulcão com fumaça e uma caveira
+  { const x = 232, y = 205; g.fillStyle = 'rgba(110,60,40,.5)'; g.beginPath(); g.moveTo(x - 70, y + 20); g.lineTo(x - 18, y - 60); g.lineTo(x + 18, y - 60); g.lineTo(x + 70, y + 20); g.closePath(); g.fill(); linha(0.9, 1.3); g.stroke();
+    g.fillStyle = 'rgba(210,60,30,.6)'; g.beginPath(); g.moveTo(x - 18, y - 60); g.lineTo(x - 8, y - 30); g.lineTo(x, y - 50); g.lineTo(x + 9, y - 25); g.lineTo(x + 18, y - 60); g.closePath(); g.fill();
+    linha(0.4, 1); for (let i = 0; i < 4; i++) { g.beginPath(); g.arc(x - 6 + i * 6, y - 74 - i * 12, 7 + i * 2, 0, 7); g.stroke() }
+    for (const [mx, my, s] of [[80, 230, 1.4], [360, 220, 1.3], [130, 160, 1], [330, 150, 1.1], [40, 120, 1.2], [370, 90, 1]]) monte(mx, my, s, true);
+    for (let i = 0; i < 12; i++) { const sx = ra(140, 330), sy = ra(240, 320); if (longe(sx, sy, 30)) seca(sx, sy, ra(0.8, 1.1)) } }
+  // caminhos entre os estágios: tracejado de tinta (vermelho onde já passou)
+  for (let i = 1; i < NOS.length; i++) {
+    const [ax, ay] = NOS[i - 1], [bx, by] = NOS[i], cx = (ax + bx) / 2 + (i % 2 ? -40 : 40), cy = (ay + by) / 2, feito = S.ok[i];
+    g.setLineDash([]); g.strokeStyle = 'rgba(233,213,161,.9)'; g.lineWidth = 9; g.beginPath(); g.moveTo(ax, ay); g.quadraticCurveTo(cx, cy, bx, by); g.stroke();
+    g.setLineDash([7, 6]); g.lineCap = 'round'; g.strokeStyle = feito ? 'rgba(160,30,20,.85)' : tinta + '.55)'; g.lineWidth = feito ? 3.2 : 2.4; g.stroke(); g.setLineDash([]) }
+  // rosa dos ventos e título
+  { const x = 52, y = 58; linha(0.8, 1); g.beginPath(); g.arc(x, y, 20, 0, 7); g.stroke(); g.beginPath(); g.arc(x, y, 14, 0, 7); g.stroke();
+    for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 - Math.PI / 2; g.fillStyle = i ? 'rgba(70,42,18,.55)' : 'rgba(160,30,20,.8)'; g.beginPath(); g.moveTo(x + Math.cos(a) * 28, y + Math.sin(a) * 28); g.lineTo(x + Math.cos(a + 1.3) * 6, y + Math.sin(a + 1.3) * 6); g.lineTo(x + Math.cos(a - 1.3) * 6, y + Math.sin(a - 1.3) * 6); g.closePath(); g.fill() }
+    g.fillStyle = tinta + '.85)'; g.font = 'bold 11px Georgia,serif'; g.textAlign = 'center'; g.fillText('N', x, y - 31) }
+  // bordas queimadas e rasgadas
+  { const passo = 6; g.fillStyle = '#1a120b'; g.beginPath(); g.rect(-5, -5, VW + 10, VH + 10); g.moveTo(0, 6);
+    for (let x = 0; x <= VW; x += passo) g.lineTo(x, 4 + ra(0, 7)); for (let y = 0; y <= VH; y += passo) g.lineTo(VW - 4 - ra(0, 7), y);
+    for (let x = VW; x >= 0; x -= passo) g.lineTo(x, VH - 4 - ra(0, 7)); for (let y = VH; y >= 0; y -= passo) g.lineTo(4 + ra(0, 7), y);
+    g.closePath(); g.fill('evenodd');
+    for (const [x0, y0, x1, y1, w, h] of [[0, 0, 26, 0, 26, VH], [VW, 0, VW - 26, 0, 26, VH]]) { const gr = g.createLinearGradient(x0, y0, x1, y1); gr.addColorStop(0, 'rgba(90,50,15,.55)'); gr.addColorStop(1, 'rgba(90,50,15,0)'); g.fillStyle = gr; g.fillRect(Math.min(x0, x1), 0, w, h) }
+    for (const [y0, y1] of [[0, 26], [VH, VH - 26]]) { const gr = g.createLinearGradient(0, y0, 0, y1); gr.addColorStop(0, 'rgba(90,50,15,.55)'); gr.addColorStop(1, 'rgba(90,50,15,0)'); g.fillStyle = gr; g.fillRect(0, Math.min(y0, y1), VW, 26) } }
+}
 let selN = 1, contaT = 0, contaN = 0;
 function abreMapa(motivo, sel) { // motivo: 'venceu' ou 'perdeu' (aí no Auto ele mesmo começa a próxima fase depois de uns segundos)
-  mapaEl.classList.add('on'); mapaEl.querySelectorAll('.no,.rot').forEach(e => e.remove());
-  selN = Math.min(sel || F.n, S.lib); clearInterval(contaT); contaN = motivo && S.auto ? 6 : 0;
+  mapaEl.classList.add('on'); folhaEl.querySelectorAll('.no,.rot').forEach(e => e.remove());
+  selN = Math.min(sel || (F.fim ? S.lib : F.n), S.lib); clearInterval(contaT); contaN = motivo && S.auto ? 6 : 0;
   if (contaN) contaT = setInterval(() => { if (--contaN <= 0) { clearInterval(contaT); joga() } else infoMapa() }, 1000);
-  mapaEl.querySelector('.fecha').hidden = F.fim || F.perdeu;
-  const svg = mapaEl.querySelector('svg'), W = mapaEl.clientWidth || 1, H = mapaEl.clientHeight || 1; svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  const pt = ([x, y]) => [x / 100 * W, y / 100 * H]; let d = '';
-  NOS.forEach((q, i) => { const [x, y] = pt(q); if (!i) { d = `M${x},${y}`; return } const [px, py] = pt(NOS[i - 1]); d += ` Q${(px + x) / 2 + (i % 2 ? 22 : -22)},${(py + y) / 2} ${x},${y}` });
-  let enf = ''; for (let i = 0; i < 26; i++) { const x = (i * 37.7 % 100) / 100 * W, y = (10 + (i * 53.3 % 74)) / 100 * H, t = 9 + (i * 7 % 6); enf += `<path d="M${x},${y - t * 1.6} L${x - t * 0.7},${y} L${x + t * 0.7},${y} Z" fill="#1f3a22" opacity=".8"/>` }
-  svg.innerHTML = enf + `<path d="${d}" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="12" stroke-linecap="round"/>` +
-    `<path d="${d}" fill="none" stroke="#c9a46a" stroke-width="7" stroke-linecap="round" stroke-dasharray="1 12"/>`;
-  NOS.forEach((q, i) => {
-    const n = i + 1, [x, y] = pt(q), lib = n <= S.lib, b = document.createElement('button'), rot = document.createElement('div');
+  const W = folhaEl.clientWidth || 400, k = W / VW; folhaEl.style.height = VH * k + 'px'; desenhaPapel();
+  NOS.forEach(([vx, vy], i) => {
+    const n = i + 1, x = vx * k, y = vy * k, lib = n <= S.lib, b = document.createElement('button'), rot = document.createElement('div');
     b.className = 'no' + (S.ok[n] ? ' feito' : '') + (lib ? '' : ' tranc') + (n === S.lib && !S.ok[n] ? ' atual' : '') + (n === N_EST ? ' chefe' : '') + (n === selN ? ' sel' : '');
     b.textContent = lib ? (n === N_EST ? '👹' : n) : '🔒'; b.style.left = x + 'px'; b.style.top = y + 'px';
     b.setAttribute('aria-label', 'Estágio ' + n + ': ' + EST[i][0] + (lib ? '' : ' (trancado)'));
-    b.onclick = () => { clearInterval(contaT); contaN = 0; if (!lib) { aviso('Passe do estágio ' + (n - 1) + ' pra liberar este.'); return } selN = n; mapaEl.querySelectorAll('.no').forEach((e, k) => e.classList.toggle('sel', k === i)); infoMapa() };
-    rot.className = 'rot'; rot.style.left = x + 'px'; rot.style.top = y + (n === N_EST ? 5 : 0) + 'px'; rot.textContent = EST[i][0];
-    rot.append(Object.assign(document.createElement('small'), S.ok[n] ? { textContent: '✓ vencido', className: 'ok' } : { textContent: 'nível ' + nvSugerido(n) + '+' }));
-    mapaEl.append(b, rot) });
-  infoMapa();
+    b.onclick = () => { clearInterval(contaT); contaN = 0; if (!lib) { aviso('Passe do estágio ' + (n - 1) + ' pra liberar este.'); return } selN = n; folhaEl.querySelectorAll('.no').forEach((e, j) => e.classList.toggle('sel', j === i)); infoMapa() };
+    rot.className = 'rot'; rot.style.left = x + 'px'; rot.style.top = y + (n === N_EST ? 6 : 0) + 'px'; rot.textContent = EST[i][0];
+    rot.append(Object.assign(document.createElement('small'), S.ok[n] ? { textContent: '✓ vencido', className: 'ok' } : { textContent: lib ? 'nível ' + nvSugerido(n) + '+' : 'trancado' }));
+    folhaEl.append(b, rot) });
+  mapaEl.querySelector('.topo small').textContent = Object.keys(S.ok).length + ' de ' + N_EST + ' estágios vencidos · nível ' + S.nv;
+  const [, sy] = NOS[selN - 1]; roloEl.scrollTop = sy * k - roloEl.clientHeight * 0.5; infoMapa();
 }
 function infoMapa() {
   const n = selN, i = mapaEl.querySelector('.info div'); i.textContent = 'Estágio ' + n + ' · ' + EST[n - 1][0];
-  i.append(Object.assign(document.createElement('small'), { textContent: (S.ok[n] ? 'Vencido · dá pra jogar de novo' : 'Nível sugerido ' + nvSugerido(n) + ' · você está no ' + S.nv) + ' · ' + (4 + Math.ceil(n / 3)) + ' grupos' }));
+  i.append(Object.assign(document.createElement('small'), { textContent: (S.ok[n] ? 'Vencido · jogue de novo' : 'Sugerido: nível ' + nvSugerido(n) + ' (você: ' + S.nv + ')') + ' · chefe no fim' }));
   mapaEl.querySelector('.jogar').textContent = '▶ Jogar' + (contaN ? ' (' + contaN + ')' : '');
 }
 function joga() { clearInterval(contaT); contaN = 0; fechaMapa(); comecaEstagio(selN) }
 function fechaMapa() { clearInterval(contaT); contaN = 0; mapaEl.classList.remove('on') }
-mapaEl.querySelector('.fecha').onclick = fechaMapa; mapaEl.querySelector('.jogar').onclick = joga;
+mapaEl.querySelector('.jogar').onclick = joga;
+mapaEl.querySelector('.tarefas').onclick = fechaMapa;
 document.getElementById('bEst').addEventListener('click', () => mapaEl.classList.contains('on') ? (F.fim || F.perdeu || fechaMapa()) : abreMapa());
 
 // ---------------- HUD ----------------
@@ -1062,7 +1143,7 @@ function hud() {
   const m = hpMax(); S.hp = Math.min(S.hp, m);
   document.querySelector('#hpB i').style.transform = 'scaleX(' + S.hp / m + ')'; document.querySelector('#hpB span').textContent = 'Vida ' + Math.ceil(S.hp) + '/' + m;
   document.querySelector('#xpB i').style.transform = 'scaleX(' + S.xp / xpProx() + ')'; document.querySelector('#xpB span').textContent = 'XP ' + S.xp + '/' + xpProx();
-  document.getElementById('hOuro').textContent = '🪙 ' + S.ouro; const be = document.getElementById('bEst'); be.textContent = '⚔ Estágio ' + F.n; be.append(Object.assign(document.createElement('small'), { textContent: F.feitos + '/' + F.G }));
+  document.getElementById('hOuro').textContent = '🪙 ' + S.ouro; const be = document.getElementById('bEst'); be.textContent = F.fim || F.perdeu ? '🗺 Mapa' : '⚔ Estágio ' + F.n; if (!F.fim && !F.perdeu) be.append(Object.assign(document.createElement('small'), { textContent: F.feitos + '/' + F.G }));
   const bm = document.getElementById('bModo'); bm.textContent = S.auto ? '▶ Auto' : '🕹 Manual'; bm.classList.toggle('manual', !S.auto); document.body.classList.toggle('manual', !S.auto);
   const bp = document.getElementById('bPocao'); bp.hidden = S.pocoes <= 0; bp.textContent = '🧪 ' + S.pocoes;
   const pend = S.diar.filter(d => !d.ok).length; document.querySelector('[data-aba="diar"]').innerHTML = 'Diárias' + (pend ? '<b>' + pend + '</b>' : '');
@@ -1199,7 +1280,7 @@ function quadro(t) {
   numsPasso(dt); r.render(sc, cam);
 }
 new ResizeObserver(tam).observe(arena);
-comecaEstagio(S.est || 1); trocaAba(aba); hud(); carregar(S.pers); requestAnimationFrame(quadro);
+comecaEstagio(S.est || 1, true); trocaAba(aba); hud(); carregar(S.pers); requestAnimationFrame(quadro); abreMapa(null, S.lib); // o jogo abre no mapa
 window.HAB = { abreMapa, joga, montaMapa, TPf: () => TP, sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
 </script>
 </body></html>

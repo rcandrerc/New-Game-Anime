@@ -9,7 +9,7 @@ boneco de treino de palha (balança e mostra o dano), espada na mão com Atacar 
 são os mesmos do Quimera Sandbox.
 
 **Hábitos (esboço, celular em pé):** https://rcandrerc.github.io/New-Game-Anime/habitos.html — jogo estilo Habitica: hábitos (+/−), diárias e afazeres
-embaixo; em cima a heroína joga a missão: 10 estágios (estilo Eternium) escolhidos num mapa de estágios. Cada estágio é uma fase separada, com mapa próprio
+embaixo; em cima a heroína joga a missão: 10 estágios (estilo Eternium). O jogo abre no mapa da missão, um pergaminho que rola na vertical, com os estágios ligados por caminhos. Cada estágio é uma fase separada, com mapa próprio
 (bosque, lago, colina de pedras, campo de flores, pinheiral, floresta escura, covil do demônio…), grupos de monstros e um chefe numa clareira no fim;
 dura de 1 a 3 minutos e cada um é mais difícil. Vencendo ou perdendo, volta pro mapa (no Auto a próxima fase começa sozinha depois de uns segundos).
 Ela luta sozinha (Auto) ou com joystick e botões de skill (Manual). Só as tarefas dão XP; cada nível dá 3 pontos pra Força, Destreza, Vida,
