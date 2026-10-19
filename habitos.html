@@ -72,6 +72,12 @@
   #mapa .rot{position:absolute;transform:translate(-50%,0);margin-top:27px;font:700 10.5px/1.15 system-ui,sans-serif;color:#fff;text-shadow:0 1px 2px #000;text-align:center;white-space:nowrap;pointer-events:none}
   #mapa .rot small{display:block;font-weight:600;color:#ffe08a;font-size:10px}
   #mapa .rot small.ok{color:#9dff9a}
+  #mapa .no.sel{outline:3px solid #fff;outline-offset:3px}
+  #mapa .info{position:absolute;left:8px;right:8px;bottom:8px;display:flex;align-items:center;gap:10px;padding:7px 8px 7px 12px;border-radius:14px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15)}
+  #mapa .info div{flex:1;min-width:0;font:800 14px/1.2 system-ui,sans-serif;color:#fff}
+  #mapa .info small{display:block;font-weight:600;font-size:11.5px;color:#e6dcc0}
+  #mapa .jogar{flex:none;padding:9px 16px;border-radius:12px;font:900 15px system-ui,sans-serif;background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border:2px solid #fff3c4;box-shadow:0 3px 0 #7a4a00}
+  #mapa .fecha[hidden]{display:none}
   @keyframes pulsa{0%,100%{box-shadow:0 3px 0 #0006,0 0 0 3px #ffe06655}50%{box-shadow:0 3px 0 #0006,0 0 0 9px #ffe06633,0 0 18px #ffe066}}
   #carga{position:absolute;inset:0;display:grid;place-content:center;gap:10px;justify-items:center;background:rgba(10,14,24,.6);font-weight:700;text-shadow:0 1px 3px #000;pointer-events:none;z-index:5}
   #carga.fora{display:none} #carga .bar{width:200px} #carga .bar i{background:var(--accent);transform:scaleX(0)}
@@ -152,7 +158,7 @@
   <div id="ctl"><div id="stick"><div id="knob"></div></div><button id="bAtk">Atacar</button></div>
   <div id="barras"></div><div id="nums"></div><div id="dor"></div>
   <div id="faixa"></div>
-  <div id="mapa"><svg aria-hidden="true"></svg><h2>Missão: os 10 estágios<small>Fique forte com as tarefas pra passar de cada um</small></h2><button class="fecha" aria-label="Fechar o mapa">✕</button></div>
+  <div id="mapa"><svg aria-hidden="true"></svg><h2>Missão: os 10 estágios</h2><button class="fecha" aria-label="Voltar pra fase">✕</button><div class="info"><div></div><button class="jogar">▶ Jogar</button></div></div>
   <div id="carga"><b>Carregando…</b><div class="bar"><i></i></div></div>
 </div>
 <div id="painel">
@@ -267,105 +273,142 @@ function ambiente(k) {
   hemi.color.set(c.ceu); hemi.groundColor.set(c.chao); hemi.intensity = c.hi; sol.color.set(c.sol); sol.intensity = c.si;
 }
 
-// ---------------- trilha e terreno ----------------
-// a trilha é uma volta fechada pelo vale: ela anda sem parar e a volta recomeça sozinha (depois dá pra crescer o mapa)
-const TRILHA = new THREE.CatmullRomCurve3([[0, 0], [12, -7], [25, -3], [31, 10], [26, 24], [12, 31], [-4, 29], [-17, 22], [-24, 9], [-19, -4], [-9, -6]].map(([x, z]) => new THREE.Vector3(x, 0, z)), true, 'catmullrom', 0.5);
-const NT = 900, TP = TRILHA.getSpacedPoints(NT).slice(0, NT).map(v => [v.x, v.z]), TL = TRILHA.getLength(), TPASSO = TL / NT;
+// ---------------- fases: cada estágio tem o seu mapinho (trilha, chão, grama e cenário), montado quando ela entra nele ----------------
+// a trilha da fase vai do começo (onde ela aparece) até a clareira do chefe no fim
+let TP = [], TL = 1, TPASSO = 1, LAGO = { x: 0, z: -999, r: 0 }, TAM = 120, GN = 121, OX = 0, OZ = 0, ALTS = new Float32Array(1), DTR = new Float32Array(1), FIM = { x: 0, z: 0 };
+const NT = 600;
 function pertoTrilha(x, z, i0, jan) { // índice do ponto da trilha mais perto (procura só numa janela se der o índice anterior)
-  let mi = 0, md = 1e9; const n = i0 == null ? NT : jan;
-  for (let k = 0; k < n; k++) { const i = i0 == null ? k : ((i0 - (jan >> 1) + k) % NT + NT) % NT, dx = TP[i][0] - x, dz = TP[i][1] - z, d = dx * dx + dz * dz; if (d < md) { md = d; mi = i } }
+  let mi = 0, md = 1e9; const a = i0 == null ? 0 : Math.max(0, i0 - (jan >> 1)), b = i0 == null ? NT : Math.min(NT, i0 + (jan >> 1));
+  for (let i = a; i < b; i++) { const dx = TP[i][0] - x, dz = TP[i][1] - z, d = dx * dx + dz * dz; if (d < md) { md = d; mi = i } }
   return [mi, Math.sqrt(md)];
 }
-const LAGO = { x: 3, z: 13, r: 5.2 }; // laguinho no meio da volta
 const ruido = (x, z) => Math.sin(x * 0.13 + 1.3) * Math.cos(z * 0.11 - 0.7) + 0.5 * Math.sin(x * 0.29 - z * 0.23 + 2.1) + 0.25 * Math.cos(x * 0.61 + z * 0.53);
 const liso = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t) };
-// grade de alturas (1 m) pra pôr cada coisa no chão sem recalcular
-const TAM = 120, GN = 121, OX = 3, OZ = 12, ALTS = new Float32Array(GN * GN), DTR = new Float32Array(GN * GN);
-for (let j = 0; j < GN; j++) for (let i = 0; i < GN; i++) {
-  const x = i - TAM / 2 + OX, z = j - TAM / 2 + OZ, [, d] = pertoTrilha(x, z), dl = Math.hypot(x - LAGO.x, z - LAGO.z);
-  let h = (ruido(x, z) * 0.9 + 0.9) * liso(4, 16, d) * 2.2 + liso(18, 40, d) * 6 + Math.sin(x * 1.7) * Math.cos(z * 1.3) * 0.06;
-  h -= (1 - liso(LAGO.r - 1.5, LAGO.r + 2.5, dl)) * (h + 0.7); // o lago afunda
-  ALTS[j * GN + i] = h; DTR[j * GN + i] = d;
-}
-function altura(x, z) { // altura do chão (interpolada da grade)
+function altura(x, z) { // altura do chão (interpolada da grade de 1 m)
   const fx = Math.min(GN - 1.001, Math.max(0, x + TAM / 2 - OX)), fz = Math.min(GN - 1.001, Math.max(0, z + TAM / 2 - OZ)), i = fx | 0, j = fz | 0, u = fx - i, v = fz - j, k = j * GN + i;
   return (ALTS[k] * (1 - u) + ALTS[k + 1] * u) * (1 - v) + (ALTS[k + GN] * (1 - u) + ALTS[k + GN + 1] * u) * v;
 }
 const dTrilha = (x, z) => { const fx = Math.min(GN - 1, Math.max(0, Math.round(x + TAM / 2 - OX))), fz = Math.min(GN - 1, Math.max(0, Math.round(z + TAM / 2 - OZ))); return DTR[fz * GN + fx] };
-let AGUA;
-{ // chão: cores misturadas (grama de vários verdes, manchas secas, terra da trilha, beira do lago)
-  const geo = new THREE.PlaneGeometry(TAM, TAM, GN - 1, GN - 1); geo.rotateX(-Math.PI / 2); geo.translate(OX, 0, OZ);
-  const pos = geo.attributes.position, cor = new Float32Array(pos.count * 3), c = new THREE.Color(), t = new THREE.Color();
-  const G1 = new THREE.Color(0x5a8a34), G2 = new THREE.Color(0x86a845), SECO = new THREE.Color(0xb3a55a), ESC = new THREE.Color(0x3f6a2c), TERRA = new THREE.Color(0xb98d5c), TERRA2 = new THREE.Color(0x9c7448), AREIA = new THREE.Color(0xcdb98a);
-  for (let k = 0; k < pos.count; k++) {
-    const x = pos.getX(k), z = pos.getZ(k), i = Math.round(x + TAM / 2 - OX), j = Math.round(z + TAM / 2 - OZ), h = ALTS[j * GN + i], d = DTR[j * GN + i], dl = Math.hypot(x - LAGO.x, z - LAGO.z);
-    pos.setY(k, h);
-    const n1 = ruido(x * 2.3, z * 2.1) * 0.5 + 0.5, n2 = ruido(z * 4.1 + 7, x * 3.7) * 0.5 + 0.5;
-    c.copy(G1).lerp(G2, n1); c.lerp(SECO, liso(0.62, 0.95, n2) * 0.45); c.lerp(ESC, liso(16, 30, d) * 0.5);
-    t.copy(TERRA).lerp(TERRA2, n2); c.lerp(t, 1 - liso(1.1, 2.3 + n1 * 0.6, d)); // trilha com beira irregular
-    c.lerp(AREIA, 1 - liso(LAGO.r - 0.2, LAGO.r + 1.2, dl));
-    c.convertSRGBToLinear(); cor[k * 3] = c.r; cor[k * 3 + 1] = c.g; cor[k * 3 + 2] = c.b;
-  }
-  geo.setAttribute('color', new THREE.BufferAttribute(cor, 3)); geo.computeVertexNormals();
-  const chao = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true })); chao.receiveShadow = true; sc.add(chao);
-  // água do lago: azul com brilho
-  AGUA = new THREE.Mesh(new THREE.CircleGeometry(LAGO.r + 0.6, 40), new THREE.MeshPhongMaterial({ color: new THREE.Color(0x4f9fc8).convertSRGBToLinear(), shininess: 90, specular: 0xffe0b0, transparent: true, opacity: 0.85 }));
-  AGUA.rotation.x = -Math.PI / 2; AGUA.position.set(LAGO.x, -0.28, LAGO.z); sc.add(AGUA);
-}
-// tufos de grama que balançam com o vento (malha instanciada; cada tufo tem 5 folhas)
+
+// o jeito de cada fase: árvores, pedras, flores, lago, morros e as cores do chão
+const C = (g1, g2, seco, esc, terra, terra2) => ({ g1, g2, seco, esc, terra, terra2 });
+const SOLO = C(0x5a8a34, 0x86a845, 0xb3a55a, 0x3f6a2c, 0xb98d5c, 0x9c7448);
+const BIOMAS = [
+  { arv: { CommonTree_1: 2, CommonTree_2: 2, CommonTree_3: 2, Pine_1: 1 }, nArv: 70, aberto: 4.2, pedras: 14, flores: 16, deco: 1, lago: 4.2, morro: 1, grama: 2400, solo: SOLO },
+  { arv: { CommonTree_1: 2, CommonTree_2: 1, CommonTree_3: 2 }, nArv: 50, aberto: 4.5, pedras: 12, flores: 10, deco: 1, lago: 8.5, morro: 0.8, grama: 2400, solo: C(0x5f9038, 0x8cb04c, 0xb9ad66, 0x44702e, 0xc4a070, 0xa88456) },
+  { arv: { CommonTree_1: 3, CommonTree_2: 3, CommonTree_3: 3 }, nArv: 115, aberto: 3.4, pedras: 10, flores: 6, deco: 1.3, lago: 0, morro: 1, grama: 2200, solo: C(0x86883a, 0xb0a24a, 0xd0a456, 0x5f6a2c, 0xb98d5c, 0x9c7448), grCor: [0x6a6a28, 0xe0c060] },
+  { arv: { Pine_1: 2, Pine_2: 1, CommonTree_2: 1 }, nArv: 40, aberto: 4, pedras: 55, flores: 5, deco: 0.7, lago: 0, morro: 2, grama: 1800, solo: C(0x6a8040, 0x8a9a58, 0xa89a70, 0x55663a, 0xa89272, 0x8a7a62) },
+  { arv: { CommonTree_1: 1, CommonTree_3: 1 }, nArv: 30, aberto: 5, pedras: 8, flores: 42, deco: 1.2, lago: 4, morro: 0.7, grama: 3000, solo: C(0x6a9a3a, 0x9cbc50, 0xc2b86a, 0x4a7a30, 0xc09a68, 0xa48058) },
+  { arv: { Pine_1: 3, Pine_2: 3, Pine_3: 3 }, nArv: 125, aberto: 3.6, pedras: 16, flores: 4, deco: 1.4, lago: 0, morro: 1.3, grama: 2000, solo: C(0x3f6a34, 0x5a7f40, 0x8a8a52, 0x2f5228, 0x9a7a52, 0x82663e), grCor: [0x2f5a24, 0x8ab05a] },
+  { arv: { CommonTree_1: 2, CommonTree_3: 1, Pine_2: 1 }, nArv: 65, aberto: 4, pedras: 18, flores: 12, deco: 1, lago: 5.5, morro: 1.2, grama: 2400, solo: SOLO },
+  { arv: { Pine_1: 2, Pine_3: 2, DeadTree_1: 2 }, nArv: 80, aberto: 3.8, pedras: 26, flores: 3, deco: 0.8, lago: 0, morro: 1.4, grama: 1900, solo: C(0x50703a, 0x6e8448, 0x9a8e5e, 0x3a5430, 0x8e7458, 0x765e46) },
+  { arv: { Pine_1: 3, Pine_2: 3, Pine_3: 2, DeadTree_1: 1 }, nArv: 145, aberto: 3.2, pedras: 18, flores: 0, deco: 1.5, lago: 0, morro: 1.2, grama: 1800, solo: C(0x34562e, 0x48663a, 0x6a6a48, 0x243e22, 0x7a644a, 0x64503a), grCor: [0x23401e, 0x5a8040] },
+  { arv: { DeadTree_1: 4, Pine_3: 1 }, nArv: 50, aberto: 4.5, pedras: 48, flores: 0, deco: 0.3, lago: 0, morro: 1.6, grama: 900, solo: C(0x4e3e2e, 0x62483a, 0x705040, 0x382a22, 0x6e4430, 0x5a3626), grCor: [0x3a2a1e, 0x7a5a3a], covil: true }];
+const MAPA = new THREE.Group(); sc.add(MAPA);
 const VENTO = { value: 0 };
-{ const pos = [], cor = [], c0 = new THREE.Color(0x3f6e28).convertSRGBToLinear(), c1 = new THREE.Color(0xb8d06a).convertSRGBToLinear();
-  for (let b = 0; b < 5; b++) { const a = b / 5 * Math.PI + rnd(-0.2, 0.2), w = 0.05, h = rnd(0.28, 0.45), ox = rnd(-0.08, 0.08), oz = rnd(-0.08, 0.08), dx = Math.cos(a) * w, dz = Math.sin(a) * w, tx = rnd(-0.08, 0.08), tz = rnd(-0.08, 0.08);
-    pos.push(ox - dx, 0, oz - dz, ox + dx, 0, oz + dz, ox + tx, h, oz + tz); cor.push(c0.r, c0.g, c0.b, c0.r, c0.g, c0.b, c1.r, c1.g, c1.b) }
-  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(cor, 3)); geo.computeVertexNormals();
-  const mat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
-  mat.onBeforeCompile = sh => { sh.uniforms.uV = VENTO; sh.vertexShader = 'uniform float uV;\n' + sh.vertexShader.replace('#include <begin_vertex>',
-    '#include <begin_vertex>\n#ifdef USE_INSTANCING\n float fa = instanceMatrix[3].x * 0.35 + instanceMatrix[3].z * 0.27;\n#else\n float fa = 0.0;\n#endif\n transformed.x += sin(uV * 1.8 + fa) * 0.09 * position.y / 0.4; transformed.z += cos(uV * 1.3 + fa) * 0.05 * position.y / 0.4;') };
-  mat.customProgramCacheKey = () => 'grama';
-  const N = 2600, im = new THREE.InstancedMesh(geo, mat, N), m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0); let n = 0;
-  for (let k = 0; k < N * 4 && n < N; k++) { const x = ru(-36, 42), z = ru(-26, 50), d = dTrilha(x, z); if (d < 1.6 || Math.hypot(x - LAGO.x, z - LAGO.z) < LAGO.r + 0.4 || d > 22) continue;
-    const k2 = ru(0.7, 1.5) * (d < 3 ? 0.7 : 1); im.setMatrixAt(n++, m.compose(p.set(x, altura(x, z) - 0.02, z), q.setFromAxisAngle(up, ru(0, 6.28)), s.set(k2, k2 * ru(0.8, 1.3), k2))) }
-  im.count = n; im.receiveShadow = true; sc.add(im) }
-// modelos do cenário (Quaternius Stylized Nature, CC0), várias cópias por malha instanciada
 const _gl = new THREE.GLTFLoader(), _mA = new THREE.Matrix4(), _vA = new THREE.Vector3(), _qA = new THREE.Quaternion(), _sA = new THREE.Vector3(), _Y = new THREE.Vector3(0, 1, 0);
 const OBST = []; // troncos e pedras (ninguém atravessa)
-function espalha(nome, lista, sombra) { // lista de [x, z, giro, escala]
-  if (!lista.length) return;
-  _gl.load('cenario/' + nome + '.glb', g => {
+const GLBS = {}; let mapaId = 0;
+function espalha(nome, lista, sombra) { // modelos do cenário (Quaternius Stylized Nature, CC0), várias cópias por malha instanciada; lista de [x, z, giro, escala]
+  if (!lista.length) return; const meu = mapaId;
+  (GLBS[nome] = GLBS[nome] || new Promise((ok, erro) => _gl.load('cenario/' + nome + '.glb', ok, undefined, erro))).then(g => {
+    if (meu !== mapaId) return; // já trocou de fase
     g.scene.updateMatrixWorld(true); g.scene.traverse(m => {
       if (!m.isMesh) return; m.material.normalMap = null;
-      const im = new THREE.InstancedMesh(m.geometry, m.material, lista.length);
+      const im = new THREE.InstancedMesh(m.geometry, m.material, lista.length); im.userData.emprestado = true;
       lista.forEach(([x, z, rot, s], i) => { _mA.compose(_vA.set(x, altura(x, z) - 0.05, z), _qA.setFromAxisAngle(_Y, rot), _sA.set(s, s, s)).multiply(m.matrixWorld); im.setMatrixAt(i, _mA) });
-      im.castShadow = sombra; im.receiveShadow = true; sc.add(im);
+      im.castShadow = sombra; im.receiveShadow = true; MAPA.add(im);
     });
-  });
+  }).catch(() => {});
 }
-function cenario() {
-  const livre = (x, z, dmin, raio) => dTrilha(x, z) > dmin && Math.hypot(x - LAGO.x, z - LAGO.z) > LAGO.r + 1 && !OBST.some(o => Math.hypot(o.x - x, o.z - z) < o.r + raio);
-  const arv = { CommonTree_1: [], CommonTree_2: [], CommonTree_3: [], Pine_1: [], Pine_2: [], Pine_3: [] }, nomes = Object.keys(arv);
-  for (let k = 0; k < 900 && OBST.length < 95; k++) { const x = ru(-34, 40), z = ru(-24, 48), d = dTrilha(x, z); if (d > 26 || !livre(x, z, 4.2, 1.6)) continue;
+function montaMapa(n) {
+  mapaId++; const B = BIOMAS[n - 1];
+  for (const o of [...MAPA.children]) { MAPA.remove(o); if (!o.userData.emprestado) { o.geometry.dispose(); if (o.material.dispose) o.material.dispose() } }
+  OBST.length = 0; semente = 1000 + n * 7919;
+  // trilha da fase: começa na origem e vai serpenteando, sem se afastar demais do centro
+  const comp = LEST[0] + LEST[1] * n + 22, passo = 8, pts = [[0, 0]]; let a = ru(0, 6.28), x = 0, z = 0;
+  for (let k = 0; k * passo < comp * 1.04; k++) {
+    a += ru(-0.75, 0.75); const r = Math.hypot(x, z); if (r > 26) { const ac = Math.atan2(-x, -z); let d = ((ac - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI; a += d * 0.5 }
+    x += Math.sin(a) * passo; z += Math.cos(a) * passo; pts.push([x, z]) }
+  const curva = new THREE.CatmullRomCurve3(pts.map(([x, z]) => new THREE.Vector3(x, 0, z)), false, 'catmullrom', 0.5);
+  TP = curva.getSpacedPoints(NT - 1).map(v => [v.x, v.z]); TL = curva.getLength(); TPASSO = TL / (NT - 1); FIM = { x: TP[NT - 1][0], z: TP[NT - 1][1] };
+  // grade de alturas cobrindo a trilha com folga
+  let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const [x, z] of TP) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z) }
+  OX = Math.round((x0 + x1) / 2); OZ = Math.round((z0 + z1) / 2); TAM = Math.ceil(Math.max(x1 - x0, z1 - z0) + 70); GN = TAM + 1; ALTS = new Float32Array(GN * GN); DTR = new Float32Array(GN * GN);
+  if (B.lago) { const i = (NT * 0.45) | 0, j = i + 6, tx = TP[j][0] - TP[i][0], tz = TP[j][1] - TP[i][1], l = Math.hypot(tx, tz) || 1, lado = rd() < 0.5 ? 1 : -1;
+    LAGO = { x: TP[i][0] - tz / l * lado * (B.lago + 4), z: TP[i][1] + tx / l * lado * (B.lago + 4), r: B.lago } } else LAGO = { x: 0, z: -9999, r: 0 };
+  const T2 = TP.filter((_, i) => i % 3 === 0);
+  for (let j = 0; j < GN; j++) for (let i = 0; i < GN; i++) {
+    const x = i - TAM / 2 + OX, z = j - TAM / 2 + OZ; let md = 1e9; for (const p of T2) { const dx = p[0] - x, dz = p[1] - z, d = dx * dx + dz * dz; if (d < md) md = d }
+    const d = Math.sqrt(md), dl = Math.hypot(x - LAGO.x, z - LAGO.z), df = Math.hypot(x - FIM.x, z - FIM.z);
+    let h = ((ruido(x, z) * 0.9 + 0.9) * liso(4, 16, d) * 2.2 + liso(18, 40, d) * 6) * B.morro + Math.sin(x * 1.7) * Math.cos(z * 1.3) * 0.06;
+    h *= liso(5, 11, df); // clareira plana do chefe no fim
+    h -= (1 - liso(LAGO.r - 1.5, LAGO.r + 2.5, dl)) * (h + 0.7);
+    ALTS[j * GN + i] = h; DTR[j * GN + i] = Math.min(d, df < 7 ? 0.5 : 1e9) }
+  { // chão: cores misturadas (grama de vários tons, manchas secas, terra da trilha, beira do lago)
+    const geo = new THREE.PlaneGeometry(TAM, TAM, GN - 1, GN - 1); geo.rotateX(-Math.PI / 2); geo.translate(OX, 0, OZ);
+    const pos = geo.attributes.position, cor = new Float32Array(pos.count * 3), c = new THREE.Color(), t = new THREE.Color(), s = B.solo;
+    const G1 = new THREE.Color(s.g1), G2 = new THREE.Color(s.g2), SECO = new THREE.Color(s.seco), ESC = new THREE.Color(s.esc), TERRA = new THREE.Color(s.terra), TERRA2 = new THREE.Color(s.terra2), AREIA = new THREE.Color(0xcdb98a);
+    for (let k = 0; k < pos.count; k++) {
+      const x = pos.getX(k), z = pos.getZ(k), i = Math.round(x + TAM / 2 - OX), j = Math.round(z + TAM / 2 - OZ), h = ALTS[j * GN + i], d = DTR[j * GN + i], dl = Math.hypot(x - LAGO.x, z - LAGO.z), df = Math.hypot(x - FIM.x, z - FIM.z);
+      pos.setY(k, h);
+      const n1 = ruido(x * 2.3, z * 2.1) * 0.5 + 0.5, n2 = ruido(z * 4.1 + 7, x * 3.7) * 0.5 + 0.5;
+      c.copy(G1).lerp(G2, n1); c.lerp(SECO, liso(0.62, 0.95, n2) * 0.45); c.lerp(ESC, liso(16, 30, d) * 0.5);
+      t.copy(TERRA).lerp(TERRA2, n2); c.lerp(t, 1 - liso(1.1, 2.3 + n1 * 0.6, Math.min(d, Math.max(0, df - 4.5)))); // trilha com beira irregular e a clareira do fim
+      c.lerp(AREIA, 1 - liso(LAGO.r - 0.2, LAGO.r + 1.2, dl));
+      c.convertSRGBToLinear(); cor[k * 3] = c.r; cor[k * 3 + 1] = c.g; cor[k * 3 + 2] = c.b }
+    geo.setAttribute('color', new THREE.BufferAttribute(cor, 3)); geo.computeVertexNormals();
+    const chao = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true })); chao.receiveShadow = true; MAPA.add(chao);
+    if (LAGO.r) { const agua = new THREE.Mesh(new THREE.CircleGeometry(LAGO.r + 0.6, 40), new THREE.MeshPhongMaterial({ color: new THREE.Color(0x4f9fc8).convertSRGBToLinear(), shininess: 90, specular: 0xffe0b0, transparent: true, opacity: 0.85 }));
+      agua.rotation.x = -Math.PI / 2; agua.position.set(LAGO.x, -0.28, LAGO.z); MAPA.add(agua) }
+  }
+  { // tufos de grama que balançam com o vento (cada tufo tem 5 folhas)
+    const pos = [], cor = [], gc = B.grCor || [0x3f6e28, 0xb8d06a], c0 = new THREE.Color(gc[0]).convertSRGBToLinear(), c1 = new THREE.Color(gc[1]).convertSRGBToLinear();
+    for (let b = 0; b < 5; b++) { const a = b / 5 * Math.PI + rnd(-0.2, 0.2), w = 0.05, h = rnd(0.28, 0.45), ox = rnd(-0.08, 0.08), oz = rnd(-0.08, 0.08), dx = Math.cos(a) * w, dz = Math.sin(a) * w, tx = rnd(-0.08, 0.08), tz = rnd(-0.08, 0.08);
+      pos.push(ox - dx, 0, oz - dz, ox + dx, 0, oz + dz, ox + tx, h, oz + tz); cor.push(c0.r, c0.g, c0.b, c0.r, c0.g, c0.b, c1.r, c1.g, c1.b) }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(cor, 3)); geo.computeVertexNormals();
+    const mat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
+    mat.onBeforeCompile = sh => { sh.uniforms.uV = VENTO; sh.vertexShader = 'uniform float uV;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+      '#include <begin_vertex>\n#ifdef USE_INSTANCING\n float fa = instanceMatrix[3].x * 0.35 + instanceMatrix[3].z * 0.27;\n#else\n float fa = 0.0;\n#endif\n transformed.x += sin(uV * 1.8 + fa) * 0.09 * position.y / 0.4; transformed.z += cos(uV * 1.3 + fa) * 0.05 * position.y / 0.4;') };
+    mat.customProgramCacheKey = () => 'grama';
+    const N = B.grama, im = new THREE.InstancedMesh(geo, mat, N), m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3(); let k2n = 0;
+    for (let k = 0; k < N * 4 && k2n < N; k++) { const x = OX + ru(-TAM / 2 + 4, TAM / 2 - 4), z = OZ + ru(-TAM / 2 + 4, TAM / 2 - 4), d = dTrilha(x, z); if (d < 1.6 || Math.hypot(x - LAGO.x, z - LAGO.z) < LAGO.r + 0.4 || d > 22) continue;
+      const k2 = ru(0.7, 1.5) * (d < 3 ? 0.7 : 1); im.setMatrixAt(k2n++, m.compose(p.set(x, altura(x, z) - 0.02, z), q.setFromAxisAngle(_Y, ru(0, 6.28)), s.set(k2, k2 * ru(0.8, 1.3), k2))) }
+    im.count = k2n; im.receiveShadow = true; MAPA.add(im) }
+  cenario(B);
+}
+function cenario(B) {
+  const rx = () => OX + ru(-TAM / 2 + 3, TAM / 2 - 3), rz = () => OZ + ru(-TAM / 2 + 3, TAM / 2 - 3);
+  const livre = (x, z, dmin, raio) => dTrilha(x, z) > dmin && Math.hypot(x - LAGO.x, z - LAGO.z) > LAGO.r + 1 && Math.hypot(x - FIM.x, z - FIM.z) > 8 && Math.hypot(x - TP[0][0], z - TP[0][1]) > 4 && !OBST.some(o => Math.hypot(o.x - x, o.z - z) < o.r + raio);
+  const arv = {}, nomes = []; for (const n in B.arv) { arv[n] = []; for (let i = 0; i < B.arv[n]; i++) nomes.push(n) }
+  for (let k = 0; k < B.nArv * 12 && OBST.length < B.nArv; k++) { const x = rx(), z = rz(), d = dTrilha(x, z); if (d > 26 || !livre(x, z, B.aberto, 1.6)) continue;
     if (d < 9 && rd() < 0.55) continue; // mais aberto perto da trilha, mata fechada mais longe
-    const n = nomes[(rd() * 6) | 0]; arv[n].push([x, z, ru(0, 6.28), ru(0.5, 0.75)]); OBST.push({ x, z, r: 0.35, copa: 2.2 }) }
+    const n = nomes[(rd() * nomes.length) | 0]; arv[n].push([x, z, ru(0, 6.28), n === 'DeadTree_1' ? ru(0.8, 1.2) : ru(0.5, 0.75)]); OBST.push({ x, z, r: 0.35, copa: n === 'DeadTree_1' ? 1.2 : 2.2 }) }
   for (const n in arv) espalha(n, arv[n], true);
-  // anel de pinheiros simples bem longe, pra o vale parecer fechado (leve pro celular)
-  { const L = []; for (let i = 0; i < 160; i++) { const a = i / 160 * Math.PI * 2, rr = ru(36, 44); L.push([OX + Math.cos(a) * rr, OZ + Math.sin(a) * rr, ru(5, 9)]) }
-    const tr = new THREE.InstancedMesh(new THREE.ConeGeometry(1, 1, 7), M(0x2f5a34), L.length * 2);
+  // anel de pinheiros simples bem longe, pra a fase parecer fechada (leve pro celular)
+  { const L = [], R0 = TAM / 2 - 8; for (let i = 0; i < 170; i++) { const a = i / 170 * Math.PI * 2, rr = ru(R0, R0 + 6); L.push([OX + Math.cos(a) * rr, OZ + Math.sin(a) * rr, ru(5, 9)]) }
+    const tr = new THREE.InstancedMesh(new THREE.ConeGeometry(1, 1, 7), M(B.covil ? 0x2a2620 : 0x2f5a34), L.length * 2);
     L.forEach(([x, z, h], i) => { const y = altura(x, z); for (let k = 0; k < 2; k++) { const w = h * (0.28 - k * 0.09); tr.setMatrixAt(i * 2 + k, _mA.compose(_vA.set(x, y + h * (0.45 + k * 0.25), z), _qA.setFromAxisAngle(_Y, i), _sA.set(w, h * 0.55, w))) } });
-    sc.add(tr) }
+    MAPA.add(tr) }
   const pedras = { Rock_Medium_1: [], Rock_Medium_2: [], Rock_Medium_3: [] }, pn = Object.keys(pedras); let np = 0;
-  for (let k = 0; k < 300 && np < 22; k++) { const x = ru(-32, 38), z = ru(-22, 46), s = ru(0.4, 1.1); if (!livre(x, z, 3 + s, 1.2)) continue;
+  for (let k = 0; k < B.pedras * 14 && np < B.pedras; k++) { const x = rx(), z = rz(), s = ru(0.4, 1.1); if (dTrilha(x, z) > 24 || !livre(x, z, 3 + s, 1.2)) continue;
     pedras[pn[(rd() * 3) | 0]].push([x, z, ru(0, 6.28), s]); OBST.push({ x, z, r: 0.9 * s }); np++ }
+  // a clareira do chefe é cercada de pedras grandes (com uma entrada pra trilha)
+  { const i = NT - 40, ea = Math.atan2(TP[i][0] - FIM.x, TP[i][1] - FIM.z);
+    for (let k = 0; k < 14; k++) { const a = ea + 0.55 + k / 13 * (Math.PI * 2 - 1.1), rr = ru(8.2, 9.2), x = FIM.x + Math.sin(a) * rr, z = FIM.z + Math.cos(a) * rr, s = ru(0.9, 1.5);
+      if (Math.hypot(x - TP[0][0], z - TP[0][1]) < 5) continue; let perto = false; for (let j = 0; j < NT - 60; j += 3) if (Math.hypot(TP[j][0] - x, TP[j][1] - z) < 2.4 + s) { perto = true; break }
+      if (perto) continue; pedras[pn[k % 3]].push([x, z, ru(0, 6.28), s]); OBST.push({ x, z, r: 0.9 * s }) } }
   for (const n in pedras) espalha(n, pedras[n], true);
   // pedrinhas na beira da trilha e em volta do lago
   { const L = []; for (let i = 0; i < 70; i++) { const j = (rd() * NT) | 0, a = ru(0, 6.28), rr = ru(1.8, 2.8), x = TP[j][0] + Math.cos(a) * rr, z = TP[j][1] + Math.sin(a) * rr; if (dTrilha(x, z) > 1.5) L.push([x, z, ru(0, 6.28), ru(0.8, 1.6)]) }
-    for (let i = 0; i < 26; i++) { const a = i / 26 * 6.283 + ru(-0.1, 0.1), rr = LAGO.r + ru(0.3, 1.0); L.push([LAGO.x + Math.cos(a) * rr, LAGO.z + Math.sin(a) * rr, ru(0, 6.28), ru(1.2, 2.4)]) }
+    if (LAGO.r) for (let i = 0; i < 26; i++) { const a = i / 26 * 6.283 + ru(-0.1, 0.1), rr = LAGO.r + ru(0.3, 1.0); L.push([LAGO.x + Math.cos(a) * rr, LAGO.z + Math.sin(a) * rr, ru(0, 6.28), ru(1.2, 2.4)]) }
     espalha('Pebble_Round_2', L, false) }
   // flores em manchas, arbustos, samambaias, cogumelos e capim alto
   const deco = { Flower_3_Group: [], Flower_4_Group: [], Bush_Common: [], Bush_Common_Flowers: [], Fern_1: [], Mushroom_Common: [], Grass_Wispy_Tall: [], Plant_1_Big: [] };
-  for (let m = 0; m < 16; m++) { let cx = 0, cz = 0; for (let k = 0; k < 50; k++) { cx = ru(-28, 34); cz = ru(-18, 42); if (livre(cx, cz, 2.5, 0.5)) break }
+  for (let m = 0; m < B.flores; m++) { let cx = 0, cz = 0; for (let k = 0; k < 50; k++) { cx = rx(); cz = rz(); if (dTrilha(cx, cz) < 18 && livre(cx, cz, 2.5, 0.5)) break }
     const n = rd() < 0.5 ? 'Flower_3_Group' : 'Flower_4_Group'; for (let i = 0; i < 7; i++) { const x = cx + ru(-2.2, 2.2), z = cz + ru(-2.2, 2.2); if (livre(x, z, 1.8, 0.3)) deco[n].push([x, z, ru(0, 6.28), ru(0.35, 0.5)]) } }
-  for (const [n, q, s0, s1, dm] of [['Bush_Common', 26, 0.6, 1.0, 3.5], ['Bush_Common_Flowers', 18, 0.6, 0.9, 3], ['Fern_1', 34, 0.5, 0.8, 2.8], ['Mushroom_Common', 14, 0.5, 0.8, 2.2], ['Grass_Wispy_Tall', 40, 0.4, 0.6, 2.2], ['Plant_1_Big', 12, 0.4, 0.55, 3]])
-    for (let k = 0; k < q * 4 && deco[n].length < q; k++) { const x = ru(-30, 36), z = ru(-20, 44); if (dTrilha(x, z) < 20 && livre(x, z, dm, 0.5)) deco[n].push([x, z, ru(0, 6.28), ru(s0, s1)]) }
+  for (const [n, q0, s0, s1, dm] of [['Bush_Common', 26, 0.6, 1.0, 3.5], ['Bush_Common_Flowers', B.flores ? 18 : 0, 0.6, 0.9, 3], ['Fern_1', 34, 0.5, 0.8, 2.8], ['Mushroom_Common', 14, 0.5, 0.8, 2.2], ['Grass_Wispy_Tall', 40, 0.4, 0.6, 2.2], ['Plant_1_Big', 12, 0.4, 0.55, 3]]) {
+    const q = Math.round(q0 * B.deco); for (let k = 0; k < q * 6 && deco[n].length < q; k++) { const x = rx(), z = rz(); if (dTrilha(x, z) < 20 && livre(x, z, dm, 0.5)) deco[n].push([x, z, ru(0, 6.28), ru(s0, s1)]) } }
   for (const n in deco) espalha(n, deco[n], false);
 }
 // vaga-lumes e pólen flutuando perto da heroína
@@ -440,8 +483,7 @@ function estrondo(vol = 0.8) { // explosão grave
 }
 
 // ---------------- heroína ----------------
-const P = { x: TP[0][0], z: TP[0][1], y: 0, face: 0, si: 0, atk: null, desm: 0, comem: 0, hit: 0, en: 40, atkFila: false };
-P.face = Math.atan2(TP[3][0] - TP[0][0], TP[3][1] - TP[0][1]);
+const P = { x: 0, z: 0, y: 0, face: 0, si: 0, atk: null, desm: 0, comem: 0, hit: 0, en: 40, atkFila: false };
 const player = new THREE.Group(); sc.add(player);
 let R = null, mix = null, cur = null, pedido = 0, K = 0.64, ALT = 1.55, RUN = 2.9; const cache = {};
 const ONCE = new Set(['Esp1', 'Esp2', 'Esp3', 'Esp4', 'EspCombo', 'EspGiro', 'EspSalto', 'EspRaio', 'MagBola', 'MagChao', 'MagOnda', 'MagCura', 'Sword_Dash_Full', 'Sword_A', 'Sword_B', 'Sword_C',
@@ -471,7 +513,7 @@ function carregar(i) {
     root.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(root); ALT = Math.max(0.8, bb.max.y - bb.min.y); K = ALT / 2.42; RUN = 4.6 * K;
     VRMC.fix(R, RUN, 2.2 * K);
     poeEspada(); P.atk = null; carga(null); hud(); botoesSkill();
-    if (!cenarioPronto) { cenarioPronto = true; cenario(); carregaMonstros() }
+    if (!cenarioPronto) { cenarioPronto = true; carregaMonstros() }
   }).catch(() => { if (meu === pedido) { if (!R) { carga('A internet falhou. Toque pra tentar de novo.', 0); addEventListener('pointerup', () => carregar(i), { once: true }) } } delete cache[arq] });
 }
 let espada = null;
@@ -774,7 +816,7 @@ function novoBicho(tipo, x, z, chefe) {
 }
 function some(b) { b.fora = true; sc.remove(b.g); b.bar.remove(); BICHOS.splice(BICHOS.indexOf(b), 1) }
 function grupoNovo(g) { // grupo g do estágio, parado na trilha; o último é o chefe
-  const n = F.n, chefe = g === F.G - 1, i = (F.ini + Math.round(F.pos[g] / TPASSO)) % NT, j = (i + 4) % NT;
+  const n = F.n, chefe = g === F.G - 1, i = Math.min(NT - 6, F.ini + Math.round(F.pos[g] / TPASSO)), j = i + 4;
   const q = chefe ? (n >= 3 ? 1 + Math.min(2, (n / 4) | 0) : 1) : Math.min(4, 1 + ((Math.random() * (1.6 + n / 3)) | 0));
   const tx = TP[j][0] - TP[i][0], tz = TP[j][1] - TP[i][1], tl = Math.hypot(tx, tz) || 1, nx = -tz / tl, nz = tx / tl;
   for (let k = 0; k < q; k++) { const o = (k - (q - 1) / 2) * 1.6 + rnd(-0.4, 0.4), f = rnd(-1, 1), ch = chefe && k === ((q - 1) / 2 | 0);
@@ -792,19 +834,19 @@ function grupoMorto(b) {
 function comecaEstagio(n) {
   n = Math.max(1, Math.min(n, S.lib, N_EST)); S.est = n; salva();
   for (const b of [...BICHOS]) some(b);
-  const L = LEST[0] + LEST[1] * n; // metros de trilha
-  Object.assign(F, { n, ini: Math.round((n - 1) * NT * 0.37) % NT, L, G: 4 + Math.ceil(n / 3), prox: 0, feitos: 0, prog: 0, fim: false, t: 0 });
+  montaMapa(n); const ini = 4, L = (NT - 3 - ini) * TPASSO; // o chefe espera na clareira do fim
+  Object.assign(F, { n, ini, L, G: 4 + Math.ceil(n / 3), prox: 0, feitos: 0, prog: 0, fim: false, perdeu: false, t: 0 });
   F.pos = []; for (let g = 0; g < F.G; g++) F.pos.push(14 + (L - 14) * (g / (F.G - 1)));
   P.x = TP[F.ini][0]; P.z = TP[F.ini][1]; P.y = altura(P.x, P.z); P.si = ultimoSi = F.ini; P.atk = null;
-  const j = (F.ini + 20) % NT; P.face = Math.atan2(TP[j][0] - P.x, TP[j][1] - P.z); yaw = P.face + Math.PI; camAlvo.set(P.x, P.y, P.z);
-  ambiente(EST[n - 1][1]); faixa('Estágio ' + n, EST[n - 1][0] + (n === N_EST ? ' · chefe final' : ''), 2.2); hud(); if (mapaEl.classList.contains('on')) abreMapa();
+  const j = F.ini + 20; P.face = Math.atan2(TP[j][0] - P.x, TP[j][1] - P.z); yaw = P.face + Math.PI; camAlvo.set(P.x, P.y, P.z);
+  ambiente(EST[n - 1][1]); faixa('Estágio ' + n, EST[n - 1][0] + (n === N_EST ? ' · chefe final' : ''), 2.2); hud();
 }
 function venceEstagio() {
   F.fim = true; const n = F.n, primeira = !S.ok[n], bonus = primeira ? 25 * n : 5 * n;
   S.ok[n] = true; if (n < N_EST) S.lib = Math.max(S.lib, n + 1); S.ouro += bonus; S.hp = hpMax(); P.en = enMax();
   som('vitoria', 0.8); setTimeout(() => som('perfeito', 0.7), 900); brilho(0xffe066); comemora();
   faixa(n === N_EST ? 'Missão cumprida!' : 'Estágio ' + n + ' concluído!', '+' + bonus + ' 🪙' + (primeira && n < N_EST ? ' · estágio ' + (n + 1) + ' liberado' : ''), 3);
-  salva(); hud(); setTimeout(() => { if (F.fim && F.n === n) comecaEstagio(Math.min(n + 1, S.lib)) }, 4200);
+  salva(); hud(); setTimeout(() => { if (F.fim && F.n === n) abreMapa('venceu', Math.min(n + 1, S.lib)) }, 4200); // volta pro mapa, como no Eternium
 }
 function bichosPasso(dt) {
   for (let i = BICHOS.length - 1; i >= 0; i--) {
@@ -833,11 +875,11 @@ function levaDano(v, b) {
   if (S.hp <= 0) desmaia(); else if (!P.atk && b) { P.hit = 0.3; tocar('Hit_A', 1.3, 0.08) }
 }
 function desmaia() {
-  P.desm = 6; P.atk = null; FXC.vivo = false; tocar('Death_A', 1, 0.1); som('fim', 0.7);
+  P.desm = 4.5; P.atk = null; F.perdeu = true; FXC.vivo = false; tocar('Death_A', 1, 0.1); som('fim', 0.7);
   faixa('Derrota…', 'faça suas tarefas pra ficar mais forte e tente de novo', 2.8); salva(); hud();
 }
 function levanta() {
-  P.desm = 0; S.hp = Math.max(S.hp, Math.round(hpMax() * 0.5)); P.en = enMax(); comecaEstagio(F.n); // volta pro começo do estágio
+  P.desm = 0; S.hp = Math.max(S.hp, Math.round(hpMax() * 0.5)); P.en = enMax(); hud(); salva(); abreMapa('perdeu', F.n); // volta pro mapa pra tentar de novo
 }
 
 // ---------------- controle: automático (segue a trilha) ou joystick ----------------
@@ -897,13 +939,13 @@ function heroiPasso(dt) {
     if (tecla.has('a')) ix -= 1; if (tecla.has('d')) ix += 1; if (tecla.has('w')) iy -= 1; if (tecla.has('s')) iy += 1;
     const l = Math.hypot(ix, iy); if (l > 0.12) { const k = Math.min(1, l), fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
       mx = (rx * ix - fx * iy) / l * k * RUN; mz = (rz * ix - fz * iy) / l * k * RUN }
-  } else {
+  } else if (!F.fim && !F.perdeu) {
     const alvo = maisPerto(F.prox >= F.G && F.prog > F.L - 4 ? 40 : 7.5);
     if (alvo) { const dx = alvo.x - P.x, dz = alvo.z - P.z, dc = Math.hypot(dx, dz) || 1, d = dc - alvo.r, alc = 0.9 * K / 0.64;
       if (!P.atk) { const tiro = d > 2.5 && d < 8 && liberada('magbola') && CD.magbola <= 0 && P.en >= SKILLS.magbola.en;
         if (d > alc && !tiro) { mx = dx / dc * RUN; mz = dz / dc * RUN } else { P.face = Math.atan2(dx, dz); autoLuta(alvo, d) } } }
     else { // segue a trilha, no passo de quem está explorando
-      const alvoI = (P.si + Math.round(2.5 / TPASSO)) % NT, tx = TP[alvoI][0] - P.x, tz = TP[alvoI][1] - P.z, tl = Math.hypot(tx, tz) || 1; mx = tx / tl * RUN * 0.62; mz = tz / tl * RUN * 0.62 }
+      const alvoI = Math.min(NT - 1, P.si + Math.round(2.5 / TPASSO)), tx = TP[alvoI][0] - P.x, tz = TP[alvoI][1] - P.z, tl = Math.hypot(tx, tz) || 1; if (tl > 0.6) { mx = tx / tl * RUN * 0.62; mz = tz / tl * RUN * 0.62 } }
   }
   if (P.atk) { mx *= 0.1; mz *= 0.1 }
   const v = Math.hypot(mx, mz);
@@ -978,29 +1020,39 @@ viraDia(); setInterval(() => { viraDia(); if (aba === 'diar') lista() }, 60000);
 
 // ---------------- mapa de estágios (estilo Eternium) ----------------
 const mapaEl = document.getElementById('mapa');
-const NOS = [[16, 86], [50, 89], [84, 84], [80, 62], [48, 66], [16, 62], [18, 40], [50, 43], [82, 39], [50, 20]];
-function abreMapa() {
+const NOS = [[16, 70], [50, 73], [84, 68], [80, 50], [48, 52], [16, 48], [18, 31], [50, 33], [82, 29], [50, 15]];
+let selN = 1, contaT = 0, contaN = 0;
+function abreMapa(motivo, sel) { // motivo: 'venceu' ou 'perdeu' (aí no Auto ele mesmo começa a próxima fase depois de uns segundos)
   mapaEl.classList.add('on'); mapaEl.querySelectorAll('.no,.rot').forEach(e => e.remove());
+  selN = Math.min(sel || F.n, S.lib); clearInterval(contaT); contaN = motivo && S.auto ? 6 : 0;
+  if (contaN) contaT = setInterval(() => { if (--contaN <= 0) { clearInterval(contaT); joga() } else infoMapa() }, 1000);
+  mapaEl.querySelector('.fecha').hidden = F.fim || F.perdeu;
   const svg = mapaEl.querySelector('svg'), W = mapaEl.clientWidth || 1, H = mapaEl.clientHeight || 1; svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   const pt = ([x, y]) => [x / 100 * W, y / 100 * H]; let d = '';
   NOS.forEach((q, i) => { const [x, y] = pt(q); if (!i) { d = `M${x},${y}`; return } const [px, py] = pt(NOS[i - 1]); d += ` Q${(px + x) / 2 + (i % 2 ? 22 : -22)},${(py + y) / 2} ${x},${y}` });
-  let enf = ''; for (let i = 0; i < 26; i++) { const x = (i * 37.7 % 100) / 100 * W, y = (12 + (i * 53.3 % 88)) / 100 * H, t = 9 + (i * 7 % 6); enf += `<path d="M${x},${y - t * 1.6} L${x - t * 0.7},${y} L${x + t * 0.7},${y} Z" fill="#1f3a22" opacity=".8"/>` }
+  let enf = ''; for (let i = 0; i < 26; i++) { const x = (i * 37.7 % 100) / 100 * W, y = (10 + (i * 53.3 % 74)) / 100 * H, t = 9 + (i * 7 % 6); enf += `<path d="M${x},${y - t * 1.6} L${x - t * 0.7},${y} L${x + t * 0.7},${y} Z" fill="#1f3a22" opacity=".8"/>` }
   svg.innerHTML = enf + `<path d="${d}" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="12" stroke-linecap="round"/>` +
     `<path d="${d}" fill="none" stroke="#c9a46a" stroke-width="7" stroke-linecap="round" stroke-dasharray="1 12"/>`;
   NOS.forEach((q, i) => {
     const n = i + 1, [x, y] = pt(q), lib = n <= S.lib, b = document.createElement('button'), rot = document.createElement('div');
-    b.className = 'no' + (S.ok[n] ? ' feito' : '') + (lib ? '' : ' tranc') + (n === F.n ? ' atual' : '') + (n === N_EST ? ' chefe' : '');
+    b.className = 'no' + (S.ok[n] ? ' feito' : '') + (lib ? '' : ' tranc') + (n === S.lib && !S.ok[n] ? ' atual' : '') + (n === N_EST ? ' chefe' : '') + (n === selN ? ' sel' : '');
     b.textContent = lib ? (n === N_EST ? '👹' : n) : '🔒'; b.style.left = x + 'px'; b.style.top = y + 'px';
     b.setAttribute('aria-label', 'Estágio ' + n + ': ' + EST[i][0] + (lib ? '' : ' (trancado)'));
-    b.onclick = () => { if (!lib) { aviso('Passe do estágio ' + (n - 1) + ' pra liberar este.'); return } fechaMapa(); comecaEstagio(n) };
+    b.onclick = () => { clearInterval(contaT); contaN = 0; if (!lib) { aviso('Passe do estágio ' + (n - 1) + ' pra liberar este.'); return } selN = n; mapaEl.querySelectorAll('.no').forEach((e, k) => e.classList.toggle('sel', k === i)); infoMapa() };
     rot.className = 'rot'; rot.style.left = x + 'px'; rot.style.top = y + (n === N_EST ? 5 : 0) + 'px'; rot.textContent = EST[i][0];
     rot.append(Object.assign(document.createElement('small'), S.ok[n] ? { textContent: '✓ vencido', className: 'ok' } : { textContent: 'nível ' + nvSugerido(n) + '+' }));
     mapaEl.append(b, rot) });
-  mapaEl.classList.add('on');
+  infoMapa();
 }
-function fechaMapa() { mapaEl.classList.remove('on') }
-mapaEl.querySelector('.fecha').onclick = fechaMapa;
-document.getElementById('bEst').addEventListener('click', () => mapaEl.classList.contains('on') ? fechaMapa() : abreMapa());
+function infoMapa() {
+  const n = selN, i = mapaEl.querySelector('.info div'); i.textContent = 'Estágio ' + n + ' · ' + EST[n - 1][0];
+  i.append(Object.assign(document.createElement('small'), { textContent: (S.ok[n] ? 'Vencido · dá pra jogar de novo' : 'Nível sugerido ' + nvSugerido(n) + ' · você está no ' + S.nv) + ' · ' + (4 + Math.ceil(n / 3)) + ' grupos' }));
+  mapaEl.querySelector('.jogar').textContent = '▶ Jogar' + (contaN ? ' (' + contaN + ')' : '');
+}
+function joga() { clearInterval(contaT); contaN = 0; fechaMapa(); comecaEstagio(selN) }
+function fechaMapa() { clearInterval(contaT); contaN = 0; mapaEl.classList.remove('on') }
+mapaEl.querySelector('.fecha').onclick = fechaMapa; mapaEl.querySelector('.jogar').onclick = joga;
+document.getElementById('bEst').addEventListener('click', () => mapaEl.classList.contains('on') ? (F.fim || F.perdeu || fechaMapa()) : abreMapa());
 
 // ---------------- HUD ----------------
 function hud() {
@@ -1117,7 +1169,6 @@ document.getElementById('nAdd').onclick = adiciona; nTxt.addEventListener('keydo
 // ---------------- laço ----------------
 let t0 = performance.now(), hudT = 0, tempo = 0;
 const camAlvo = new THREE.Vector3(P.x, 0, P.z);
-yaw = Math.atan2(TP[0][0] - TP[20][0], TP[0][1] - TP[20][1]);
 function passo(dt) {
   if (pausa > 0) pausa -= dt;
   heroiPasso(dt); bichosPasso(dt); orbesPasso(dt); faiscasPasso(dt); aneisPasso(dt); fxPasso(dt); fx2Passo(dt); laminaPasso(dt);
@@ -1128,7 +1179,7 @@ function quadro(t) {
   // câmera atrás da heroína; no automático vira devagar pra olhar pra onde a trilha vai
   camAlvo.x += (P.x - camAlvo.x) * Math.min(1, dt * 4); camAlvo.z += (P.z - camAlvo.z) * Math.min(1, dt * 4); camAlvo.y += (P.y - camAlvo.y) * Math.min(1, dt * 4);
   if (mexeuCam > 0) mexeuCam -= dt;
-  else if (S.auto && R && !P.desm) { const j = (P.si + 20) % NT, i = P.si, alvoYaw = Math.atan2(TP[i][0] - TP[j][0], TP[i][1] - TP[j][1]); let d = ((alvoYaw - yaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI; yaw += d * Math.min(1, dt * 0.8) }
+  else if (S.auto && R && !P.desm) { const i = Math.min(P.si, NT - 21), j = i + 20, alvoYaw = Math.atan2(TP[i][0] - TP[j][0], TP[i][1] - TP[j][1]); let d = ((alvoYaw - yaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI; yaw += d * Math.min(1, dt * 0.8) }
   let D = ALT * 4.4 + 1.2;
   { // não deixa a câmera entrar na copa das árvores: encurta a distância se tiver árvore no caminho
     const ux = Math.sin(yaw), uz = Math.cos(yaw);
@@ -1149,6 +1200,6 @@ function quadro(t) {
 }
 new ResizeObserver(tam).observe(arena);
 comecaEstagio(S.est || 1); trocaAba(aba); hud(); carregar(S.pers); requestAnimationFrame(quadro);
-window.HAB = { sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
+window.HAB = { abreMapa, joga, montaMapa, TPf: () => TP, sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
 </script>
 </body></html>
