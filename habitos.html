@@ -280,7 +280,7 @@ let S; try { S = Object.assign(padrao(), JSON.parse(localStorage.getItem(CHAVE) 
 if (!S.attr) { S.attr = { for: 0, des: 0, vid: 0, est: 0, mag: 0 }; S.pontos = PTS_NIVEL * S.nv } // começa com 3 pontos (e quem já tinha nível ganha os dele)
 if (!S.lib) { S.lib = 1; S.est = 1; S.ok = {} }
 function zeraProgresso() { // nível, pontos, ouro, equipamento e missão voltam ao começo; as tarefas e as escolhas ficam
-  const fica = {}; for (const k of ['pers', 'hab', 'diar', 'afz', 'aba', 'dia', 'auto', 'cheio', 'repete', 'meta', 'metas', 'hafz', 'per']) if (k in S) fica[k] = S[k];
+  const fica = {}; for (const k of ['pers', 'hab', 'diar', 'afz', 'aba', 'dia', 'auto', 'cheio', 'repete', 'meta', 'metas', 'hafz', 'per', 'tela']) if (k in S) fica[k] = S[k];
   for (const k in S) delete S[k]; Object.assign(S, padrao(), fica); S.attr = { for: 0, des: 0, vid: 0, est: 0, mag: 0 }; S.pontos = PTS_NIVEL; S.zerado = 1;
 }
 if (S.zerado !== 1) { zeraProgresso(); try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} } // o André pediu pra recomeçar do zero (uma vez só)
@@ -1430,6 +1430,9 @@ function heroina() {
   PERS.forEach(([arq, nome], i) => { const b = el('button'); b.classList.toggle('on', i === S.pers); const im = el('img'); im.src = 'personagens/fotos/' + arq + '.png'; im.alt = ''; im.loading = 'lazy';
     b.append(im, el('span', null, nome)); b.onclick = () => { S.pers = i; salva(); carregar(i); lista(); hud() }; g.append(b) });
   s3.append(g); listaEl.append(s3);
+  { const st = el('div', 'sec'), sg = el('div', 'seg'); st.append(el('h3', null, 'Tela acesa'));
+    for (const [v, t] of [[5, '5 min'], [8, '8 min'], [15, '15 min'], [0, 'Normal']]) { const bt = el('button', telaMin() === v ? 'on' : null, t); bt.onclick = () => { S.tela = v; salva(); if (!v) soltaTela(); else prendeTela(); lista() }; sg.append(bt) }
+    st.append(el('p', 'dica', 'Quanto tempo a tela fica acesa sem você tocar, com o jogo aberto. Depois disso o celular apaga no tempo normal dele.'), sg); listaEl.append(st) }
   const s4 = el('div', 'sec'); s4.append(el('h3', null, 'Como funciona'));
   const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 10 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede uns 2 níveis a mais que o anterior (o nível aparece no mapa) e um desafio de hábito (📜) pra liberar, como fazer uma diária vários dias seguidos. Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. O herói luta sozinho (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Os monstros dão ouro pra loja. Hábito ruim e diária esquecida tiram vida; se zerar, perde e recomeça o estágio. Tudo fica salvo neste celular.';
   s4.append(p); const zn = el('button', null, 'Zerar nível e missão (mantém as tarefas)'); zn.style.marginTop = '8px'; zn.onclick = () => { if (confirm('Voltar pro nível 1 e pro estágio 1? As tarefas ficam.')) { zeraProgresso(); salva(); location.reload() } }; s4.append(zn);
@@ -1615,6 +1618,18 @@ function quadro(t) {
 }
 new ResizeObserver(tam).observe(arena);
 comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); trocaAba(aba); hud(); carregar(S.pers); requestAnimationFrame(quadro); abreMapa(null, S.lib); // o jogo abre no mapa
+// ---------------- tela acesa: o celular não apaga enquanto joga; só depois de uns minutos sem tocar (Screen Wake Lock) ----------------
+const TELA = { trava: null, ult: Date.now() };
+const telaMin = () => S.tela == null ? 8 : S.tela; // minutos sem tocar até deixar o celular apagar (0 = o tempo normal do celular)
+async function prendeTela() {
+  if (!('wakeLock' in navigator) || TELA.trava || document.visibilityState !== 'visible' || !telaMin()) return;
+  try { TELA.trava = await navigator.wakeLock.request('screen'); TELA.trava.addEventListener('release', () => { TELA.trava = null }) } catch (e) {}
+}
+function soltaTela() { if (TELA.trava) { TELA.trava.release().catch(() => {}); TELA.trava = null } }
+for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, () => { TELA.ult = Date.now(); prendeTela() }, { capture: true, passive: true });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { TELA.ult = Date.now(); prendeTela() } });
+setInterval(() => { if (TELA.trava && Date.now() - TELA.ult > telaMin() * 60000) soltaTela() }, 15000);
+prendeTela();
 window.HAB = { MUS, compoeMusica, painelCheio, abreMapa, joga, montaMapa, TPf: () => TP, sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, viraDia, desafio, podeJogar, editor, trocaAba, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
 </script>
 </body></html>
