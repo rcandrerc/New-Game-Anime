@@ -117,7 +117,7 @@
   #novo .tipo.off{opacity:.35}
   #novo #nAdd{font-weight:800;background:var(--accent);color:var(--ink);border-color:var(--accent);padding:0 14px;font-size:20px}
   #novo[hidden]{display:none}
-  /* aba Heroína */
+  /* aba Herói */
   .sec{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px}
   .sec h3{margin:0 0 8px;font-size:14px;color:#ffe7a8;display:flex;align-items:center;gap:8px}
   .sec h3 .pts{margin-left:auto;font-size:12px;background:var(--accent);color:var(--ink);border-radius:8px;padding:2px 8px}
@@ -223,7 +223,7 @@
 <div id="painel">
   <button id="puxa" aria-label="Esconder ou mostrar as tarefas"></button>
   <div id="abas">
-    <button data-aba="hab">Hábitos</button><button data-aba="diar">Diárias</button><button data-aba="afz">Afazeres</button><button data-aba="her">Heroína</button><button data-aba="prog">Progresso</button>
+    <button data-aba="hab">Hábitos</button><button data-aba="diar">Diárias</button><button data-aba="afz">Afazeres</button><button data-aba="her">Herói</button><button data-aba="prog">Progresso</button>
   </div>
   <div id="lista"></div>
   <div id="novo">
@@ -985,7 +985,7 @@ cv.addEventListener('pointerup', solta); cv.addEventListener('pointercancel', so
 const tecla = new Set(); addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; tecla.add(e.key.toLowerCase()); if (e.key === 'j') atacar('combo') }); addEventListener('keyup', e => tecla.delete(e.key.toLowerCase()));
 const toque = (b, f) => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); somLiga(); f() });
 toque(document.getElementById('bAtk'), () => atacar('combo'));
-toque(document.getElementById('bModo'), () => { S.auto = !S.auto; salva(); hud(); aviso(S.auto ? 'Automático: ela segue a trilha e luta sozinha.' : 'Manual: joystick à esquerda, Atacar e as skills à direita.') });
+toque(document.getElementById('bModo'), () => { S.auto = !S.auto; salva(); hud(); aviso(S.auto ? 'Automático: o herói segue a trilha e luta sozinho.' : 'Manual: joystick à esquerda, Atacar e as skills à direita.') });
 toque(document.getElementById('bPocao'), bebePocao);
 // botões das skills liberadas, em dois arcos em volta do Atacar (até 4 no de dentro, o resto no de fora)
 function botoesSkill() {
@@ -1083,7 +1083,7 @@ function ganha(xp, ouro, cura) {
   numero('+' + xp + ' XP', P.x, P.y + ALT + 0.35, P.z, 'xp'); if (ouro) setTimeout(() => numero('+' + ouro + ' 🪙', P.x, P.y + ALT + 0.1, P.z, 'ouro'), 180);
   brilho(0xffe066); plim(0); comemora();
   let subiu = 0; while (S.xp >= xpProx()) { S.xp -= xpProx(); S.nv++; subiu++ }
-  if (subiu) { S.pontos += PTS_NIVEL * subiu; S.hp = hpMax(); P.en = enMax(); som('vitoria', 0.8); faixa('Nível ' + S.nv + '!', '+' + PTS_NIVEL * subiu + ' pontos pra distribuir (aba Heroína)', 2.4); setTimeout(() => brilho(0xffffff), 250) }
+  if (subiu) { S.pontos += PTS_NIVEL * subiu; S.hp = hpMax(); P.en = enMax(); som('vitoria', 0.8); faixa('Nível ' + S.nv + '!', '+' + PTS_NIVEL * subiu + ' pontos pra distribuir (aba Herói)', 2.4); setTimeout(() => brilho(0xffffff), 250) }
   salva(); hud(); if (aba === 'her') lista();
 }
 function perde(xp, ouro) { S.xp = Math.max(0, S.xp - xp); S.ouro = Math.max(0, S.ouro - ouro); salva(); hud() } // desmarcou: devolve (não desce de nível)
@@ -1278,7 +1278,7 @@ function infoMapa() {
 function joga() { clearInterval(contaT); contaN = 0; if (!podeJogar(selN)) { aviso('Cumpra o desafio nas tarefas pra liberar este estágio.'); return } fechaMapa(); comecaEstagio(selN) }
 function fechaMapa() { clearInterval(contaT); contaN = 0; mapaEl.classList.remove('on') }
 mapaEl.querySelector('.jogar').onclick = joga;
-mapaEl.querySelector('.repete').onclick = () => { S.repete = !S.repete; salva(); infoMapa(); aviso(S.repete ? 'Repetir ligado: depois de vencer, ela joga este mesmo estágio de novo (bom pra juntar ouro).' : 'Repetir desligado: depois de vencer, vai pro próximo estágio.') };
+mapaEl.querySelector('.repete').onclick = () => { S.repete = !S.repete; salva(); infoMapa(); aviso(S.repete ? 'Repetir ligado: depois de vencer, joga este mesmo estágio de novo (bom pra juntar ouro).' : 'Repetir desligado: depois de vencer, vai pro próximo estágio.') };
 mapaEl.querySelector('.tarefas').onclick = fechaMapa;
 document.getElementById('bEst').addEventListener('click', () => mapaEl.classList.contains('on') ? (F.fim || F.perdeu || fechaMapa()) : abreMapa());
 
@@ -1295,7 +1295,7 @@ function hud() {
   const bp = document.getElementById('bPocao'); bp.hidden = S.pocoes <= 0; bp.textContent = '🧪 ' + S.pocoes;
   const pend = S.diar.filter(pendente).length; document.querySelector('[data-aba="diar"]').innerHTML = 'Diárias' + (pend ? '<b>' + pend + '</b>' : '');
   if (typeof textoPuxa === 'function') textoPuxa();
-  document.querySelector('[data-aba="her"]').innerHTML = 'Heroína' + (S.pontos ? '<b>' + S.pontos + '</b>' : '');
+  document.querySelector('[data-aba="her"]').innerHTML = 'Herói' + (S.pontos ? '<b>' + S.pontos + '</b>' : '');
 }
 document.getElementById('hPts').addEventListener('pointerdown', e => { e.stopPropagation(); trocaAba('her') });
 // puxador do painel: toque ou arraste pra baixo esconde as tarefas (o jogo fica na tela toda); pra cima mostra de novo
@@ -1371,7 +1371,7 @@ function lista() {
       listaEl.append(it);
     }
   } else if (aba === 'diar') {
-    if (!S.diar.length) listaEl.append(el('div', 'vazio', 'Diárias são as tarefas de rotina. Se ficar alguma sem fazer no dia dela, a heroína perde vida quando o dia vira.'));
+    if (!S.diar.length) listaEl.append(el('div', 'vazio', 'Diárias são as tarefas de rotina. Se ficar alguma sem fazer no dia dela, o herói perde vida quando o dia vira.'));
     const L = filtroCats(S.diar).map(prep), h = hoje(), hj = L.filter(d => agendada(d, h)), fora = L.filter(d => !agendada(d, h));
     hj.sort((a, b) => (a.hora || '99') < (b.hora || '99') ? -1 : (a.hora || '99') > (b.hora || '99') ? 1 : 0); // com horário primeiro, na ordem do relógio
     for (const t of hj) linhaDiaria(t);
@@ -1427,7 +1427,7 @@ function heroina() {
     b.append(im, el('span', null, nome)); b.onclick = () => { S.pers = i; salva(); carregar(i); lista(); hud() }; g.append(b) });
   s3.append(g); listaEl.append(s3);
   const s4 = el('div', 'sec'); s4.append(el('h3', null, 'Como funciona'));
-  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 10 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede uns 2 níveis a mais que o anterior (o nível aparece no mapa) e um desafio de hábito (📜) pra liberar, como fazer uma diária vários dias seguidos. Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. Ela luta sozinha (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Os monstros dão ouro pra loja. Hábito ruim e diária esquecida tiram vida; se zerar, ela perde e recomeça o estágio. Tudo fica salvo neste celular.';
+  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 10 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede uns 2 níveis a mais que o anterior (o nível aparece no mapa) e um desafio de hábito (📜) pra liberar, como fazer uma diária vários dias seguidos. Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. O herói luta sozinho (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Os monstros dão ouro pra loja. Hábito ruim e diária esquecida tiram vida; se zerar, perde e recomeça o estágio. Tudo fica salvo neste celular.';
   s4.append(p); const zn = el('button', null, 'Zerar nível e missão (mantém as tarefas)'); zn.style.marginTop = '8px'; zn.onclick = () => { if (confirm('Voltar pro nível 1 e pro estágio 1? As tarefas ficam.')) { zeraProgresso(); salva(); location.reload() } }; s4.append(zn);
   const z = el('button', null, 'Começar do zero'); z.style.marginTop = '8px'; z.onclick = () => { if (confirm('Apagar todo o progresso e as tarefas?')) { localStorage.removeItem(CHAVE); location.reload() } }; s4.append(z);
   listaEl.append(s4);

@@ -9,11 +9,11 @@ boneco de treino de palha (balança e mostra o dano), espada na mão com Atacar 
 são os mesmos do Quimera Sandbox.
 
 **Hábitos (esboço, celular em pé):** https://rcandrerc.github.io/New-Game-Anime/habitos.html — jogo estilo Habitica: hábitos (+/−), diárias e afazeres
-embaixo; em cima a heroína joga a missão: 10 estágios (estilo Eternium). O jogo abre no mapa da missão, um pergaminho que rola na vertical, com os estágios ligados por caminhos. Cada estágio é uma fase separada, com mapa próprio
+embaixo; em cima o herói joga a missão: 10 estágios (estilo Eternium). O jogo abre no mapa da missão, um pergaminho que rola na vertical, com os estágios ligados por caminhos. Cada estágio é uma fase separada, com mapa próprio
 (bosque, lago, colina de pedras, campo de flores, pinheiral, floresta escura, covil do demônio…), grupos de monstros e um chefe numa clareira no fim;
 dura de 1 a 3 minutos e cada um pede uns 2 níveis a mais (estágio 2: nível 3, estágio 10: nível 19), então é preciso fazer as tarefas pra avançar. O botão 🔁 no mapa repete o mesmo estágio pra juntar ouro. Vencendo ou perdendo, volta pro mapa (no Auto a próxima fase começa sozinha depois de uns segundos).
 Ela luta sozinha (Auto) ou com joystick e botões de skill (Manual). Só as tarefas dão XP; cada nível dá 3 pontos pra Força, Destreza, Vida,
-Estamina e Magia (aba Heroína). Sem classe: Força libera as skills de espada e Magia as de magia, dá pra fazer híbrido. Monstros e estágios dão
+Estamina e Magia (aba Herói). Sem classe: Força libera as skills de espada e Magia as de magia, dá pra fazer híbrido. Monstros e estágios dão
 ouro pra loja (poção, espada, armadura). Hábito ruim e diária esquecida tiram vida; se zerar, ela perde e recomeça o estágio. Um puxador em cima das tarefas: toque ou arraste pra baixo e o jogo ocupa a tela toda. Toque no nome de uma tarefa pra configurar (ideias do HabitNow): categoria, frequência (todo dia, dias da semana, X por semana, a cada N dias), medir por sim/não, número (pelo menos / no máximo) ou checklist, horário, pausa, prazo dos afazeres, racha de dias seguidos (+2% de XP por dia, ouro nos marcos) e calendário. A aba Progresso mostra o % de acerto das diárias (7, 30, 90 dias ou 1 ano), um calendário colorido por dia, o % de cada diária e uma meta com data alvo: no fim do período ganha medalha (🥇 90%, 🥈 75%, 🥉 50%) e ouro, e a meta vai pro histórico. Do estágio 2 em diante, cada estágio pede também um desafio de hábito (📜) pra liberar. Tudo salvo no próprio celular.
 
 **Galeria:** https://rcandrerc.github.io/New-Game-Anime/galeria.html — personagem parado no centro, um botão por animação.
