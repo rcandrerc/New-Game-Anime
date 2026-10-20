@@ -94,7 +94,7 @@
   body.cheio #arena{flex:1 1 auto} body.cheio #painel{flex:0 0 auto} body.cheio #painel > :not(#puxa){display:none}
   body.cheio #puxa{height:34px;padding-bottom:env(safe-area-inset-bottom,0px);color:var(--fg)}
   #abas{display:flex;gap:4px;padding:6px 6px 0}
-  #abas button{flex:1;padding:9px 2px;font-size:13.5px;font-weight:700;border-radius:10px 10px 0 0;border-bottom:none;background:var(--card);color:var(--fg2)}
+  #abas button{flex:1 1 auto;padding:9px 2px;font-size:12.5px;font-weight:700;border-radius:10px 10px 0 0;border-bottom:none;background:var(--card);color:var(--fg2)}
   #abas button.on{background:var(--card2);color:var(--fg);box-shadow:inset 0 -3px 0 var(--accent)}
   #abas button b{display:inline-block;min-width:18px;margin-left:4px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--ink);font-size:11px}
   #lista{flex:1;overflow-y:auto;padding:8px 8px 4px;background:var(--card2);-webkit-overflow-scrolling:touch;touch-action:pan-y}
@@ -148,6 +148,17 @@
   #aviso{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);max-width:calc(100vw - 30px);background:#0d111c;border:1px solid var(--line);
     border-radius:12px;padding:10px 14px;font-size:14px;box-shadow:0 6px 24px #000a;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:40;text-align:center}
   #aviso.on{opacity:1;transform:translateX(-50%)}
+  /* ---------- aba Progresso ---------- */
+  .meta{display:flex;align-items:center;gap:12px} .meta .pct{font-size:38px;font-weight:900;color:#ffe7a8;line-height:1}
+  .meta span{display:block;font-weight:700} .meta small{display:block;color:var(--fg2);font-size:12px;margin-top:2px}
+  .barra{position:relative;height:12px;border-radius:7px;background:#2a3350;margin:8px 0 6px;overflow:visible} .barra i{display:block;height:100%;border-radius:7px;max-width:100%}
+  .barra u{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1px;background:#ffe7a8;border-radius:2px}
+  .sec .seg{display:flex;gap:5px;margin:6px 0 8px} .sec .seg button{flex:1;padding:7px 4px;font-size:13px;font-weight:700}
+  .sec .linha{display:flex;align-items:center;gap:8px;margin:8px 0} .sec .linha span{font-size:13.5px;color:var(--fg2)}
+  .sec input[type=date]{flex:1;font:inherit;font-size:15px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+  .sec .salvar{width:100%;margin-top:6px;background:var(--accent);color:var(--ink);border-color:var(--accent);font-weight:800}
+  .pdia{padding:7px 0;border-top:1px solid var(--line);cursor:pointer} .pdia .nm{display:flex;justify-content:space-between;gap:8px;font-size:14px} .pdia small{color:var(--fg2);font-size:11.5px}
+  .pdia .barra{height:8px;margin:5px 0 3px}
   /* ---------- ficha de configurar tarefa ---------- */
   #ed{position:fixed;inset:0;z-index:35;display:none;background:rgba(5,8,14,.62);align-items:flex-end;justify-content:center}
   #ed.on{display:flex}
@@ -212,7 +223,7 @@
 <div id="painel">
   <button id="puxa" aria-label="Esconder ou mostrar as tarefas"></button>
   <div id="abas">
-    <button data-aba="hab">Hábitos</button><button data-aba="diar">Diárias</button><button data-aba="afz">Afazeres</button><button data-aba="her">Heroína</button>
+    <button data-aba="hab">Hábitos</button><button data-aba="diar">Diárias</button><button data-aba="afz">Afazeres</button><button data-aba="her">Heroína</button><button data-aba="prog">Progresso</button>
   </div>
   <div id="lista"></div>
   <div id="novo">
@@ -267,7 +278,7 @@ let S; try { S = Object.assign(padrao(), JSON.parse(localStorage.getItem(CHAVE) 
 if (!S.attr) { S.attr = { for: 0, des: 0, vid: 0, est: 0, mag: 0 }; S.pontos = PTS_NIVEL * S.nv } // começa com 3 pontos (e quem já tinha nível ganha os dele)
 if (!S.lib) { S.lib = 1; S.est = 1; S.ok = {} }
 function zeraProgresso() { // nível, pontos, ouro, equipamento e missão voltam ao começo; as tarefas e as escolhas ficam
-  const fica = {}; for (const k of ['pers', 'hab', 'diar', 'afz', 'aba', 'dia', 'auto', 'cheio', 'repete']) if (k in S) fica[k] = S[k];
+  const fica = {}; for (const k of ['pers', 'hab', 'diar', 'afz', 'aba', 'dia', 'auto', 'cheio', 'repete', 'meta', 'metas', 'hafz', 'per']) if (k in S) fica[k] = S[k];
   for (const k in S) delete S[k]; Object.assign(S, padrao(), fica); S.attr = { for: 0, des: 0, vid: 0, est: 0, mag: 0 }; S.pontos = PTS_NIVEL; S.zerado = 1;
 }
 if (S.zerado !== 1) { zeraProgresso(); try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} } // o André pediu pra recomeçar do zero (uma vez só)
@@ -1094,7 +1105,7 @@ const difDias = (a, b) => Math.round((dData(b) - dData(a)) / 864e5);
 const ddmm = s => s.slice(8, 10) + '/' + s.slice(5, 7);
 function prep(d) { // diária com os campos novos (as antigas eram só sim ou não, todo dia)
   if (!d.freq) d.freq = { t: 'todo' }; if (!d.tipo) d.tipo = 'sn'; if (!d.meta) d.meta = { op: 'min', n: 8, un: '' }; if (!d.itens) d.itens = []; if (!d.hist) d.hist = {};
-  for (const k of ['v', 'racha', 'melhor', 'sem']) d[k] = d[k] || 0; if (!d.ini) d.ini = hoje(); if (d.pago == null) d.pago = d.ok ? 1 : 0; return d;
+  for (const k of ['v', 'racha', 'melhor', 'sem']) d[k] = d[k] || 0; if (!d.ini) d.ini = hoje(); if (!d.criado) d.criado = d.ini; if (d.pago == null) d.pago = d.ok ? 1 : 0; return d;
 }
 const ehMax = d => d.tipo === 'num' && d.meta.op === 'max';
 function agendada(d, dt) { const f = d.freq; if (d.pausa) return false; if (f.t === 'semana') return (f.dias || []).includes(dData(dt).getDay());
@@ -1145,9 +1156,10 @@ function viraDia() { // fecha o(s) dia(s) que passaram: racha, histórico e vida
         if (ehMax(d)) { const m = MARCOS[d.racha] || 0; xp += Math.round(DIF[d.d].xp * (1 + bonusRacha(d.racha - 1))); ouro += DIF[d.d].ouro + m; S.cont.t++; if (m) marco = [d.racha, d.t] }
       } else { d.racha = 0; if (i === 0) { dano += DIF[d.d].dor; falt++ } }
     });
-    zeraHoje(d); for (const k in d.hist) if (difDias(k, h) > 120) delete d.hist[k];
+    zeraHoje(d); for (const k in d.hist) if (difDias(k, h) > 400) delete d.hist[k];
   }
-  for (const t of S.hab) { t.c = 0; t.cn = 0 } S.dia = h; salva();
+  for (const t of S.hab) { if (t.c || t.cn) { t.hist = t.hist || {}; t.hist[S.dia] = [t.c || 0, t.cn || 0]; for (const k in t.hist) if (difDias(k, h) > 400) delete t.hist[k] } t.c = 0; t.cn = 0 } S.dia = h; salva();
+  if (S.meta && h > S.meta.fim) fechaMeta();
   if (xp) setTimeout(() => { ganha(xp, ouro); if (marco) faixa('🔥 ' + marco[0] + ' dias seguidos!', marco[1], 2.6) }, 900);
   if (dano) setTimeout(() => machuca(dano, falt === 1 ? 'Ficou 1 diária sem fazer: −' + dano + ' de vida.' : 'Ficaram ' + falt + ' diárias sem fazer: −' + dano + ' de vida.'), 1500);
   else setTimeout(() => aviso('Dia novo! As diárias voltaram.' + (xp ? ' Limites respeitados: +' + xp + ' XP.' : '')), 1500);
@@ -1345,10 +1357,10 @@ function linhaDiaria(t) {
     for (const i of t.itens) { const c = el('button', i.ok ? 'on' : null, (i.ok ? '✓ ' : '○ ') + i.t); c.onclick = () => { i.ok = !i.ok; confere(t); salva(); lista(); hud() }; L.append(c) } listaEl.append(L) }
 }
 function lista() {
-  const top = listaEl.scrollTop; listaEl.innerHTML = ''; document.getElementById('novo').hidden = aba === 'her';
+  const top = listaEl.scrollTop; listaEl.innerHTML = ''; document.getElementById('novo').hidden = aba === 'her' || aba === 'prog';
   document.getElementById('nPos').style.display = document.getElementById('nNeg').style.display = aba === 'hab' ? '' : 'none';
   document.getElementById('nTxt').placeholder = aba === 'hab' ? 'Novo hábito…' : aba === 'diar' ? 'Nova diária…' : 'Novo afazer…';
-  if (aba !== 'her') avisoDesafio();
+  if (aba !== 'her' && aba !== 'prog') avisoDesafio();
   if (aba === 'hab') {
     if (!S.hab.length) listaEl.append(el('div', 'vazio', 'Hábitos são coisas que você faz várias vezes, boas (+) ou ruins (−). Toque em + quando fizer uma boa; em − quando cair numa ruim.'));
     for (const t of filtroCats(S.hab)) {
@@ -1370,12 +1382,12 @@ function lista() {
     const h = hoje();
     for (const t of filtroCats(S.afz)) {
       const it = el('div', 'item'), b = el('button', 'chk', ''); b.setAttribute('aria-label', 'Concluir');
-      b.onclick = () => { if (it.classList.contains('feito')) return; it.classList.add('feito'); b.textContent = '✓'; ganha(Math.round(DIF[t.d].xp * AFZ_X), Math.round(DIF[t.d].ouro * AFZ_X), 5); S.feitos++; S.cont.t++; checaDesafios();
+      b.onclick = () => { if (it.classList.contains('feito')) return; it.classList.add('feito'); b.textContent = '✓'; ganha(Math.round(DIF[t.d].xp * AFZ_X), Math.round(DIF[t.d].ouro * AFZ_X), 5); S.feitos++; S.cont.t++; S.hafz = S.hafz || {}; S.hafz[hoje()] = (S.hafz[hoje()] || 0) + 1; checaDesafios();
         setTimeout(() => { it.classList.add('some'); setTimeout(() => { S.afz.splice(S.afz.indexOf(t), 1); salva(); if (aba === 'afz') lista() }, 400) }, 500) };
       const k = t.prazo ? difDias(h, t.prazo) : null;
       it.append(b, texto(t, 'afz', [k == null ? null : mini(k < 0 ? 'atrasado (' + ddmm(t.prazo) + ')' : k === 0 ? '📅 hoje' : k === 1 ? '📅 amanhã' : '📅 até ' + ddmm(t.prazo), k < 0 ? 'mal' : null)])); listaEl.append(it);
     }
-  } else heroina();
+  } else if (aba === 'prog') progresso(); else heroina();
   listaEl.scrollTop = top;
 }
 function heroina() {
@@ -1428,6 +1440,68 @@ function adiciona() { // com nome: cria direto; sem nome: abre a ficha completa
   if (aba === 'hab') Object.assign(base, { pos: novoPos, neg: novoNeg, c: 0, cn: 0 }); else if (aba === 'diar') prep(Object.assign(base, { ok: false }));
   if (!t) { editor(aba, base, true); return }
   S[aba].push(base); nTxt.value = ''; salva(); lista(); hud(); listaEl.scrollTop = listaEl.scrollHeight;
+}
+// ---------------- progresso: % de acerto num período e meta com data alvo (o que o André mais gostou do HabitNow) ----------------
+const MEDALHAS = [['ouro', '🥇', 90, 4], ['prata', '🥈', 75, 2.5], ['bronze', '🥉', 50, 1.5]]; // nome, ícone, % mínimo, ouro por dia de meta
+const medalhaDe = p => MEDALHAS.find(m => p >= m[2]);
+function diaDe(d, dt) { // 1 feita, 0 faltou, null não conta (hoje só conta depois de feita)
+  if (dt === hoje()) return d.pago || (ehMax(d) && feito(d) && agendada(d, dt)) ? 1 : null; return d.hist[dt] ?? null }
+function taxa(d, ini, fim) { // diárias feitas / diárias que eram pra fazer, entre duas datas
+  prep(d); const h = hoje(), a = ini > d.criado ? ini : d.criado, f = fim < h ? fim : h; let ok = 0, tot = 0;
+  for (let dt = a; dt <= f; dt = somaDia(dt, 1)) { const v = diaDe(d, dt); if (v != null) { tot++; ok += v } }
+  if (d.freq.t === 'vezes' && a <= f) tot = Math.max(ok, Math.round((difDias(a, f) + (f === h ? 0 : 1)) * (d.freq.n || 3) / 7)); // conta pela semana
+  return { ok, tot };
+}
+function geral(ini, fim) { let ok = 0, tot = 0; for (const d of S.diar) { const t = taxa(d, ini, fim); ok += t.ok; tot += t.tot } return { ok, tot, p: tot ? Math.round(ok / tot * 100) : null } }
+function fechaMeta() { // a data alvo passou: guarda no histórico e dá a medalha
+  const M = S.meta, g = geral(M.ini, M.fim), p = g.p ?? 0, md = medalhaDe(p), dias = difDias(M.ini, M.fim) + 1, ouro = md ? Math.round(dias * md[3]) : 0;
+  S.metas = [{ ini: M.ini, fim: M.fim, alvo: M.alvo, p, med: md ? md[0] : '' }, ...(S.metas || [])].slice(0, 30); S.meta = null; S.ouro += ouro; salva();
+  setTimeout(() => { faixa((md ? md[1] + ' ' : '') + 'Meta encerrada: ' + p + '%', (p >= M.alvo ? 'Bateu o alvo de ' + M.alvo + '%!' : 'O alvo era ' + M.alvo + '%') + (ouro ? ' · +' + ouro + ' 🪙' : ''), 3.4); if (md) som('vitoria', 0.7); hud() }, 2600);
+}
+function corPct(p) { return p == null ? null : 'hsl(' + Math.round(p * 1.2) + ',55%,' + (30 + p * 0.06) + '%)' } // vermelho → verde
+function progresso() {
+  const h = hoje(), sec = tit => { const s = el('div', 'sec'); s.append(el('h3', null, tit)); listaEl.append(s); return s };
+  // meta com data alvo
+  { const s = sec('🎯 Meta com data alvo'), M = S.meta;
+    if (M) {
+      const g = geral(M.ini, M.fim), p = g.p ?? 0, dias = difDias(M.ini, M.fim) + 1, foi = Math.min(dias, difDias(M.ini, h) + 1), md = medalhaDe(p);
+      const top = el('div', 'meta'); top.append(el('b', 'pct', g.p == null ? '—' : p + '%'), el('div', null, ''));
+      top.lastChild.append(el('span', null, 'de acerto nas diárias'), el('small', null, ddmm(M.ini) + ' até ' + ddmm(M.fim) + ' · dia ' + foi + ' de ' + dias + ' · faltam ' + (dias - foi) + (dias - foi === 1 ? ' dia' : ' dias')));
+      const bar = el('div', 'barra'), i = el('i'), alvo = el('u'); i.style.width = p + '%'; i.style.background = corPct(p); alvo.style.left = M.alvo + '%'; alvo.title = 'alvo ' + M.alvo + '%'; bar.append(i, alvo);
+      s.append(top, bar, el('p', 'dica', 'Alvo: ' + M.alvo + '% (o tracinho). ' + g.ok + ' de ' + g.tot + ' diárias feitas até agora. ' + (md ? 'Se terminar assim, leva ' + md[1] + ' ' + md[0] + ' e ' + Math.round(dias * md[3]) + ' de ouro.' : 'Abaixo de 50% não leva medalha.')));
+      const b = el('button', null, 'Encerrar meta agora'); b.style.marginTop = '8px'; b.onclick = () => { if (confirm('Encerrar a meta hoje e ver a medalha?')) { S.meta.fim = h; fechaMeta(); lista() } }; s.append(b);
+    } else {
+      const fim = el('input'), lin = el('div', 'linha'); fim.type = 'date'; fim.value = somaDia(h, 30); fim.min = somaDia(h, 1); let alvo = 80;
+      lin.append(el('span', null, 'De hoje até'), fim); const sg = el('div', 'seg');
+      for (const v of [50, 70, 80, 90]) { const b = el('button', v === alvo ? 'on' : null, v + '%'); b.onclick = () => { alvo = v; sg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)) }; sg.append(b) }
+      const ok = el('button', 'salvar', 'Começar meta'); ok.onclick = () => { if (!fim.value || fim.value <= h) { aviso('Escolha uma data depois de hoje.'); return } S.meta = { ini: h, fim: fim.value, alvo }; salva(); lista() };
+      s.append(el('p', 'dica', 'Escolha uma data alvo e quanto quer acertar. Até lá o jogo conta quantos % das diárias você fez. No fim: 🥇 90% ou mais, 🥈 75%, 🥉 50%, com ouro pra cada dia da meta.'), lin, el('div', 'mini', 'Alvo de acerto:'), sg, ok);
+    } }
+  // período pra olhar
+  const per = S.per || 30, s = sec('📊 Histórico'), sg = el('div', 'seg');
+  for (const [v, t] of [[7, '7 dias'], [30, '30 dias'], [90, '90 dias'], [365, '1 ano']]) { const b = el('button', v === per ? 'on' : null, t); b.onclick = () => { S.per = v; salva(); lista() }; sg.append(b) }
+  const ini = somaDia(h, -(per - 1)), g = geral(ini, h);
+  let fz = 0, hb = 0, hr = 0; for (let dt = ini; dt <= h; dt = somaDia(dt, 1)) fz += (S.hafz || {})[dt] || 0;
+  for (const t of S.hab) { for (const k in t.hist || {}) if (k >= ini) { hb += t.hist[k][0]; hr += t.hist[k][1] } hb += t.c || 0; hr += t.cn || 0 }
+  const st = el('div', 'stats'), lin = (k, v) => { const d = el('div'); d.append(el('span', null, k), el('b', null, v)); st.append(d) };
+  lin('Acerto', g.p == null ? '—' : g.p + '%'); lin('Diárias feitas', g.ok + ' de ' + g.tot); lin('Afazeres feitos', fz); lin('Hábitos', '+' + hb + ' / −' + hr); lin('Maior racha', '🔥 ' + melhorRacha());
+  s.append(sg, st);
+  // calendário colorido pelo % de cada dia (até 13 semanas)
+  { const cal = el('div', 'cal'), dias = Math.min(per, 91), dom = somaDia(h, -dData(h).getDay()), a = somaDia(dom, -7 * (Math.max(2, Math.ceil(dias / 7)) - 1));
+    for (const x of SEM) cal.append(el('b', null, x));
+    for (let dt = a; dt <= somaDia(dom, 6); dt = somaDia(dt, 1)) { let ok = 0, tot = 0; for (const d of S.diar) { const v = diaDe(prep(d), dt); if (v != null) { tot++; ok += v } }
+      const p = tot ? Math.round(ok / tot * 100) : null, c = el('span', (dt === h ? 'hj' : '') + (dt > h ? ' fut' : ''), String(+dt.slice(8))); if (p != null) { c.style.background = corPct(p); c.style.color = '#fff'; c.title = p + '%' } cal.append(c) }
+    s.append(cal, el('p', 'dica', 'Cada quadrado é um dia: verde fez tudo, vermelho quase nada, cinza sem diária.')) }
+  // cada diária
+  { const s2 = sec('Cada diária (' + (per === 365 ? '1 ano' : per + ' dias') + ')'); if (!S.diar.length) s2.append(el('p', 'dica', 'Nenhuma diária ainda.'));
+    for (const d of S.diar) { const t = taxa(d, ini, h), p = t.tot ? Math.round(t.ok / t.tot * 100) : null, r = el('div', 'pdia'), bar = el('div', 'barra'), i = el('i');
+      i.style.width = (p || 0) + '%'; i.style.background = corPct(p); bar.append(i);
+      const nm = el('div', 'nm'); nm.append((d.cat ? catDe(d)[1] + ' ' : '') + d.t, el('b', null, p == null ? '—' : p + '%')); r.append(nm, bar, el('small', null, t.ok + ' de ' + t.tot + (d.pausa ? ' · pausada' : '') + (rachaVista(d) ? ' · 🔥' + rachaVista(d) : '')));
+      r.onclick = () => editor('diar', d); s2.append(r) } }
+  // metas que já terminaram
+  if ((S.metas || []).length) { const s3 = sec('🏅 Metas anteriores');
+    for (const m of S.metas) { const md = MEDALHAS.find(x => x[0] === m.med), r = el('div', 'pdia'), nm = el('div', 'nm');
+      nm.append((md ? md[1] + ' ' : '') + ddmm(m.ini) + ' até ' + ddmm(m.fim), el('b', null, m.p + '%')); r.append(nm, el('small', null, 'alvo ' + m.alvo + '% · ' + (m.p >= m.alvo ? 'bateu ✓' : 'não bateu'))); s3.append(r) } }
 }
 // ---------------- ficha de configurar uma tarefa (toque no nome) ----------------
 const edEl = document.getElementById('ed'); let ED = null;
