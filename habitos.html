@@ -148,6 +148,45 @@
   #aviso{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);max-width:calc(100vw - 30px);background:#0d111c;border:1px solid var(--line);
     border-radius:12px;padding:10px 14px;font-size:14px;box-shadow:0 6px 24px #000a;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:40;text-align:center}
   #aviso.on{opacity:1;transform:translateX(-50%)}
+  /* ---------- ficha de configurar tarefa ---------- */
+  #ed{position:fixed;inset:0;z-index:35;display:none;background:rgba(5,8,14,.62);align-items:flex-end;justify-content:center}
+  #ed.on{display:flex}
+  #ed .ficha{width:100%;max-width:560px;max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;padding:12px 12px 0}
+  #ed .cab{display:flex;align-items:center;justify-content:space-between} #ed .cab b{font-size:17px;color:#ffe7a8}
+  #ed .fecha{background:none;border:none;font-size:18px;padding:4px 8px;color:var(--fg2)}
+  #ed .campo{margin:12px 0}
+  #ed label{display:block;font-size:11.5px;font-weight:800;color:var(--fg2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+  #ed input,#ed textarea{font:inherit;font-size:15px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%;min-width:0;user-select:text;-webkit-user-select:text;resize:vertical}
+  #ed input[type=number]{width:84px;flex:none} #ed input[type=time],#ed input[type=date]{flex:1;width:auto}
+  #ed .seg{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px} #ed .seg button{flex:1 1 auto;padding:8px 6px;font-size:13px;font-weight:700}
+  #ed .cats{display:grid;grid-template-columns:repeat(5,1fr);gap:5px} #ed .cats button{padding:5px 2px;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+  #ed .cats span{font-size:19px;line-height:1.2} #ed .cats small{font-size:9.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  #ed .dsem{display:flex;gap:5px} #ed .dsem button{flex:1;padding:9px 0;font-weight:800}
+  #ed .linha{display:flex;align-items:center;gap:8px;margin:6px 0} #ed .linha span{font-size:13px;color:var(--fg2);line-height:1.3} #ed .linha b{min-width:34px;text-align:center;font-size:18px}
+  #ed .linha button{flex:none} #ed .linha .x{background:none;border:none;color:var(--fg2)}
+  #ed .toggle{width:100%;text-align:left}
+  #ed .botoes{display:flex;gap:8px;position:sticky;bottom:0;background:var(--card);padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);margin-top:8px}
+  #ed .botoes .salvar{flex:1;background:var(--accent);color:var(--ink);border-color:var(--accent);font-weight:800}
+  #ed .botoes .apagar{background:#5a2020;border-color:#a04040}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:10px 0 8px;text-align:center;font-size:12px}
+  .cal b{color:var(--fg2);font-size:11px} .cal span{padding:5px 0;border-radius:7px;background:#2a3350;color:var(--fg2)}
+  .cal span.b{background:#1f6b45;color:#fff} .cal span.r{background:#6a2a2a;color:#fff} .cal span.hj{outline:2px solid var(--accent)} .cal span.fut{opacity:.3}
+  /* ---------- itens com as configurações novas ---------- */
+  .item .cat{margin-right:5px}
+  .mini{display:inline-block;font-size:11px;margin-right:6px;color:var(--fg2)} .mini.fogo{color:#ffb35a;font-weight:800} .mini.mal{color:var(--ruim);font-weight:800}
+  .dias{display:inline-flex;gap:2px;vertical-align:middle} .dias i{width:7px;height:7px;border-radius:50%;background:#39445f} .dias i.b{background:var(--bom)} .dias i.r{background:var(--ruim)}
+  .item .chk.num{font-size:12.5px;width:auto;min-width:44px;padding:0 6px}
+  .item .chk.ok{background:#1f6b45;border-color:#2f9a64} .item .chk.mal{background:#7a2a2a;border-color:#b04444}
+  .item.folga{opacity:.5} .item.estourou{border-color:#b04444}
+  .sub{display:flex;flex-direction:column;gap:4px;margin:-2px 0 8px 48px} .sub button{text-align:left;font-size:14px;padding:7px 10px}
+  .sub button.on{background:#1f4a35;color:var(--fg);border-color:#2f9a64;text-decoration:line-through;opacity:.85}
+  .grupo{font-size:11.5px;font-weight:800;color:var(--fg2);margin:12px 4px 6px;text-transform:uppercase;letter-spacing:.4px}
+  .filtro{display:flex;gap:5px;overflow-x:auto;padding:0 0 6px;scrollbar-width:none} .filtro::-webkit-scrollbar{display:none} .filtro button{flex:none;padding:5px 10px;font-size:12.5px;border-radius:999px}
+  .desafio{display:flex;flex-direction:column;gap:2px;margin-bottom:8px;padding:8px 10px;border-radius:12px;background:linear-gradient(#4a3270,#33224f);border:1px solid #9a7ad0;cursor:pointer}
+  .desafio b{font-size:13px;color:#e8dcff} .desafio span{font-size:13px}
+  #mapa .no.desaf{background:radial-gradient(circle at 35% 30%,#e0d0ff,#8a6ac0 60%,#4a2a7a);color:#fff;border-color:#e8dcff;font-size:20px}
+  #mapa .info small.des{color:#e0ccff}
+  #mapa .jogar:disabled{filter:grayscale(1);opacity:.6}
 </style></head>
 <body>
 <div id="arena">
@@ -184,6 +223,7 @@
   </div>
 </div>
 <div id="aviso"></div>
+<div id="ed" role="dialog" aria-label="Configurar tarefa"></div>
 <div id="mapa"><div class="rolo"><div class="folha"><canvas aria-hidden="true"></canvas></div></div><div class="topo"><b>Mapa da Missão</b><small></small></div>
   <div class="info"><div></div><button class="tarefas" aria-label="Ver as tarefas">📋</button><button class="repete" aria-pressed="false" aria-label="Repetir o mesmo estágio depois de vencer">🔁</button><button class="jogar">▶ Jogar</button></div></div>
 <script src="js/three.min.js"></script>
@@ -210,14 +250,15 @@ const ATR = [ // atributo, nome, o que faz
   ['est', 'Estamina', 'mais energia pras skills e recupera mais rápido'],
   ['mag', 'Magia', 'dano das magias, mais cura e libera as skills de magia'],
 ];
-const hoje = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') };
+const isoDe = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const hoje = () => isoDe(new Date());
 const uid = () => Math.random().toString(36).slice(2, 9);
 
 // ---------------- estado salvo no aparelho ----------------
 const CHAVE = 'nga-habitos-v1';
 function padrao() {
   const t = (txt, d, x) => Object.assign({ id: uid(), t: txt, d }, x);
-  return { pers: 0, nv: 1, xp: 0, hp: 100, ouro: 0, espada: 0, armad: 0, pocoes: 1, dist: 0, lib: 1, est: 1, ok: {}, auto: true, aba: 'diar', dia: hoje(), feitos: 0, mortos: 0,
+  return { pers: 0, nv: 1, xp: 0, hp: 100, ouro: 0, espada: 0, armad: 0, pocoes: 1, dist: 0, lib: 1, est: 1, ok: {}, auto: true, aba: 'diar', dia: hoje(), feitos: 0, mortos: 0, cont: { t: 0, h: 0 }, des: {}, mr: 0, // cont: diárias/afazeres feitos e hábitos bons; des: desafios cumpridos; mr: maior racha
     hab: [t('Beber um copo de água', 'f', { pos: true, neg: false, c: 0, cn: 0 }), t('Fazer exercício', 'm', { pos: true, neg: false, c: 0, cn: 0 }), t('Comer besteira', 'm', { pos: false, neg: true, c: 0, cn: 0 })],
     diar: [t('Arrumar a cama', 'f', { ok: false }), t('Ler 10 páginas', 'm', { ok: false }), t('Estudar 30 minutos', 'd', { ok: false })],
     afz: [t('Organizar a mesa', 'm', {}), t('Marcar o dentista', 'f', {})] };
@@ -862,7 +903,7 @@ function grupoMorto(b) {
   F.feitos++; hud(); if (F.feitos >= F.G) venceEstagio();
 }
 function comecaEstagio(n, quieto) { // quieto: só monta a fase e deixa ela parada (o mapa está aberto)
-  n = Math.max(1, Math.min(n, S.lib, N_EST)); S.est = n; salva();
+  n = Math.max(1, Math.min(n, S.lib, N_EST)); while (n > 1 && !podeJogar(n)) n--; S.est = n; salva();
   for (const b of [...BICHOS]) some(b);
   montaMapa(n); const ini = 4, L = (NT - 3 - ini) * TPASSO; // o chefe espera na clareira do fim
   Object.assign(F, { n, ini, L, G: 4 + Math.ceil(n / 3), prox: 0, feitos: 0, prog: 0, fim: false, perdeu: false, t: 0 });
@@ -876,7 +917,7 @@ function venceEstagio() {
   F.fim = true; const n = F.n, primeira = !S.ok[n], bonus = primeira ? 25 * n : 5 * n;
   S.ok[n] = true; if (n < N_EST) S.lib = Math.max(S.lib, n + 1); S.ouro += bonus; S.hp = hpMax(); P.en = enMax();
   som('vitoria', 0.8); brilho(0xffe066); comemora();
-  faixa(n === N_EST ? 'Missão cumprida!' : 'Estágio ' + n + ' concluído!', '+' + bonus + ' 🪙' + (primeira && n < N_EST ? ' · estágio ' + (n + 1) + ' liberado' : ''), 3);
+  faixa(n === N_EST ? 'Missão cumprida!' : 'Estágio ' + n + ' concluído!', '+' + bonus + ' 🪙' + (primeira && n < N_EST ? (podeJogar(n + 1) ? ' · estágio ' + (n + 1) + ' liberado' : ' · próximo pede um desafio') : ''), 3);
   salva(); hud(); setTimeout(() => { if (F.fim && F.n === n) abreMapa('venceu', S.repete ? n : Math.min(n + 1, S.lib)) }, 4200); // volta pro mapa, como no Eternium
 }
 function bichosPasso(dt) {
@@ -1040,12 +1081,77 @@ function machuca(v, motivo) {
   if (S.hp <= 0 && !P.desm) desmaia(); salva(); hud();
 }
 function comemora() { if (!R || P.atk || P.desm || BICHOS.some(b => b.vivo && b.bravo)) return; P.comem = dur('Ranged_Magic_Raise') * 0.9; tocar('Ranged_Magic_Raise', 1.1, 0.1) }
-function viraDia() { // diárias esquecidas tiram vida ao virar o dia; contadores dos hábitos zeram
-  if (S.dia === hoje()) return;
-  const falt = S.diar.filter(d => !d.ok), dano = falt.reduce((s, d) => s + DIF[d.d].dor, 0);
-  for (const d of S.diar) d.ok = false; for (const h of S.hab) { h.c = 0; h.cn = 0 } S.dia = hoje(); salva();
-  if (dano) setTimeout(() => machuca(dano, falt.length === 1 ? 'Ontem ficou 1 diária sem fazer: −' + dano + ' de vida.' : 'Ontem ficaram ' + falt.length + ' diárias sem fazer: −' + dano + ' de vida.'), 1500);
-  else if (falt.length === 0) setTimeout(() => aviso('Dia novo! As diárias voltaram.'), 1500);
+// ---------------- configurações das tarefas (ideias tiradas do HabitNow: frequência, meta em número, checklist, racha, categoria, horário, pausa) ----------------
+const CATS = [['', '·', 'Nenhuma'], ['vicio', '🚭', 'Largar vício'], ['esporte', '🏋️', 'Esporte'], ['comida', '🥗', 'Alimentação'], ['saude', '❤️', 'Saúde'], ['estudo', '📚', 'Estudo'], ['trabalho', '💼', 'Trabalho'],
+  ['casa', '🏠', 'Casa'], ['arte', '🎨', 'Arte'], ['lazer', '🎮', 'Lazer'], ['medit', '🧘', 'Meditação'], ['social', '👥', 'Social'], ['grana', '💰', 'Finanças'], ['fora', '🌳', 'Ar livre'], ['outro', '⭐', 'Outro']];
+const catDe = t => CATS.find(c => c[0] === (t.cat || '')) || CATS[0];
+const SEM = 'DSTQQSS', SEM_N = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+const MARCOS = { 7: 15, 14: 25, 21: 40, 30: 60, 66: 120, 100: 200 }; // dias seguidos → ouro de prêmio
+const bonusRacha = r => Math.min(0.3, 0.02 * Math.max(0, r)); // +2% de XP por dia de racha, até +30%
+const dData = s => { const [a, m, d] = s.split('-').map(Number); return new Date(a, m - 1, d) };
+const somaDia = (s, n) => { const d = dData(s); d.setDate(d.getDate() + n); return isoDe(d) };
+const difDias = (a, b) => Math.round((dData(b) - dData(a)) / 864e5);
+const ddmm = s => s.slice(8, 10) + '/' + s.slice(5, 7);
+function prep(d) { // diária com os campos novos (as antigas eram só sim ou não, todo dia)
+  if (!d.freq) d.freq = { t: 'todo' }; if (!d.tipo) d.tipo = 'sn'; if (!d.meta) d.meta = { op: 'min', n: 8, un: '' }; if (!d.itens) d.itens = []; if (!d.hist) d.hist = {};
+  for (const k of ['v', 'racha', 'melhor', 'sem']) d[k] = d[k] || 0; if (!d.ini) d.ini = hoje(); if (d.pago == null) d.pago = d.ok ? 1 : 0; return d;
+}
+const ehMax = d => d.tipo === 'num' && d.meta.op === 'max';
+function agendada(d, dt) { const f = d.freq; if (d.pausa) return false; if (f.t === 'semana') return (f.dias || []).includes(dData(dt).getDay());
+  if (f.t === 'cada') { const k = difDias(d.ini, dt); return k >= 0 && k % Math.max(2, f.n || 2) === 0 } return true }
+function feito(d) { if (d.tipo === 'num') return d.meta.op === 'max' ? d.v <= d.meta.n : d.v >= d.meta.n; if (d.tipo === 'lista') return d.itens.length > 0 && d.itens.every(i => i.ok); return !!d.ok }
+const semFeita = d => d.freq.t === 'vezes' && d.sem >= (d.freq.n || 3) && !d.pago; // já bateu a meta da semana
+function pendente(d) { prep(d); return agendada(d, hoje()) && !feito(d) && !semFeita(d) }
+function rachaVista(d) { return d.freq.t === 'vezes' || ehMax(d) ? d.racha : d.racha + (d.pago ? 1 : 0) } // conta hoje se já fez
+function melhorRacha() { return Math.max(S.mr || 0, ...S.diar.map(d => prep(d).freq.t === 'vezes' ? 0 : rachaVista(d))) }
+function zeraHoje(d) { d.ok = false; d.v = 0; d.pago = 0; d.dado = null; for (const i of d.itens) i.ok = false }
+function confere(d) { // depois de mexer numa diária: dá ou devolve a recompensa conforme ela ficou feita ou não
+  const f = !ehMax(d) && feito(d); // a de "no máximo" só paga quando o dia vira
+  if (f && !d.pago) {
+    const sem = d.freq.t === 'vezes', r = rachaVista(d) + 1, m = sem ? 0 : MARCOS[r] || 0;
+    const xp = Math.round(DIF[d.d].xp * (1 + bonusRacha(d.racha))), ouro = DIF[d.d].ouro + m;
+    d.pago = 1; d.dado = { xp, ouro }; S.cont.t++; ganha(xp, ouro, 5);
+    if (m) setTimeout(() => faixa('🔥 ' + r + ' dias seguidos!', d.t + ' · +' + m + ' 🪙', 2.6), 700);
+  } else if (!f && d.pago) { d.pago = 0; S.cont.t = Math.max(0, S.cont.t - 1); if (d.dado) perde(d.dado.xp, d.dado.ouro); d.dado = null }
+  checaDesafios();
+}
+// desafio de hábito que libera cada estágio (do 2 em diante), além de vencer o anterior
+const DESAFIO = [null, null,
+  { t: 'Fazer 5 diárias ou afazeres', k: 't', n: 5 }, { t: 'Fazer uma diária 2 dias seguidos', k: 'r', n: 2 }, { t: 'Fazer 20 diárias ou afazeres', k: 't', n: 20 },
+  { t: 'Fazer uma diária 3 dias seguidos', k: 'r', n: 3 }, { t: 'Marcar 15 hábitos bons (+)', k: 'h', n: 15 }, { t: 'Fazer uma diária 5 dias seguidos', k: 'r', n: 5 },
+  { t: 'Fazer 60 diárias ou afazeres', k: 't', n: 60 }, { t: 'Fazer uma diária 7 dias seguidos', k: 'r', n: 7 }, { t: 'Fazer uma diária 10 dias seguidos', k: 'r', n: 10 }];
+function desafio(n) { const D = DESAFIO[n]; if (!D) return null; const v = S.des[n] ? D.n : D.k === 'r' ? melhorRacha() : S.cont[D.k] || 0; return { t: D.t, v: Math.min(v, D.n), n: D.n, ok: v >= D.n } }
+function podeJogar(n) { return n === 1 || (n <= S.lib && desafio(n).ok) }
+function checaDesafios() {
+  for (let n = 2; n <= Math.min(S.lib, N_EST); n++) if (!S.des[n] && desafio(n).ok) { S.des[n] = 1; salva(); setTimeout(() => { faixa('Desafio cumprido!', 'Estágio ' + n + ' liberado no mapa', 2.8); som('vitoria', 0.6) }, 1200) }
+}
+function viraDia() { // fecha o(s) dia(s) que passaram: racha, histórico e vida perdida pelas diárias esquecidas; os contadores dos hábitos zeram
+  const h = hoje(); if (S.dia === h) return; if (!S.dia || S.dia > h) { S.dia = h; salva(); return }
+  const dias = []; for (let dt = S.dia; dt < h && dias.length < 90; dt = somaDia(dt, 1)) dias.push(dt); // o 1º é o dia que tem as marcações; os outros o app ficou fechado
+  let dano = 0, falt = 0, xp = 0, ouro = 0, marco = null;
+  for (const d of S.diar) {
+    prep(d); let cobrou = false;
+    if (!d.pausa) dias.forEach((dt, i) => {
+      const ok = i === 0 && feito(d);
+      if (d.freq.t === 'vezes') { // X vezes por semana: conta os dias feitos e fecha a semana no domingo
+        const n = d.freq.n || 3; if (ok) { d.sem++; d.hist[dt] = 1 }
+        if (dData(dt).getDay() === 0) { if (d.sem >= n) { d.racha++; d.melhor = Math.max(d.melhor, d.racha) } else { d.racha = 0; if (!cobrou) { dano += DIF[d.d].dor * Math.min(3, n - d.sem); falt++; cobrou = true } } d.sem = 0 }
+        return;
+      }
+      if (!agendada(d, dt)) return;
+      d.hist[dt] = ok ? 1 : 0;
+      if (ok) {
+        d.racha++; d.melhor = Math.max(d.melhor, d.racha); S.mr = Math.max(S.mr || 0, d.racha);
+        if (ehMax(d)) { const m = MARCOS[d.racha] || 0; xp += Math.round(DIF[d.d].xp * (1 + bonusRacha(d.racha - 1))); ouro += DIF[d.d].ouro + m; S.cont.t++; if (m) marco = [d.racha, d.t] }
+      } else { d.racha = 0; if (i === 0) { dano += DIF[d.d].dor; falt++ } }
+    });
+    zeraHoje(d); for (const k in d.hist) if (difDias(k, h) > 120) delete d.hist[k];
+  }
+  for (const t of S.hab) { t.c = 0; t.cn = 0 } S.dia = h; salva();
+  if (xp) setTimeout(() => { ganha(xp, ouro); if (marco) faixa('🔥 ' + marco[0] + ' dias seguidos!', marco[1], 2.6) }, 900);
+  if (dano) setTimeout(() => machuca(dano, falt === 1 ? 'Ficou 1 diária sem fazer: −' + dano + ' de vida.' : 'Ficaram ' + falt + ' diárias sem fazer: −' + dano + ' de vida.'), 1500);
+  else setTimeout(() => aviso('Dia novo! As diárias voltaram.' + (xp ? ' Limites respeitados: +' + xp + ' XP.' : '')), 1500);
+  checaDesafios();
 }
 viraDia(); setInterval(() => { viraDia(); if (aba === 'diar') lista() }, 60000);
 
@@ -1134,28 +1240,30 @@ function desenhaPapel() {
 let selN = 1, contaT = 0, contaN = 0;
 function abreMapa(motivo, sel) { // motivo: 'venceu' ou 'perdeu' (aí no Auto ele mesmo começa a próxima fase depois de uns segundos)
   mapaEl.classList.add('on'); folhaEl.querySelectorAll('.no,.rot').forEach(e => e.remove());
-  selN = Math.min(sel || (F.fim ? S.lib : F.n), S.lib); clearInterval(contaT); contaN = motivo && S.auto ? 6 : 0;
+  selN = Math.min(sel || (F.fim ? S.lib : F.n), S.lib); clearInterval(contaT); contaN = motivo && S.auto && podeJogar(selN) ? 6 : 0;
   if (contaN) contaT = setInterval(() => { if (--contaN <= 0) { clearInterval(contaT); joga() } else infoMapa() }, 1000);
   const W = folhaEl.clientWidth || 400, k = W / VW; folhaEl.style.height = VH * k + 'px'; desenhaPapel();
   NOS.forEach(([vx, vy], i) => {
-    const n = i + 1, x = vx * k, y = vy * k, lib = n <= S.lib, b = document.createElement('button'), rot = document.createElement('div');
-    b.className = 'no' + (S.ok[n] ? ' feito' : '') + (lib ? '' : ' tranc') + (n === S.lib && !S.ok[n] ? ' atual' : '') + (n === N_EST ? ' chefe' : '') + (n === selN ? ' sel' : '');
-    b.textContent = lib ? (n === N_EST ? '👹' : n) : '🔒'; b.style.left = x + 'px'; b.style.top = y + 'px';
+    const n = i + 1, x = vx * k, y = vy * k, lib = n <= S.lib, pode = podeJogar(n), b = document.createElement('button'), rot = document.createElement('div');
+    b.className = 'no' + (S.ok[n] ? ' feito' : '') + (lib ? (pode ? '' : ' desaf') : ' tranc') + (n === S.lib && !S.ok[n] ? ' atual' : '') + (n === N_EST ? ' chefe' : '') + (n === selN ? ' sel' : '');
+    b.textContent = !lib ? '🔒' : !pode ? '📜' : n === N_EST ? '👹' : n; b.style.left = x + 'px'; b.style.top = y + 'px';
     b.setAttribute('aria-label', 'Estágio ' + n + ': ' + EST[i][0] + (lib ? '' : ' (trancado)'));
     b.onclick = () => { clearInterval(contaT); contaN = 0; if (!lib) { aviso('Passe do estágio ' + (n - 1) + ' pra liberar este.'); return } selN = n; folhaEl.querySelectorAll('.no').forEach((e, j) => e.classList.toggle('sel', j === i)); infoMapa() };
     rot.className = 'rot'; rot.style.left = x + 'px'; rot.style.top = y + (n === N_EST ? 6 : 0) + 'px'; rot.textContent = EST[i][0];
-    rot.append(Object.assign(document.createElement('small'), S.ok[n] ? { textContent: '✓ vencido', className: 'ok' } : { textContent: lib ? 'nível ' + nvSugerido(n) + '+' : 'trancado' }));
+    rot.append(Object.assign(document.createElement('small'), S.ok[n] ? { textContent: '✓ vencido', className: 'ok' } : { textContent: !lib ? 'trancado' : !pode ? 'desafio ' + desafio(n).v + '/' + desafio(n).n : 'nível ' + nvSugerido(n) + '+' }));
     folhaEl.append(b, rot) });
   mapaEl.querySelector('.topo small').textContent = Object.keys(S.ok).length + ' de ' + N_EST + ' estágios vencidos · nível ' + S.nv;
   const [, sy] = NOS[selN - 1]; roloEl.scrollTop = sy * k - roloEl.clientHeight * 0.5; infoMapa();
 }
 function infoMapa() {
   const n = selN, i = mapaEl.querySelector('.info div'); i.textContent = 'Estágio ' + n + ' · ' + EST[n - 1][0];
-  i.append(Object.assign(document.createElement('small'), { textContent: S.repete ? '🔁 Repetindo este estágio pra juntar ouro' : S.ok[n] ? 'Vencido · repita pra juntar ouro' : 'Precisa nível ' + nvSugerido(n) + ' (você: ' + S.nv + ') · chefe no fim' }));
+  const D = podeJogar(n) ? null : desafio(n), jb = mapaEl.querySelector('.jogar'); jb.disabled = !!D;
+  if (D) i.append(Object.assign(document.createElement('small'), { textContent: '📜 Desafio pra liberar: ' + D.t + ' (' + D.v + '/' + D.n + ')', className: 'des' }));
+  else i.append(Object.assign(document.createElement('small'), { textContent: S.repete ? '🔁 Repetindo este estágio pra juntar ouro' : S.ok[n] ? 'Vencido · repita pra juntar ouro' : 'Precisa nível ' + nvSugerido(n) + ' (você: ' + S.nv + ') · chefe no fim' }));
   const rb = mapaEl.querySelector('.repete'); rb.classList.toggle('on', !!S.repete); rb.setAttribute('aria-pressed', !!S.repete);
-  mapaEl.querySelector('.jogar').textContent = '▶ Jogar' + (contaN ? ' (' + contaN + ')' : '');
+  jb.textContent = D ? '🔒' : '▶ Jogar' + (contaN ? ' (' + contaN + ')' : '');
 }
-function joga() { clearInterval(contaT); contaN = 0; fechaMapa(); comecaEstagio(selN) }
+function joga() { clearInterval(contaT); contaN = 0; if (!podeJogar(selN)) { aviso('Cumpra o desafio nas tarefas pra liberar este estágio.'); return } fechaMapa(); comecaEstagio(selN) }
 function fechaMapa() { clearInterval(contaT); contaN = 0; mapaEl.classList.remove('on') }
 mapaEl.querySelector('.jogar').onclick = joga;
 mapaEl.querySelector('.repete').onclick = () => { S.repete = !S.repete; salva(); infoMapa(); aviso(S.repete ? 'Repetir ligado: depois de vencer, ela joga este mesmo estágio de novo (bom pra juntar ouro).' : 'Repetir desligado: depois de vencer, vai pro próximo estágio.') };
@@ -1173,7 +1281,7 @@ function hud() {
   document.getElementById('hOuro').textContent = '🪙 ' + S.ouro; const be = document.getElementById('bEst'); be.textContent = F.fim || F.perdeu ? '🗺 Mapa' : '⚔ Estágio ' + F.n; if (!F.fim && !F.perdeu) be.append(Object.assign(document.createElement('small'), { textContent: F.feitos + '/' + F.G }));
   const bm = document.getElementById('bModo'); bm.textContent = S.auto ? '▶ Auto' : '🕹 Manual'; bm.classList.toggle('manual', !S.auto); document.body.classList.toggle('manual', !S.auto);
   const bp = document.getElementById('bPocao'); bp.hidden = S.pocoes <= 0; bp.textContent = '🧪 ' + S.pocoes;
-  const pend = S.diar.filter(d => !d.ok).length; document.querySelector('[data-aba="diar"]').innerHTML = 'Diárias' + (pend ? '<b>' + pend + '</b>' : '');
+  const pend = S.diar.filter(pendente).length; document.querySelector('[data-aba="diar"]').innerHTML = 'Diárias' + (pend ? '<b>' + pend + '</b>' : '');
   if (typeof textoPuxa === 'function') textoPuxa();
   document.querySelector('[data-aba="her"]').innerHTML = 'Heroína' + (S.pontos ? '<b>' + S.pontos + '</b>' : '');
 }
@@ -1181,7 +1289,7 @@ document.getElementById('hPts').addEventListener('pointerdown', e => { e.stopPro
 // puxador do painel: toque ou arraste pra baixo esconde as tarefas (o jogo fica na tela toda); pra cima mostra de novo
 const puxa = document.getElementById('puxa'); let puxaY = null;
 function painelCheio(v) { S.cheio = v; document.body.classList.toggle('cheio', v); salva(); textoPuxa() }
-function textoPuxa() { const pend = S.diar.filter(d => !d.ok).length, puxa = document.getElementById('puxa'); puxa.textContent = S.cheio ? '▲ Mostrar tarefas' + (pend ? ' (' + pend + ' diárias)' : '') : '▼ Esconder' }
+function textoPuxa() { const pend = S.diar.filter(pendente).length, puxa = document.getElementById('puxa'); puxa.textContent = S.cheio ? '▲ Mostrar tarefas' + (pend ? ' (' + pend + ' diárias)' : '') : '▼ Esconder' }
 puxa.addEventListener('pointerdown', e => { puxaY = e.clientY; puxa.setPointerCapture(e.pointerId) });
 puxa.addEventListener('pointerup', e => { if (puxaY == null) return; const d = e.clientY - puxaY; puxaY = null; if (d > 30) painelCheio(true); else if (d < -30) painelCheio(false); else painelCheio(!S.cheio) });
 puxa.addEventListener('pointercancel', () => { puxaY = null });
@@ -1196,37 +1304,76 @@ const listaEl = document.getElementById('lista');
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e };
 function trocaAba(a) { const igual = aba === a; aba = a; S.aba = a; salva(); for (const b of document.querySelectorAll('#abas button')) b.classList.toggle('on', b.dataset.aba === a); if (!igual) listaEl.scrollTop = 0; lista() }
 for (const b of document.querySelectorAll('#abas button')) b.onclick = () => trocaAba(b.dataset.aba);
-function texto(t, sub) { const d = el('div', 'txt'); d.append(t.t); const s = el('small'); s.append(el('span', 'tag ' + t.d, DIF[t.d].n)); if (sub) s.append(sub); d.append(s);
-  d.onclick = () => { const n = prompt('Mudar o nome da tarefa:', t.t); if (n && n.trim()) { t.t = n.trim().slice(0, 80); salva(); lista() } }; return d }
-function apaga(lst, t) { const b = el('button', 'x', '✕'); b.setAttribute('aria-label', 'Apagar'); b.onclick = () => { if (confirm('Apagar "' + t.t + '"?')) { lst.splice(lst.indexOf(t), 1); salva(); lista(); hud() } }; return b }
+const mini = (txt, cls) => el('span', 'mini' + (cls ? ' ' + cls : ''), txt);
+function texto(t, kind, extra) { const d = el('div', 'txt'); if (t.cat) d.append(el('span', 'cat', catDe(t)[1])); d.append(t.t);
+  const s = el('small'); s.append(el('span', 'tag ' + t.d, DIF[t.d].n)); for (const x of extra || []) if (x) s.append(x); d.append(s);
+  d.onclick = () => editor(kind, t); return d }
+function freqTxt(d) { const f = d.freq; if (f.t === 'semana') return (f.dias || []).length === 7 ? '' : (f.dias || []).map(i => SEM_N[i].slice(0, 3)).join(' ');
+  if (f.t === 'vezes') return (d.sem + (d.pago ? 1 : 0)) + '/' + (f.n || 3) + ' na semana'; if (f.t === 'cada') return 'a cada ' + (f.n || 2) + ' dias'; return '' }
+function proxima(d) { const h = hoje(); for (let i = 1; i < 400; i++) { const dt = somaDia(h, i); if (agendada(d, dt)) return 'próxima: ' + (i === 1 ? 'amanhã' : i < 7 ? SEM_N[dData(dt).getDay()] : ddmm(dt)) } return '' }
+function pontos(d) { const s = el('span', 'dias'), h = hoje(); s.title = 'últimos 6 dias'; for (let i = 6; i >= 1; i--) { const v = d.hist[somaDia(h, -i)]; s.append(el('i', v === 1 ? 'b' : v === 0 ? 'r' : null)) } return s }
+const unid = d => d.meta.n + (d.meta.un ? ' ' + d.meta.un : '');
+function registra(t) { // diária com número: soma 1 (ou pede o valor quando a meta é grande)
+  if (t.meta.n <= 20) t.v++; else { const v = prompt('Quanto hoje' + (t.meta.un ? ' (' + t.meta.un + ')' : '') + '?', t.v); if (v == null) return; const x = parseFloat(String(v).replace(',', '.')); if (!(x >= 0)) return; t.v = x }
+  confere(t); salva(); lista(); hud(); if (ehMax(t) && !feito(t)) aviso('Passou do limite de hoje (' + unid(t) + '). Se ficar assim, tira vida quando o dia vira.');
+}
+const abertos = new Set(); // checklists abertas na lista
+function filtroCats(lst) { // fileira pra filtrar por categoria (só aparece com mais de uma em uso)
+  const usadas = [...new Set(lst.map(t => t.cat || ''))]; if (usadas.filter(Boolean).length < 2 && !(usadas.length > 1 && S.filtro)) return lst;
+  const f = el('div', 'filtro'), chip = (k, txt) => { const b = el('button', S.filtro === k || (!k && !usadas.includes(S.filtro)) ? 'on' : null, txt); b.onclick = () => { S.filtro = k; salva(); lista() }; f.append(b) };
+  chip(null, 'Todas'); for (const c of CATS) if (c[0] && usadas.includes(c[0])) chip(c[0], c[1] + ' ' + c[2]); listaEl.append(f);
+  return S.filtro && usadas.includes(S.filtro) ? lst.filter(t => (t.cat || '') === S.filtro) : lst;
+}
+function avisoDesafio() { // o desafio que falta pro próximo estágio, no alto da lista
+  const n = S.lib; if (n < 2 || S.ok[n] || podeJogar(n)) return; const D = desafio(n), d = el('div', 'desafio');
+  d.append(el('b', null, '📜 Desafio do estágio ' + n), el('span', null, D.t + ' (' + D.v + '/' + D.n + ')')); d.onclick = () => abreMapa(null, n); listaEl.append(d);
+}
+function linhaDiaria(t) {
+  prep(t); const h = hoje(), tem = agendada(t, h), f = feito(t), sf = semFeita(t), max = ehMax(t);
+  const it = el('div', 'item' + ((f && !max) || sf ? ' feito' : '') + (tem ? '' : ' folga') + (max && !f ? ' estourou' : '')); let b;
+  if (!tem) { b = el('button', 'chk', t.pausa ? '⏸' : '–'); b.disabled = true }
+  else if (t.tipo === 'num') { b = el('button', 'chk num' + (max ? (f ? ' ok' : ' mal') : ''), t.v + '/' + t.meta.n); b.onclick = () => registra(t); b.setAttribute('aria-label', 'Somar') }
+  else if (t.tipo === 'lista') { b = el('button', 'chk num', t.itens.filter(i => i.ok).length + '/' + t.itens.length); b.onclick = () => { abertos.has(t.id) ? abertos.delete(t.id) : abertos.add(t.id); lista() }; b.setAttribute('aria-label', 'Abrir a checklist') }
+  else { b = el('button', 'chk', t.ok ? '✓' : ''); b.onclick = () => { t.ok = !t.ok; confere(t); salva(); lista(); hud() }; b.setAttribute('aria-label', t.ok ? 'Desmarcar' : 'Marcar como feita') }
+  const r = rachaVista(t), ft = freqTxt(t), ex = [];
+  if (t.pausa) ex.push(mini('pausada')); else if (!tem) ex.push(mini(proxima(t)));
+  if (r) ex.push(mini('🔥' + r + (t.freq.t === 'vezes' ? ' sem.' : ''), 'fogo'));
+  if (ft) ex.push(mini(ft)); if (t.hora) ex.push(mini('⏰ ' + t.hora));
+  if (t.tipo === 'num') ex.push(mini((max ? 'máx. ' : 'meta ') + unid(t), max && !f ? 'mal' : null));
+  ex.push(pontos(t)); it.append(b, texto(t, 'diar', ex)); listaEl.append(it);
+  if (t.tipo === 'lista' && tem && abertos.has(t.id)) { const L = el('div', 'sub');
+    for (const i of t.itens) { const c = el('button', i.ok ? 'on' : null, (i.ok ? '✓ ' : '○ ') + i.t); c.onclick = () => { i.ok = !i.ok; confere(t); salva(); lista(); hud() }; L.append(c) } listaEl.append(L) }
+}
 function lista() {
   const top = listaEl.scrollTop; listaEl.innerHTML = ''; document.getElementById('novo').hidden = aba === 'her';
   document.getElementById('nPos').style.display = document.getElementById('nNeg').style.display = aba === 'hab' ? '' : 'none';
   document.getElementById('nTxt').placeholder = aba === 'hab' ? 'Novo hábito…' : aba === 'diar' ? 'Nova diária…' : 'Novo afazer…';
+  if (aba !== 'her') avisoDesafio();
   if (aba === 'hab') {
     if (!S.hab.length) listaEl.append(el('div', 'vazio', 'Hábitos são coisas que você faz várias vezes, boas (+) ou ruins (−). Toque em + quando fizer uma boa; em − quando cair numa ruim.'));
-    for (const t of S.hab) {
+    for (const t of filtroCats(S.hab)) {
       const it = el('div', 'item');
-      if (t.neg) { const b = el('button', 'chk menos', '−'); b.setAttribute('aria-label', 'Fiz o hábito ruim'); b.onclick = () => { t.cn = (t.cn || 0) + 1; machuca(DIF[t.d].dor, null); lista() }; it.append(b) }
-      it.append(texto(t, (t.c ? ' +' + t.c : '') + (t.cn ? ' −' + t.cn : '') + (t.c || t.cn ? ' hoje' : '')));
-      if (t.pos) { const b = el('button', 'chk mais', '+'); b.setAttribute('aria-label', 'Fiz o hábito bom'); b.onclick = () => { t.c = (t.c || 0) + 1; ganha(DIF[t.d].xp, DIF[t.d].ouro); lista() }; it.append(b) }
-      it.append(apaga(S.hab, t)); listaEl.append(it);
+      if (t.neg) { const b = el('button', 'chk menos', '−'); b.setAttribute('aria-label', 'Fiz o hábito ruim'); b.onclick = () => { t.cn = (t.cn || 0) + 1; t.totn = (t.totn || 0) + 1; machuca(DIF[t.d].dor, null); lista() }; it.append(b) }
+      it.append(texto(t, 'hab', [t.c || t.cn ? mini((t.c ? '+' + t.c : '') + (t.cn ? ' −' + t.cn : '') + ' hoje') : null, t.tot || t.totn ? mini('total ' + (t.tot ? '+' + t.tot : '') + (t.totn ? ' −' + t.totn : '')) : null]));
+      if (t.pos) { const b = el('button', 'chk mais', '+'); b.setAttribute('aria-label', 'Fiz o hábito bom'); b.onclick = () => { t.c = (t.c || 0) + 1; t.tot = (t.tot || 0) + 1; S.cont.h++; ganha(DIF[t.d].xp, DIF[t.d].ouro); checaDesafios(); lista() }; it.append(b) }
+      listaEl.append(it);
     }
   } else if (aba === 'diar') {
-    if (!S.diar.length) listaEl.append(el('div', 'vazio', 'Diárias são as tarefas de todo dia. Se ficar alguma sem fazer, a heroína perde vida quando o dia vira.'));
-    for (const t of S.diar) {
-      const it = el('div', 'item' + (t.ok ? ' feito' : '')), b = el('button', 'chk', t.ok ? '✓' : ''); b.setAttribute('aria-label', t.ok ? 'Desmarcar' : 'Marcar como feita');
-      b.onclick = () => { t.ok = !t.ok; if (t.ok) ganha(DIF[t.d].xp, DIF[t.d].ouro, 5); else perde(DIF[t.d].xp, DIF[t.d].ouro); lista(); hud() };
-      it.append(b, texto(t), apaga(S.diar, t)); listaEl.append(it);
-    }
-    const p = el('p', 'dica'); p.style.padding = '4px 6px'; p.textContent = 'Diária esquecida tira vida quando o dia vira. Tarefa feita dá XP, ouro e um pouco de vida.'; listaEl.append(p);
+    if (!S.diar.length) listaEl.append(el('div', 'vazio', 'Diárias são as tarefas de rotina. Se ficar alguma sem fazer no dia dela, a heroína perde vida quando o dia vira.'));
+    const L = filtroCats(S.diar).map(prep), h = hoje(), hj = L.filter(d => agendada(d, h)), fora = L.filter(d => !agendada(d, h));
+    hj.sort((a, b) => (a.hora || '99') < (b.hora || '99') ? -1 : (a.hora || '99') > (b.hora || '99') ? 1 : 0); // com horário primeiro, na ordem do relógio
+    for (const t of hj) linhaDiaria(t);
+    if (fora.length) { listaEl.append(el('div', 'grupo', 'Não é pra hoje')); for (const t of fora) linhaDiaria(t) }
+    const p = el('p', 'dica'); p.style.padding = '4px 6px'; p.textContent = 'Toque no nome pra configurar: dias da semana, meta em número, checklist, horário, categoria e pausa. Fazer vários dias seguidos (🔥) dá XP a mais.'; listaEl.append(p);
   } else if (aba === 'afz') {
     if (!S.afz.length) listaEl.append(el('div', 'vazio', 'Afazeres são tarefas de uma vez só. Valem 50% a mais de XP e somem quando você marca.'));
-    for (const t of S.afz) {
+    const h = hoje();
+    for (const t of filtroCats(S.afz)) {
       const it = el('div', 'item'), b = el('button', 'chk', ''); b.setAttribute('aria-label', 'Concluir');
-      b.onclick = () => { if (it.classList.contains('feito')) return; it.classList.add('feito'); b.textContent = '✓'; ganha(Math.round(DIF[t.d].xp * AFZ_X), Math.round(DIF[t.d].ouro * AFZ_X), 5); S.feitos++;
+      b.onclick = () => { if (it.classList.contains('feito')) return; it.classList.add('feito'); b.textContent = '✓'; ganha(Math.round(DIF[t.d].xp * AFZ_X), Math.round(DIF[t.d].ouro * AFZ_X), 5); S.feitos++; S.cont.t++; checaDesafios();
         setTimeout(() => { it.classList.add('some'); setTimeout(() => { S.afz.splice(S.afz.indexOf(t), 1); salva(); if (aba === 'afz') lista() }, 400) }, 500) };
-      it.append(b, texto(t), apaga(S.afz, t)); listaEl.append(it);
+      const k = t.prazo ? difDias(h, t.prazo) : null;
+      it.append(b, texto(t, 'afz', [k == null ? null : mini(k < 0 ? 'atrasado (' + ddmm(t.prazo) + ')' : k === 0 ? '📅 hoje' : k === 1 ? '📅 amanhã' : '📅 até ' + ddmm(t.prazo), k < 0 ? 'mal' : null)])); listaEl.append(it);
     }
   } else heroina();
   listaEl.scrollTop = top;
@@ -1268,7 +1415,7 @@ function heroina() {
     b.append(im, el('span', null, nome)); b.onclick = () => { S.pers = i; salva(); carregar(i); lista(); hud() }; g.append(b) });
   s3.append(g); listaEl.append(s3);
   const s4 = el('div', 'sec'); s4.append(el('h3', null, 'Como funciona'));
-  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 10 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede uns 2 níveis a mais que o anterior (o nível aparece no mapa). Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. Ela luta sozinha (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Os monstros dão ouro pra loja. Hábito ruim e diária esquecida tiram vida; se zerar, ela perde e recomeça o estágio. Tudo fica salvo neste celular.';
+  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 10 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede uns 2 níveis a mais que o anterior (o nível aparece no mapa) e um desafio de hábito (📜) pra liberar, como fazer uma diária vários dias seguidos. Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. Ela luta sozinha (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Os monstros dão ouro pra loja. Hábito ruim e diária esquecida tiram vida; se zerar, ela perde e recomeça o estágio. Tudo fica salvo neste celular.';
   s4.append(p); const zn = el('button', null, 'Zerar nível e missão (mantém as tarefas)'); zn.style.marginTop = '8px'; zn.onclick = () => { if (confirm('Voltar pro nível 1 e pro estágio 1? As tarefas ficam.')) { zeraProgresso(); salva(); location.reload() } }; s4.append(zn);
   const z = el('button', null, 'Começar do zero'); z.style.marginTop = '8px'; z.onclick = () => { if (confirm('Apagar todo o progresso e as tarefas?')) { localStorage.removeItem(CHAVE); location.reload() } }; s4.append(z);
   listaEl.append(s4);
@@ -1276,10 +1423,85 @@ function heroina() {
 const nTxt = document.getElementById('nTxt'), nPos = document.getElementById('nPos'), nNeg = document.getElementById('nNeg');
 function tiposHab() { nPos.classList.toggle('off', !novoPos); nNeg.classList.toggle('off', !novoNeg) }
 nPos.onclick = () => { novoPos = !novoPos; if (!novoPos && !novoNeg) novoNeg = true; tiposHab() }; nNeg.onclick = () => { novoNeg = !novoNeg; if (!novoPos && !novoNeg) novoPos = true; tiposHab() }; tiposHab();
-function adiciona() {
-  const t = nTxt.value.trim(); if (!t) { nTxt.focus(); return } const d = document.getElementById('nDif').value, base = { id: uid(), t: t.slice(0, 80), d };
-  if (aba === 'hab') S.hab.push(Object.assign(base, { pos: novoPos, neg: novoNeg, c: 0, cn: 0 })); else if (aba === 'diar') S.diar.push(Object.assign(base, { ok: false })); else S.afz.push(base);
-  nTxt.value = ''; salva(); lista(); hud(); listaEl.scrollTop = listaEl.scrollHeight;
+function adiciona() { // com nome: cria direto; sem nome: abre a ficha completa
+  const t = nTxt.value.trim(), d = document.getElementById('nDif').value, base = { id: uid(), t: t.slice(0, 80), d };
+  if (aba === 'hab') Object.assign(base, { pos: novoPos, neg: novoNeg, c: 0, cn: 0 }); else if (aba === 'diar') prep(Object.assign(base, { ok: false }));
+  if (!t) { editor(aba, base, true); return }
+  S[aba].push(base); nTxt.value = ''; salva(); lista(); hud(); listaEl.scrollTop = listaEl.scrollHeight;
+}
+// ---------------- ficha de configurar uma tarefa (toque no nome) ----------------
+const edEl = document.getElementById('ed'); let ED = null;
+edEl.addEventListener('click', e => { if (e.target === edEl) fechaEd() });
+function editor(kind, t, novo) { const D = JSON.parse(JSON.stringify(t)); if (kind === 'diar') prep(D); ED = { kind, t, D, novo }; edEl.classList.add('on'); desenhaEd(true); if (novo) setTimeout(() => edEl.querySelector('input').focus(), 60) }
+function fechaEd() { edEl.classList.remove('on'); edEl.innerHTML = ''; ED = null }
+function calendario(D) { // as últimas 5 semanas: verde feito, vermelho faltou
+  const h = hoje(), g = el('div', 'cal'); for (const s of SEM) g.append(el('b', null, s)); const ini = somaDia(somaDia(h, -dData(h).getDay()), -28);
+  for (let i = 0; i < 35; i++) { const dt = somaDia(ini, i), v = dt === h ? (D.pago ? 1 : null) : D.hist[dt]; g.append(el('span', (v === 1 ? 'b' : v === 0 ? 'r' : '') + (dt === h ? ' hj' : '') + (dt > h ? ' fut' : ''), String(+dt.slice(8)))) }
+  return g;
+}
+function desenhaEd(doTopo) {
+  const { kind, D, novo } = ED, velho = edEl.querySelector('.ficha'), top = doTopo || !velho ? 0 : velho.scrollTop; edEl.innerHTML = '';
+  const fic = el('div', 'ficha'), cab = el('div', 'cab'), x = el('button', 'fecha', '✕'); edEl.append(fic);
+  cab.append(el('b', null, (novo ? { hab: 'Novo hábito', diar: 'Nova diária', afz: 'Novo afazer' } : { hab: 'Hábito', diar: 'Diária', afz: 'Afazer' })[kind])); x.onclick = fechaEd; x.setAttribute('aria-label', 'Fechar'); cab.append(x); fic.append(cab);
+  const campo = tit => { const s = el('div', 'campo'); if (tit) s.append(el('label', null, tit)); fic.append(s); return s };
+  const seg = (s, ops, val, f) => { const g = el('div', 'seg'); for (const [v, txt] of ops) { const b = el('button', v === val ? 'on' : null, txt); b.onclick = () => { f(v); desenhaEd() }; g.append(b) } s.append(g) };
+  const num = (val, min, max, f) => { const i = el('input'); i.type = 'number'; i.inputMode = 'decimal'; i.min = min; i.max = max; i.value = val;
+    i.onchange = () => { let v = parseFloat(String(i.value).replace(',', '.')); if (!(v >= min)) v = min; if (v > max) v = max; f(v); i.value = v }; return i };
+  const linha = (...xs) => { const l = el('div', 'linha'); l.append(...xs); return l };
+  { const s = campo('Nome'), i = el('input'); i.value = D.t; i.maxLength = 80; i.placeholder = kind === 'hab' ? 'ex.: Beber um copo de água' : kind === 'diar' ? 'ex.: Ir pra academia' : 'ex.: Marcar o dentista'; i.oninput = () => D.t = i.value; s.append(i) }
+  { const s = campo('Categoria'), g = el('div', 'cats'); for (const c of CATS) { const b = el('button', (D.cat || '') === c[0] ? 'on' : null); b.append(el('span', null, c[1]), el('small', null, c[2])); b.onclick = () => { D.cat = c[0]; desenhaEd() }; g.append(b) } s.append(g) }
+  seg(campo(kind === 'hab' ? 'Dificuldade (XP e ouro; no ruim, quanta vida tira)' : 'Dificuldade (XP e ouro; esquecer tira vida)'), [['f', 'Fácil'], ['m', 'Médio'], ['d', 'Difícil']], D.d, v => D.d = v);
+  if (kind === 'hab') seg(campo('Tipo'), [['pos', '+ Bom'], ['neg', '− Ruim'], ['ambos', '+ e −']], D.pos && D.neg ? 'ambos' : D.neg ? 'neg' : 'pos', v => { D.pos = v !== 'neg'; D.neg = v !== 'pos' });
+  if (kind === 'diar') {
+    const s = campo('Frequência');
+    seg(s, [['todo', 'Todo dia'], ['semana', 'Dias da semana'], ['vezes', 'X por semana'], ['cada', 'A cada N dias']], D.freq.t, v => {
+      D.freq.t = v; if (v === 'semana' && !(D.freq.dias || []).length) D.freq.dias = [1, 2, 3, 4, 5]; if (v === 'vezes') D.freq.n = Math.min(7, D.freq.n || 3); if (v === 'cada') D.freq.n = Math.max(2, D.freq.n || 2) });
+    if (D.freq.t === 'semana') { const g = el('div', 'dsem'); for (let i = 0; i < 7; i++) { const b = el('button', D.freq.dias.includes(i) ? 'on' : null, SEM[i]); b.setAttribute('aria-label', SEM_N[i]);
+      b.onclick = () => { const ds = new Set(D.freq.dias); ds.has(i) ? ds.delete(i) : ds.add(i); if (!ds.size) { aviso('Deixe pelo menos um dia.'); return } D.freq.dias = [...ds].sort(); desenhaEd() }; g.append(b) } s.append(g) }
+    if (D.freq.t === 'vezes') s.append(linha(num(D.freq.n, 1, 7, v => D.freq.n = v), el('span', null, 'vezes por semana. A semana fecha no domingo; se faltar, tira vida.')));
+    if (D.freq.t === 'cada') s.append(linha(el('span', null, 'A cada'), num(D.freq.n, 2, 365, v => D.freq.n = v), el('span', null, 'dias, a partir de hoje')));
+    const m = campo('Como medir');
+    seg(m, [['sn', 'Sim ou não'], ['num', 'Número'], ['lista', 'Checklist']], D.tipo, v => D.tipo = v);
+    if (D.tipo === 'num') {
+      seg(m, [['min', 'Pelo menos'], ['max', 'No máximo']], D.meta.op, v => D.meta.op = v);
+      const u = el('input'); u.value = D.meta.un || ''; u.placeholder = 'unidade: copos, km, min…'; u.maxLength = 16; u.oninput = () => D.meta.un = u.value.trim();
+      m.append(linha(num(D.meta.n, 1, 99999, v => D.meta.n = v), u));
+      const vv = el('b', null, String(D.v)), me = el('button', null, '−'), ma = el('button', null, '+'); me.onclick = () => { D.v = Math.max(0, D.v - 1); vv.textContent = D.v }; ma.onclick = () => { D.v++; vv.textContent = D.v };
+      m.append(linha(el('span', null, 'Hoje:'), me, vv, ma), el('p', 'dica', D.meta.op === 'max' ? 'Ex.: no máximo 2 horas de celular. Fica feita enquanto não passar do limite e paga quando o dia vira; passou, tira vida.' : 'Ex.: pelo menos 8 copos de água. Na lista, toque no número pra somar 1 (meta acima de 20 pede o valor).'));
+    }
+    if (D.tipo === 'lista') {
+      const L = el('div', 'itens'); D.itens.forEach((i, k) => { const inp = el('input'), x = el('button', 'x', '✕'); inp.value = i.t; inp.maxLength = 60; inp.oninput = () => i.t = inp.value; x.onclick = () => { D.itens.splice(k, 1); desenhaEd() }; x.setAttribute('aria-label', 'Tirar item'); L.append(linha(inp, x)) });
+      const ni = el('input'), ab = el('button', null, '+'), add = () => { if (!ni.value.trim()) return; D.itens.push({ t: ni.value.trim().slice(0, 60), ok: false }); desenhaEd(); const n = edEl.querySelector('.novoit'); if (n) n.focus() };
+      ni.className = 'novoit'; ni.placeholder = 'Novo item da checklist…'; ni.maxLength = 60; ni.onkeydown = e => { if (e.key === 'Enter') add() }; ab.onclick = add; ab.setAttribute('aria-label', 'Pôr item');
+      L.append(linha(ni, ab)); m.append(L, el('p', 'dica', 'Ex.: rotina da manhã (cama, banho, café). Fica feita quando marcar todos os itens.'));
+    }
+    { const s2 = campo('Horário (opcional, ordena a lista)'), hi = el('input'), lim = el('button', null, 'Sem horário'); hi.type = 'time'; hi.value = D.hora || ''; hi.onchange = () => D.hora = hi.value; lim.onclick = () => { D.hora = ''; hi.value = '' }; s2.append(linha(hi, lim)) }
+    { const pb = el('button', 'toggle' + (D.pausa ? ' on' : ''), D.pausa ? '⏸ Pausada: não aparece pra fazer e não tira vida. Toque pra voltar.' : '⏸ Pausar (férias, viagem, doente…)'); pb.onclick = () => { D.pausa = !D.pausa; desenhaEd() }; campo(null).append(pb) }
+    if (!novo) {
+      const es = campo('Progresso'), st = el('div', 'stats'), sem = D.freq.t === 'vezes', un = sem ? ' sem.' : ' dias', lin = (k, v) => { const d = el('div'); d.append(el('span', null, k), el('b', null, v)); st.append(d) };
+      const h = hoje(); let a = 0, n = 0; for (let i = 1; i <= 30; i++) { const v = D.hist[somaDia(h, -i)]; if (v != null) { n++; a += v } }
+      lin('Racha', '🔥 ' + rachaVista(D) + un); lin('Melhor', Math.max(D.melhor, rachaVista(D)) + un); lin('Acerto (30 dias)', n ? Math.round(a / n * 100) + '%' : '—'); lin('Bônus de XP', '+' + Math.round(bonusRacha(D.racha) * 100) + '%');
+      es.append(st, calendario(D), el('p', 'dica', 'Cada dia seguido dá +2% de XP (até +30%). Com 7, 14, 21, 30, 66 e 100 dias seguidos ganha ouro de prêmio.'));
+    }
+  }
+  if (kind === 'afz') { const s = campo('Prazo (opcional)'), di = el('input'), lim = el('button', null, 'Sem prazo'); di.type = 'date'; di.value = D.prazo || ''; di.onchange = () => D.prazo = di.value; lim.onclick = () => { D.prazo = ''; di.value = '' }; s.append(linha(di, lim)) }
+  if (kind === 'hab' && !novo) { const st = el('div', 'stats'), lin = (k, v) => { const d = el('div'); d.append(el('span', null, k), el('b', null, v)); st.append(d) };
+    lin('Hoje', '+' + (D.c || 0) + ' / −' + (D.cn || 0)); lin('Total', '+' + (D.tot || 0) + ' / −' + (D.totn || 0)); campo('Contagem').append(st) }
+  { const a = el('textarea'); a.value = D.nota || ''; a.maxLength = 300; a.rows = 2; a.placeholder = 'Por que isso importa, como fazer…'; a.oninput = () => D.nota = a.value; campo('Nota (opcional)').append(a) }
+  const bt = el('div', 'botoes');
+  if (!novo) { const ap = el('button', 'apagar', 'Apagar'); ap.onclick = () => { if (!confirm('Apagar "' + ED.t.t + '"?')) return; const l = S[kind]; l.splice(l.indexOf(ED.t), 1); salva(); fechaEd(); lista(); hud() }; bt.append(ap) }
+  const ca = el('button', null, 'Cancelar'), sv = el('button', 'salvar', novo ? 'Criar' : 'Salvar'); ca.onclick = fechaEd; sv.onclick = salvaEd; bt.append(ca, sv); fic.append(bt);
+  fic.scrollTop = top;
+}
+function salvaEd() {
+  const { kind, t, D, novo } = ED; D.t = (D.t || '').trim().slice(0, 80); if (!D.t) { aviso('Dê um nome pra tarefa.'); edEl.querySelector('input').focus(); return }
+  if (kind === 'diar') {
+    D.itens = D.itens.filter(i => i.t.trim()); if (D.tipo === 'lista' && !D.itens.length) { aviso('Ponha pelo menos um item na checklist.'); return }
+    if (D.freq.t === 'cada' && (novo || !t.freq || t.freq.t !== 'cada' || t.freq.n !== D.freq.n)) D.ini = hoje(); // conta a partir de hoje
+  }
+  for (const k in t) delete t[k]; Object.assign(t, D); if (novo) S[kind].push(t);
+  if (kind === 'diar') confere(t);
+  salva(); fechaEd(); lista(); hud();
 }
 document.getElementById('nAdd').onclick = adiciona; nTxt.addEventListener('keydown', e => { if (e.key === 'Enter') { adiciona(); nTxt.blur() } });
 
@@ -1317,6 +1539,6 @@ function quadro(t) {
 }
 new ResizeObserver(tam).observe(arena);
 comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); trocaAba(aba); hud(); carregar(S.pers); requestAnimationFrame(quadro); abreMapa(null, S.lib); // o jogo abre no mapa
-window.HAB = { MUS, compoeMusica, painelCheio, abreMapa, joga, montaMapa, TPf: () => TP, sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
+window.HAB = { MUS, compoeMusica, painelCheio, abreMapa, joga, montaMapa, TPf: () => TP, sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, viraDia, desafio, podeJogar, editor, trocaAba, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
 </script>
 </body></html>
