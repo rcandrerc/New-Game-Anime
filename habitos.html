@@ -195,10 +195,6 @@
   .sub button.on{background:#1f4a35;color:var(--fg);border-color:#2f9a64;text-decoration:line-through;opacity:.85}
   .grupo{font-size:11.5px;font-weight:800;color:var(--fg2);margin:12px 4px 6px;text-transform:uppercase;letter-spacing:.4px}
   .filtro{display:flex;gap:5px;overflow-x:auto;padding:0 0 6px;scrollbar-width:none} .filtro::-webkit-scrollbar{display:none} .filtro button{flex:none;padding:5px 10px;font-size:12.5px;border-radius:999px}
-  .desafio{display:flex;flex-direction:column;gap:2px;margin-bottom:8px;padding:8px 10px;border-radius:12px;background:linear-gradient(#4a3270,#33224f);border:1px solid #9a7ad0;cursor:pointer}
-  .desafio b{font-size:13px;color:#e8dcff} .desafio span{font-size:13px}
-  #mapa .no.desaf{background:radial-gradient(circle at 35% 30%,#e0d0ff,#8a6ac0 60%,#4a2a7a);color:#fff;border-color:#e8dcff;font-size:20px}
-  #mapa .info small.des{color:#e0ccff}
   #mapa .jogar:disabled{filter:grayscale(1);opacity:.6}
 </style></head>
 <body>
@@ -930,7 +926,7 @@ function venceEstagio() {
   F.fim = true; const n = F.n, primeira = !S.ok[n], bonus = primeira ? 25 * n : 5 * n;
   S.ok[n] = true; if (n < N_EST) S.lib = Math.max(S.lib, n + 1); S.ouro += bonus; S.hp = hpMax(); P.en = enMax();
   som('vitoria', 0.8); brilho(0xffe066); comemora();
-  faixa(n === N_EST ? 'Missão cumprida!' : 'Estágio ' + n + ' concluído!', '+' + bonus + ' 🪙' + (primeira && n < N_EST ? (podeJogar(n + 1) ? ' · estágio ' + (n + 1) + ' liberado' : ' · próximo pede um desafio') : ''), 3);
+  faixa(n === N_EST ? 'Missão cumprida!' : 'Estágio ' + n + ' concluído!', '+' + bonus + ' 🪙' + (primeira && n < N_EST ? ' · estágio ' + (n + 1) + ' liberado' : ''), 3);
   salva(); hud(); setTimeout(() => { if (F.fim && F.n === n) abreMapa('venceu', S.repete ? n : Math.min(n + 1, S.lib)) }, 4200); // volta pro mapa, como no Eternium
 }
 function bichosPasso(dt) {
@@ -1128,18 +1124,8 @@ function confere(d) { // depois de mexer numa diária: dá ou devolve a recompen
     d.pago = 1; d.dado = { xp, ouro }; S.cont.t++; ganha(xp, ouro, 5);
     if (m) setTimeout(() => faixa('🔥 ' + r + ' dias seguidos!', d.t + ' · +' + m + ' 🪙', 2.6), 700);
   } else if (!f && d.pago) { d.pago = 0; S.cont.t = Math.max(0, S.cont.t - 1); if (d.dado) perde(d.dado.xp, d.dado.ouro); d.dado = null }
-  checaDesafios();
 }
-// desafio de hábito que libera cada estágio (do 2 em diante), além de vencer o anterior
-const DESAFIO = [null, null,
-  { t: 'Fazer 5 diárias ou afazeres', k: 't', n: 5 }, { t: 'Fazer uma diária 2 dias seguidos', k: 'r', n: 2 }, { t: 'Fazer 20 diárias ou afazeres', k: 't', n: 20 },
-  { t: 'Fazer uma diária 3 dias seguidos', k: 'r', n: 3 }, { t: 'Marcar 15 hábitos bons (+)', k: 'h', n: 15 }, { t: 'Fazer uma diária 5 dias seguidos', k: 'r', n: 5 },
-  { t: 'Fazer 60 diárias ou afazeres', k: 't', n: 60 }, { t: 'Fazer uma diária 7 dias seguidos', k: 'r', n: 7 }, { t: 'Fazer uma diária 10 dias seguidos', k: 'r', n: 10 }];
-function desafio(n) { const D = DESAFIO[n]; if (!D) return null; const v = S.des[n] ? D.n : D.k === 'r' ? melhorRacha() : S.cont[D.k] || 0; return { t: D.t, v: Math.min(v, D.n), n: D.n, ok: v >= D.n } }
-function podeJogar(n) { return n === 1 || (n <= S.lib && desafio(n).ok) }
-function checaDesafios() {
-  for (let n = 2; n <= Math.min(S.lib, N_EST); n++) if (!S.des[n] && desafio(n).ok) { S.des[n] = 1; salva(); setTimeout(() => { faixa('Desafio cumprido!', 'Estágio ' + n + ' liberado no mapa', 2.8); som('vitoria', 0.6) }, 1200) }
-}
+function podeJogar(n) { return n <= S.lib } // o que segura o próximo estágio é só a dificuldade (nível que vem das tarefas)
 function viraDia() { // fecha o(s) dia(s) que passaram: racha, histórico e vida perdida pelas diárias esquecidas; os contadores dos hábitos zeram
   const h = hoje(); if (S.dia === h) return; if (!S.dia || S.dia > h) { S.dia = h; salva(); return }
   const dias = []; for (let dt = S.dia; dt < h && dias.length < 90; dt = somaDia(dt, 1)) dias.push(dt); // o 1º é o dia que tem as marcações; os outros o app ficou fechado
@@ -1167,7 +1153,6 @@ function viraDia() { // fecha o(s) dia(s) que passaram: racha, histórico e vida
   if (xp) setTimeout(() => { ganha(xp, ouro); if (marco) faixa('🔥 ' + marco[0] + ' dias seguidos!', marco[1], 2.6) }, 900);
   if (dano) setTimeout(() => machuca(dano, falt === 1 ? 'Ficou 1 diária sem fazer: −' + dano + ' de vida.' : 'Ficaram ' + falt + ' diárias sem fazer: −' + dano + ' de vida.'), 1500);
   else setTimeout(() => aviso('Dia novo! As diárias voltaram.' + (xp ? ' Limites respeitados: +' + xp + ' XP.' : '')), 1500);
-  checaDesafios();
 }
 viraDia(); setInterval(() => { viraDia(); if (aba === 'diar') lista() }, 60000);
 
@@ -1260,26 +1245,25 @@ function abreMapa(motivo, sel) { // motivo: 'venceu' ou 'perdeu' (aí no Auto el
   if (contaN) contaT = setInterval(() => { if (--contaN <= 0) { clearInterval(contaT); joga() } else infoMapa() }, 1000);
   const W = folhaEl.clientWidth || 400, k = W / VW; folhaEl.style.height = VH * k + 'px'; desenhaPapel();
   NOS.forEach(([vx, vy], i) => {
-    const n = i + 1, x = vx * k, y = vy * k, lib = n <= S.lib, pode = podeJogar(n), b = document.createElement('button'), rot = document.createElement('div');
-    b.className = 'no' + (S.ok[n] ? ' feito' : '') + (lib ? (pode ? '' : ' desaf') : ' tranc') + (n === S.lib && !S.ok[n] ? ' atual' : '') + (n === N_EST ? ' chefe' : '') + (n === selN ? ' sel' : '');
-    b.textContent = !lib ? '🔒' : !pode ? '📜' : n === N_EST ? '👹' : n; b.style.left = x + 'px'; b.style.top = y + 'px';
+    const n = i + 1, x = vx * k, y = vy * k, lib = n <= S.lib, b = document.createElement('button'), rot = document.createElement('div');
+    b.className = 'no' + (S.ok[n] ? ' feito' : '') + (lib ? '' : ' tranc') + (n === S.lib && !S.ok[n] ? ' atual' : '') + (n === N_EST ? ' chefe' : '') + (n === selN ? ' sel' : '');
+    b.textContent = !lib ? '🔒' : n === N_EST ? '👹' : n; b.style.left = x + 'px'; b.style.top = y + 'px';
     b.setAttribute('aria-label', 'Estágio ' + n + ': ' + EST[i][0] + (lib ? '' : ' (trancado)'));
     b.onclick = () => { clearInterval(contaT); contaN = 0; if (!lib) { aviso('Passe do estágio ' + (n - 1) + ' pra liberar este.'); return } selN = n; folhaEl.querySelectorAll('.no').forEach((e, j) => e.classList.toggle('sel', j === i)); infoMapa() };
     rot.className = 'rot'; rot.style.left = x + 'px'; rot.style.top = y + (n === N_EST ? 6 : 0) + 'px'; rot.textContent = EST[i][0];
-    rot.append(Object.assign(document.createElement('small'), S.ok[n] ? { textContent: '✓ vencido', className: 'ok' } : { textContent: !lib ? 'trancado' : !pode ? 'desafio ' + desafio(n).v + '/' + desafio(n).n : 'nível ' + nvSugerido(n) + '+' }));
+    rot.append(Object.assign(document.createElement('small'), S.ok[n] ? { textContent: '✓ vencido', className: 'ok' } : { textContent: lib ? 'nível ' + nvSugerido(n) + '+' : 'trancado' }));
     folhaEl.append(b, rot) });
   mapaEl.querySelector('.topo small').textContent = Object.keys(S.ok).length + ' de ' + N_EST + ' estágios vencidos · nível ' + S.nv;
   const [, sy] = NOS[selN - 1]; roloEl.scrollTop = sy * k - roloEl.clientHeight * 0.5; infoMapa();
 }
 function infoMapa() {
   const n = selN, i = mapaEl.querySelector('.info div'); i.textContent = 'Estágio ' + n + ' · ' + EST[n - 1][0];
-  const D = podeJogar(n) ? null : desafio(n), jb = mapaEl.querySelector('.jogar'); jb.disabled = !!D;
-  if (D) i.append(Object.assign(document.createElement('small'), { textContent: '📜 Desafio pra liberar: ' + D.t + ' (' + D.v + '/' + D.n + ')', className: 'des' }));
-  else i.append(Object.assign(document.createElement('small'), { textContent: S.repete ? '🔁 Repetindo este estágio pra juntar ouro' : S.ok[n] ? 'Vencido · repita pra juntar ouro' : 'Precisa nível ' + nvSugerido(n) + ' (você: ' + S.nv + ') · chefe no fim' }));
+  const jb = mapaEl.querySelector('.jogar');
+  i.append(Object.assign(document.createElement('small'), { textContent: S.repete ? '🔁 Repetindo este estágio pra juntar ouro' : S.ok[n] ? 'Vencido · repita pra juntar ouro' : 'Precisa nível ' + nvSugerido(n) + ' (você: ' + S.nv + ') · chefe no fim' }));
   const rb = mapaEl.querySelector('.repete'); rb.classList.toggle('on', !!S.repete); rb.setAttribute('aria-pressed', !!S.repete);
-  jb.textContent = D ? '🔒' : '▶ Jogar' + (contaN ? ' (' + contaN + ')' : '');
+  jb.textContent = '▶ Jogar' + (contaN ? ' (' + contaN + ')' : '');
 }
-function joga() { clearInterval(contaT); contaN = 0; if (!podeJogar(selN)) { aviso('Cumpra o desafio nas tarefas pra liberar este estágio.'); return } fechaMapa(); comecaEstagio(selN) }
+function joga() { clearInterval(contaT); contaN = 0; fechaMapa(); comecaEstagio(selN) }
 function fechaMapa() { clearInterval(contaT); contaN = 0; mapaEl.classList.remove('on') }
 mapaEl.querySelector('.jogar').onclick = joga;
 mapaEl.querySelector('.repete').onclick = () => { S.repete = !S.repete; salva(); infoMapa(); aviso(S.repete ? 'Repetir ligado: depois de vencer, joga este mesmo estágio de novo (bom pra juntar ouro).' : 'Repetir desligado: depois de vencer, vai pro próximo estágio.') };
@@ -1340,10 +1324,6 @@ function filtroCats(lst) { // fileira pra filtrar por categoria (só aparece com
   chip(null, 'Todas'); for (const c of CATS) if (c[0] && usadas.includes(c[0])) chip(c[0], c[1] + ' ' + c[2]); listaEl.append(f);
   return S.filtro && usadas.includes(S.filtro) ? lst.filter(t => (t.cat || '') === S.filtro) : lst;
 }
-function avisoDesafio() { // o desafio que falta pro próximo estágio, no alto da lista
-  const n = S.lib; if (n < 2 || S.ok[n] || podeJogar(n)) return; const D = desafio(n), d = el('div', 'desafio');
-  d.append(el('b', null, '📜 Desafio do estágio ' + n), el('span', null, D.t + ' (' + D.v + '/' + D.n + ')')); d.onclick = () => abreMapa(null, n); listaEl.append(d);
-}
 function linhaDiaria(t) {
   prep(t); const h = hoje(), tem = agendada(t, h), f = feito(t), sf = semFeita(t), max = ehMax(t);
   const it = el('div', 'item' + ((f && !max) || sf ? ' feito' : '') + (tem ? '' : ' folga') + (max && !f ? ' estourou' : '')); let b;
@@ -1364,14 +1344,13 @@ function lista() {
   const top = listaEl.scrollTop; listaEl.innerHTML = ''; document.getElementById('novo').hidden = aba === 'her' || aba === 'prog';
   document.getElementById('nPos').style.display = document.getElementById('nNeg').style.display = aba === 'hab' ? '' : 'none';
   document.getElementById('nTxt').placeholder = aba === 'hab' ? 'Novo hábito…' : aba === 'diar' ? 'Nova diária…' : 'Novo afazer…';
-  if (aba !== 'her' && aba !== 'prog') avisoDesafio();
   if (aba === 'hab') {
     if (!S.hab.length) listaEl.append(el('div', 'vazio', 'Hábitos são coisas que você faz várias vezes, boas (+) ou ruins (−). Toque em + quando fizer uma boa; em − quando cair numa ruim.'));
     for (const t of filtroCats(S.hab)) {
       const it = el('div', 'item');
       if (t.neg) { const b = el('button', 'chk menos', '−'); b.setAttribute('aria-label', 'Fiz o hábito ruim'); b.onclick = () => { t.cn = (t.cn || 0) + 1; t.totn = (t.totn || 0) + 1; machuca(DIF[t.d].dor, null); lista() }; it.append(b) }
       it.append(texto(t, 'hab', [t.c || t.cn ? mini((t.c ? '+' + t.c : '') + (t.cn ? ' −' + t.cn : '') + ' hoje') : null, t.tot || t.totn ? mini('total ' + (t.tot ? '+' + t.tot : '') + (t.totn ? ' −' + t.totn : '')) : null]));
-      if (t.pos) { const b = el('button', 'chk mais', '+'); b.setAttribute('aria-label', 'Fiz o hábito bom'); b.onclick = () => { t.c = (t.c || 0) + 1; t.tot = (t.tot || 0) + 1; S.cont.h++; ganha(DIF[t.d].xp, DIF[t.d].ouro); checaDesafios(); lista() }; it.append(b) }
+      if (t.pos) { const b = el('button', 'chk mais', '+'); b.setAttribute('aria-label', 'Fiz o hábito bom'); b.onclick = () => { t.c = (t.c || 0) + 1; t.tot = (t.tot || 0) + 1; S.cont.h++; ganha(DIF[t.d].xp, DIF[t.d].ouro); lista() }; it.append(b) }
       listaEl.append(it);
     }
   } else if (aba === 'diar') {
@@ -1386,7 +1365,7 @@ function lista() {
     const h = hoje();
     for (const t of filtroCats(S.afz)) {
       const it = el('div', 'item'), b = el('button', 'chk', ''); b.setAttribute('aria-label', 'Concluir');
-      b.onclick = () => { if (it.classList.contains('feito')) return; it.classList.add('feito'); b.textContent = '✓'; ganha(Math.round(DIF[t.d].xp * AFZ_X), Math.round(DIF[t.d].ouro * AFZ_X), 5); S.feitos++; S.cont.t++; S.hafz = S.hafz || {}; S.hafz[hoje()] = (S.hafz[hoje()] || 0) + 1; checaDesafios();
+      b.onclick = () => { if (it.classList.contains('feito')) return; it.classList.add('feito'); b.textContent = '✓'; ganha(Math.round(DIF[t.d].xp * AFZ_X), Math.round(DIF[t.d].ouro * AFZ_X), 5); S.feitos++; S.cont.t++; S.hafz = S.hafz || {}; S.hafz[hoje()] = (S.hafz[hoje()] || 0) + 1;
         setTimeout(() => { it.classList.add('some'); setTimeout(() => { S.afz.splice(S.afz.indexOf(t), 1); salva(); if (aba === 'afz') lista() }, 400) }, 500) };
       const k = t.prazo ? difDias(h, t.prazo) : null;
       it.append(b, texto(t, 'afz', [k == null ? null : mini(k < 0 ? 'atrasado (' + ddmm(t.prazo) + ')' : k === 0 ? '📅 hoje' : k === 1 ? '📅 amanhã' : '📅 até ' + ddmm(t.prazo), k < 0 ? 'mal' : null)])); listaEl.append(it);
@@ -1434,7 +1413,7 @@ function heroina() {
     for (const [v, t] of [[5, '5 min'], [8, '8 min'], [15, '15 min'], [0, 'Normal']]) { const bt = el('button', telaMin() === v ? 'on' : null, t); bt.onclick = () => { S.tela = v; salva(); if (!v) soltaTela(); else prendeTela(); lista() }; sg.append(bt) }
     st.append(el('p', 'dica', 'Quanto tempo a tela fica acesa sem você tocar, com o jogo aberto. Depois disso o celular apaga no tempo normal dele.'), sg); listaEl.append(st) }
   const s4 = el('div', 'sec'); s4.append(el('h3', null, 'Como funciona'));
-  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 10 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede uns 2 níveis a mais que o anterior (o nível aparece no mapa) e um desafio de hábito (📜) pra liberar, como fazer uma diária vários dias seguidos. Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. O herói luta sozinho (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Os monstros dão ouro pra loja. Hábito ruim e diária esquecida tiram vida; se zerar, perde e recomeça o estágio. Tudo fica salvo neste celular.';
+  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 10 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede uns 2 níveis a mais que o anterior (o nível aparece no mapa): sem fazer as tarefas você não sobe de nível e não passa. Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. O herói luta sozinho (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Os monstros dão ouro pra loja. Hábito ruim e diária esquecida tiram vida; se zerar, perde e recomeça o estágio. Tudo fica salvo neste celular.';
   s4.append(p); const zn = el('button', null, 'Zerar nível e missão (mantém as tarefas)'); zn.style.marginTop = '8px'; zn.onclick = () => { if (confirm('Voltar pro nível 1 e pro estágio 1? As tarefas ficam.')) { zeraProgresso(); salva(); location.reload() } }; s4.append(zn);
   const z = el('button', null, 'Começar do zero'); z.style.marginTop = '8px'; z.onclick = () => { if (confirm('Apagar todo o progresso e as tarefas?')) { localStorage.removeItem(CHAVE); location.reload() } }; s4.append(z);
   listaEl.append(s4);
@@ -1617,10 +1596,10 @@ function quadro(t) {
   numsPasso(dt); r.render(sc, cam);
 }
 new ResizeObserver(tam).observe(arena);
-comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); trocaAba(aba); hud(); carregar(S.pers); requestAnimationFrame(quadro); abreMapa(null, S.lib); // o jogo abre no mapa
+comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); try { trocaAba(aba) } catch (e) { console.error(e) } try { hud() } catch (e) { console.error(e) } carregar(S.pers); requestAnimationFrame(quadro); abreMapa(null, S.lib); // o jogo abre no mapa; um erro na lista nunca pode travar o carregamento
 // ---------------- tela acesa: o celular não apaga enquanto joga; só depois de uns minutos sem tocar (Screen Wake Lock) ----------------
 const TELA = { trava: null, ult: Date.now() };
-const telaMin = () => S.tela == null ? 8 : S.tela; // minutos sem tocar até deixar o celular apagar (0 = o tempo normal do celular)
+function telaMin() { return S.tela == null ? 8 : S.tela } // (função, não const: a aba Herói usa antes desta linha rodar) minutos sem tocar até deixar o celular apagar (0 = o tempo normal do celular)
 async function prendeTela() {
   if (!('wakeLock' in navigator) || TELA.trava || document.visibilityState !== 'visible' || !telaMin()) return;
   try { TELA.trava = await navigator.wakeLock.request('screen'); TELA.trava.addEventListener('release', () => { TELA.trava = null }) } catch (e) {}
@@ -1630,6 +1609,6 @@ for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, () => { TELA.u
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { TELA.ult = Date.now(); prendeTela() } });
 setInterval(() => { if (TELA.trava && Date.now() - TELA.ult > telaMin() * 60000) soltaTela() }, 15000);
 prendeTela();
-window.HAB = { MUS, compoeMusica, painelCheio, abreMapa, joga, montaMapa, TPf: () => TP, sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, viraDia, desafio, podeJogar, editor, trocaAba, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
+window.HAB = { MUS, compoeMusica, painelCheio, abreMapa, joga, montaMapa, TPf: () => TP, sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, viraDia, podeJogar, editor, trocaAba, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
 </script>
 </body></html>
