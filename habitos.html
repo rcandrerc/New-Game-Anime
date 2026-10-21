@@ -257,7 +257,7 @@ const ATR = [ // atributo, nome, o que faz
   ['des', 'Destreza', 'ataca mais rápido e acerta mais crítico'],
   ['vid', 'Vida', '+15 de vida máxima'],
   ['est', 'Estamina', 'mais energia pras skills e recupera mais rápido'],
-  ['mag', 'Magia', 'dano das magias, mais cura e libera as skills de magia'],
+  ['mag', 'Magia', 'dano das magias e libera as skills de magia'],
 ];
 const isoDe = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 const hoje = () => isoDe(new Date());
@@ -291,14 +291,17 @@ const atkMag = () => 8 + 2 * (S.nv - 1) + 3.5 * A_('mag');
 const critChance = () => Math.min(0.5, 0.06 + 0.015 * A_('des'));
 const velAtk = () => 1 + Math.min(0.6, 0.035 * A_('des'));
 const defesa = () => Math.min(0.6, 0.07 * S.armad); // fração do dano dos monstros que a armadura segura
-// ---------------- estágios (a missão é passar dos 10; cada um mais difícil que o outro) ----------------
+// ---------------- estágios (a missão é passar dos 20; cada um mais difícil que o outro) ----------------
 const EST = [ // nome, tempo do dia
   ['Trilha do Vale', 0], ['Beira do Lago', 0], ['Bosque Dourado', 1], ['Colina das Pedras', 1], ['Campo das Flores', 2],
-  ['Pinheiral', 2], ['Vale ao Entardecer', 3], ['Trilha do Crepúsculo', 3], ['Floresta Escura', 4], ['Covil do Demônio', 4]];
+  ['Pinheiral', 2], ['Vale ao Entardecer', 3], ['Trilha do Crepúsculo', 3], ['Floresta Escura', 4], ['Pé do Vulcão', 4],
+  ['Cinzas do Vulcão', 3], ['Brejo Sombrio', 4], ['Campos de Geada', 0], ['Picos Nevados', 1], ['Lago Congelado', 1],
+  ['Bosque dos Cogumelos', 2], ['Desfiladeiro Rubro', 2], ['Vale das Sombras', 3], ['Ruínas Antigas', 4], ['Covil do Demônio', 4]];
 const N_EST = EST.length; let HPM = 75, DNM = 9, KH = 0.065, KD = 0.065, LEST = [75, 8];
 // os monstros do estágio n crescem junto com a força de uma heroína no nível sugerido (e um pouco mais a cada estágio)
 const forcaM = n => { const L = nvSugerido(n); return [(6 + 7 * L) / 13 * (1 + KH * (n - 1)), (92 + 17 * L) / 109 * (1 + KD * (n - 1))] };
-const nvSugerido = n => 1 + 2 * (n - 1); // nível mínimo pra passar: uns 2 níveis (e as tarefas que eles pedem) por estágio
+const nvSugerido = n => n <= 10 ? 1 + 2 * (n - 1) : 19 + 3 * (n - 10); // nível mínimo pra passar: 2 níveis por estágio até o 10, depois 3 (a segunda metade pede mais tarefas)
+for (const k in S.ok) S.lib = Math.min(N_EST, Math.max(S.lib, +k + 1)); // quem já tinha vencido o antigo último estágio libera o próximo
 const perigo = () => F.n;
 const F = { n: 1, ini: 0, L: 60, G: 5, pos: [], prox: 0, feitos: 0, prog: 0, fim: false, t: 0 };
 
@@ -370,7 +373,17 @@ const BIOMAS = [
   { arv: { CommonTree_1: 2, CommonTree_3: 1, Pine_2: 1 }, nArv: 65, aberto: 4, pedras: 18, flores: 12, deco: 1, lago: 5.5, morro: 1.2, grama: 2400, solo: SOLO },
   { arv: { Pine_1: 2, Pine_3: 2, DeadTree_1: 2 }, nArv: 80, aberto: 3.8, pedras: 26, flores: 3, deco: 0.8, lago: 0, morro: 1.4, grama: 1900, solo: C(0x50703a, 0x6e8448, 0x9a8e5e, 0x3a5430, 0x8e7458, 0x765e46) },
   { arv: { Pine_1: 3, Pine_2: 3, Pine_3: 2, DeadTree_1: 1 }, nArv: 145, aberto: 3.2, pedras: 18, flores: 0, deco: 1.5, lago: 0, morro: 1.2, grama: 1800, solo: C(0x34562e, 0x48663a, 0x6a6a48, 0x243e22, 0x7a644a, 0x64503a), grCor: [0x23401e, 0x5a8040] },
-  { arv: { DeadTree_1: 4, Pine_3: 1 }, nArv: 50, aberto: 4.5, pedras: 48, flores: 0, deco: 0.3, lago: 0, morro: 1.6, grama: 900, solo: C(0x4e3e2e, 0x62483a, 0x705040, 0x382a22, 0x6e4430, 0x5a3626), grCor: [0x3a2a1e, 0x7a5a3a], covil: true }];
+  { arv: { DeadTree_1: 4, Pine_3: 1 }, nArv: 50, aberto: 4.5, pedras: 48, flores: 0, deco: 0.3, lago: 0, morro: 1.6, grama: 900, solo: C(0x4e3e2e, 0x62483a, 0x705040, 0x382a22, 0x6e4430, 0x5a3626), grCor: [0x3a2a1e, 0x7a5a3a], covil: true },
+  { arv: { DeadTree_1: 3, Pine_3: 1 }, nArv: 60, aberto: 4.2, pedras: 40, flores: 0, deco: 0.4, lago: 0, morro: 1.5, grama: 800, solo: C(0x5a5650, 0x6e6860, 0x8a8070, 0x403c38, 0x5e5048, 0x4a3e36), grCor: [0x3e3a34, 0x8a8478], covil: true },
+  { arv: { DeadTree_1: 2, CommonTree_3: 1, Pine_3: 1 }, nArv: 70, aberto: 3.8, pedras: 14, flores: 0, deco: 1.3, lago: 7, morro: 0.8, grama: 2600, solo: C(0x3e5a30, 0x56703a, 0x6e6a40, 0x2a4224, 0x5e5236, 0x4a4028), grCor: [0x2a4420, 0x6a7a3a] },
+  { arv: { Pine_1: 2, Pine_2: 2 }, nArv: 70, aberto: 4, pedras: 20, flores: 2, deco: 0.6, lago: 0, morro: 1.2, grama: 1500, solo: C(0x9aaab0, 0xc0ccd0, 0xd8dee0, 0x7a8c90, 0xa8a49a, 0x8c887e), grCor: [0x8aa0a0, 0xe8f0f0] },
+  { arv: { Pine_1: 2, Pine_3: 2 }, nArv: 55, aberto: 4, pedras: 60, flores: 0, deco: 0.4, lago: 0, morro: 2.4, grama: 900, solo: C(0xb4c0c8, 0xd0d8de, 0xb4b8bc, 0x96a4ae, 0xa09c94, 0x8a8680), grCor: [0xb8c4cc, 0xffffff] },
+  { arv: { Pine_2: 2, Pine_3: 1, DeadTree_1: 1 }, nArv: 50, aberto: 4.5, pedras: 24, flores: 0, deco: 0.5, lago: 9, morro: 1.1, grama: 1000, solo: C(0xa6b8c4, 0xc6d2da, 0xb4bcc0, 0x8498a6, 0xa8a8a0, 0x908c86), grCor: [0xa0b4bc, 0xf4f8fa] },
+  { arv: { CommonTree_1: 2, CommonTree_3: 2, Pine_2: 1 }, nArv: 90, aberto: 3.6, pedras: 12, flores: 8, deco: 2.4, lago: 0, morro: 1, grama: 2400, solo: C(0x4e6a3a, 0x6a8a48, 0x8a8456, 0x36502c, 0x8a6a4c, 0x72583e), grCor: [0x3a5a2c, 0xa0c060] },
+  { arv: { DeadTree_1: 2, Pine_3: 1 }, nArv: 35, aberto: 4.5, pedras: 70, flores: 2, deco: 0.5, lago: 0, morro: 2.2, grama: 900, solo: C(0x9a5a3a, 0xb8704a, 0xc89060, 0x7a4430, 0xa85a3a, 0x8a4a30), grCor: [0x7a5030, 0xd0a060] },
+  { arv: { Pine_1: 2, Pine_3: 2, DeadTree_1: 2 }, nArv: 120, aberto: 3.4, pedras: 22, flores: 0, deco: 1.2, lago: 4.5, morro: 1.3, grama: 1600, solo: C(0x2e3e30, 0x3e5038, 0x5a5a46, 0x1e2c22, 0x5a4a3c, 0x46382c), grCor: [0x1e3020, 0x4a6040] },
+  { arv: { DeadTree_1: 3, CommonTree_2: 1 }, nArv: 55, aberto: 4.3, pedras: 55, flores: 2, deco: 0.8, lago: 0, morro: 1.4, grama: 1400, solo: C(0x5a6040, 0x707850, 0x8a8a68, 0x444a32, 0x7a6a56, 0x625444), grCor: [0x3e4a2c, 0x8a9060], covil: true },
+  { arv: { DeadTree_1: 4 }, nArv: 45, aberto: 4.6, pedras: 60, flores: 0, deco: 0.2, lago: 0, morro: 1.8, grama: 600, solo: C(0x3e2a24, 0x52302a, 0x6a3a2e, 0x2a1c18, 0x6a2a1e, 0x521e16), grCor: [0x2e1a16, 0x7a3a2a], covil: true }];
 const MAPA = new THREE.Group(); sc.add(MAPA);
 const VENTO = { value: 0 };
 const _gl = new THREE.GLTFLoader(), _mA = new THREE.Matrix4(), _vA = new THREE.Vector3(), _qA = new THREE.Quaternion(), _sA = new THREE.Vector3(), _Y = new THREE.Vector3(0, 1, 0);
@@ -565,7 +578,7 @@ function estrondo(vol = 0.8) { // explosão grave
 const P = { x: 0, z: 0, y: 0, face: 0, si: 0, atk: null, desm: 0, comem: 0, hit: 0, en: 40, atkFila: false };
 const player = new THREE.Group(); sc.add(player);
 let R = null, mix = null, cur = null, pedido = 0, K = 0.64, ALT = 1.55, RUN = 2.9; const cache = {};
-const ONCE = new Set(['Esp1', 'Esp2', 'Esp3', 'Esp4', 'EspCombo', 'EspGiro', 'EspSalto', 'EspRaio', 'MagBola', 'MagChao', 'MagOnda', 'MagCura', 'Sword_Dash_Full', 'Sword_A', 'Sword_B', 'Sword_C',
+const ONCE = new Set(['Esp1', 'Esp2', 'Esp3', 'Esp4', 'EspCombo', 'EspGiro', 'EspSalto', 'EspRaio', 'MagBola', 'MagChao', 'MagOnda', 'Sword_Dash_Full', 'Sword_A', 'Sword_B', 'Sword_C',
   'Spell_Shoot', 'Hit_A', 'Death_A', 'Ranged_Magic_Raise', 'Ranged_Magic_Summon']);
 function tocar(n, rate = 1, fade = 0.15) {
   const a = R && R.act[n]; if (!a) return;
@@ -646,7 +659,7 @@ const ANEIS = [0, 1].map(() => { const m = new THREE.Mesh(new THREE.RingGeometry
 let anelI = 0;
 function anel(x, y, z, r, cor) { const a = ANEIS[anelI++ % 2]; a.m.position.set(x, y + 0.08, z); a.m.material.color.set(cor); a.t = 0; a.r = r; a.m.visible = true }
 function aneisPasso(dt) { for (const a of ANEIS) { if (!a.m.visible) continue; a.t += dt; const u = a.t / 0.45; if (u >= 1) { a.m.visible = false; continue } a.m.scale.setScalar(0.2 + a.r * (1 - (1 - u) * (1 - u))); a.m.material.opacity = 1 - u } }
-const FXCOR = { magbola: [0xfff2b0, 0xff7a1a], magchao: [0xffe6a0, 0xff4a12], magonda: [0xbfe6ff, 0x2a7dff], magcura: [0xeaffef, 0x3fe07a] };
+const FXCOR = { magbola: [0xfff2b0, 0xff7a1a], magchao: [0xffe6a0, 0xff4a12], magonda: [0xbfe6ff, 0x2a7dff] };
 for (const k of ['giro', 'investida', 'espgiro', 'espsalto', 'espraio']) FXCOR[k] = [0xfff0b0, 0xff3d0a];
 const comFx = t => !!FXCOR[t];
 const ehMagia = t => /^mag/.test(t);
@@ -728,7 +741,7 @@ function fxConjura(tipo) { // começo da skill: círculo no chão, coluna de luz
   const [cb, cc] = FXCOR[tipo] || FXCOR.magbola;
   FXC.tipo = tipo; FXC.t = 0; FXC.vivo = true; FXC.r = (tipo === 'magchao' ? 1.75 : tipo === 'magonda' ? 1.65 : ehMagia(tipo) ? 1.45 : 1.35) * 2.42 * K;
   FXC.a.material.color.set(cc); FXC.b.material.color.set(cc); FXC.col.material.color.set(cc); FXC.g.visible = FXC.a.visible = FXC.b.visible = true;
-  luzMagia.color.set(cc); fumacaChao(P.x, P.y, P.z, FXC.r * 0.9, 22, tipo === 'magcura' ? 0xc8e8d0 : 0x8a8496);
+  luzMagia.color.set(cc); fumacaChao(P.x, P.y, P.z, FXC.r * 0.9, 22, 0x8a8496);
   for (let i = 0; i < 36; i++) { const a = i / 36 * 6.283; labareda(P.x + Math.cos(a) * FXC.r * 0.9, P.y + 0.05, P.z + Math.sin(a) * FXC.r * 0.9, cb, cc, 1.6) }
   for (let i = 0; i < 24; i++) { const a = Math.random() * 6.283, d = FXC.r * Math.sqrt(Math.random()) * 0.8; labareda(P.x + Math.cos(a) * d, P.y + 0.05, P.z + Math.sin(a) * d, cb, cc, 1.2) }
   fxSurto(P.x, P.y + 0.1, P.z, 40, cb, cc, 7); luzFlash = Math.max(luzFlash, 0.9); tremor = Math.max(tremor, 0.1);
@@ -742,11 +755,6 @@ function fxArea(x, y, z, r, tipo) { // explosão de área: círculo gigante, fog
   if (tipo === 'magonda') for (let i = 0; i < 60; i++) { const a = i / 60 * 6.283, v = r * 2.6; part(FOGO, x + Math.cos(a) * 0.4, y + 0.3 * H, z + Math.sin(a) * 0.4, Math.cos(a) * v, 0, Math.sin(a) * v, 0.45, 0.35 * H, 0.15 * H, cb, cc, 1, 0, 1.2) }
   fxSurto(x, y + 0.4 * H, z, tipo === 'magchao' ? 50 : 30, cb, cc, 9); fumacaChao(x, y, z, r * 0.8, tipo === 'magchao' ? 40 : 24, 0x77707e, 1.6);
   part(FOGO, x, y + 0.5 * H, z, 0, 0, 0, 0.3, r * 0.7, r * 1.4, 0xffffff, cc, 0.6);
-}
-function fxCura(x, y, z) { // espiral verde subindo
-  vush(0.9, 300, 1200, 0.3); const [cb, cc] = FXCOR.magcura, H = 2.42 * K; luzFlash = 0.8; luzMagia.color.set(cc);
-  for (let i = 0; i < 46; i++) { const a = i * 0.55, d = 0.45 * H; part(FOGO, x + Math.cos(a) * d, y + i * 0.018 * H, z + Math.sin(a) * d, -Math.sin(a) * 0.6, rnd(1.4, 2.4) * K, Math.cos(a) * 0.6, rnd(0.9, 1.4), 0.16 * H, 0.04 * H, cb, cc, 1, 0.4, 0.4) }
-  part(FOGO, x, y + 0.5 * H, z, 0, 0, 0, 0.5, 0.6 * H, 1.6 * H, 0xffffff, cc, 0.7);
 }
 function fxPasso(dt) {
   FOGO.mat.uniforms.esc.value = FUMA.mat.uniforms.esc.value = r.domElement.height / (2 * Math.tan(cam.fov * Math.PI / 360));
@@ -807,7 +815,6 @@ const SKILLS = {
   espraio: { nome: 'Combo relâmpago', lado: 'E', req: 6, en: 28, desc: '3 cortes e um salto', a: 'EspRaio', dur: 3.53, hits: [0.14, 0.4, 0.6, 0.76], alc: 2.0, mult: 1.5, cd: 7, crit: true, raiz: 1, vel: 1.7 },
   giro: { nome: 'Fúria', lado: 'E', req: 9, en: 35, desc: 'o combo inteiro da espada, sem parar', a: 'EspCombo', dur: 3.66, hits: [0.12, 0.38, 0.66, 0.86], alc: 2.0, mult: 1.9, cd: 9, crit: true, raiz: 1, vel: 1.75 },
   magbola: { nome: 'Bola de fogo', lado: 'M', req: 1, en: 10, desc: 'tiro de fogo à distância', a: 'MagBola', dur: 2.3, orbe: 0.43, mult: 2.4, cd: 2, vel: 1.7, ate: 0.33 },
-  magcura: { nome: 'Cura', lado: 'M', req: 2, en: 22, desc: 'recupera vida (mais com Magia)', a: 'MagCura', dur: 2.67, cura: { at: 0.5 }, cd: 9, vel: 1.7, ate: 0.4 },
   magchao: { nome: 'Explosão', lado: 'M', req: 4, en: 28, desc: 'explosão de fogo no chão em volta', a: 'MagChao', dur: 2.97, area: { at: 0.6, r: 3.6, mult: 3.2, cor: 0xff8a3d }, cd: 7, raiz: 1, vel: 1.6 },
   magonda: { nome: 'Onda arcana', lado: 'M', req: 6, en: 26, desc: 'onda de gelo que empurra tudo', a: 'MagOnda', dur: 3.53, area: { at: 0.5, r: 4.2, mult: 2.3, cor: 0x6fc8ff, empurra: 1 }, cd: 6, vel: 1.8, ate: 0.4 },
 };
@@ -857,7 +864,6 @@ function ataquePasso(dt) {
     A.areaFeito = true; const rr = g.area.r * K / 0.68; anel(P.x, P.y, P.z, rr, g.area.cor); tremor = 0.18; if (comFx(A.tipo)) fxArea(P.x, P.y, P.z, rr, A.tipo);
     for (const a of [...BICHOS]) { if (!a.vivo) continue; const dx = a.x - P.x, dz = a.z - P.z; if (Math.hypot(dx, dz) < rr + a.r) { acerta(a, ehMagia(A.tipo) ? danoMag(g.area.mult) : danoEsp(g.area.mult), Math.random() < critChance(), dx, dz, g.area.cor); if (g.area.empurra) { const l = Math.hypot(dx, dz) || 1; a.kx = dx / l * 7 / a.peso; a.kz = dz / l * 7 / a.peso } } }
   }
-  if (g.cura && !A.curaFeita && x >= g.cura.at) { A.curaFeita = true; const v = Math.min(hpMax() - S.hp, Math.round(25 + 7 * A_('mag'))); S.hp += v; anel(P.x, P.y, P.z, 1.4 * K / 0.68, 0x7dffa0); faiscas(P.x, P.y + 1, P.z, 16, 0x7dffa0); fxCura(P.x, P.y, P.z); numero('+' + v, P.x, P.y + ALT + 0.2, P.z, 'cura'); hud() }
   const corta = A.tipo === 'combo' && (A.atkFila || P.atkFila) && g.hits && x > g.hits[g.hits.length - 1] + 0.1;
   if (A.t >= du || corta) { P.atk = null; comboT = 0; if ((A.atkFila || P.atkFila) && A.tipo === 'combo') { P.atkFila = false; atacar('combo') } }
   if (P.atkFila && P.atk) { P.atk.atkFila = true; P.atkFila = false }
@@ -1001,7 +1007,6 @@ function bebePocao() {
 function autoLuta(alvo, d) {
   const perto = BICHOS.filter(b => b.vivo && Math.hypot(b.x - P.x, b.z - P.z) < 4.5).length;
   const pode = k => liberada(k) && CD[k] <= 0 && P.en >= SKILLS[k].en;
-  if (S.hp < hpMax() * 0.45 && pode('magcura')) return atacar('magcura');
   if (d < 2.6 && (perto >= 2 || alvo.chefe)) for (const k of ['magchao', 'espsalto', 'magonda', 'giro', 'espgiro']) if (pode(k) && Math.random() < 0.6) return atacar(k);
   if (d > 2.5 && pode('magbola')) return atacar('magbola');
   if (d < 1.8) { for (const k of ['espraio', 'giro', 'espgiro', 'investida', 'magbola']) if (pode(k) && Math.random() < 0.3) return atacar(k); return atacar('combo') }
@@ -1156,10 +1161,11 @@ function viraDia() { // fecha o(s) dia(s) que passaram: racha, histórico e vida
 }
 viraDia(); setInterval(() => { viraDia(); if (aba === 'diar') lista() }, 60000);
 
-// ---------------- mapa da missão: um pergaminho com os 10 estágios ligados por caminhos (estilo Eternium) ----------------
+// ---------------- mapa da missão: um pergaminho com os 20 estágios ligados por caminhos (estilo Eternium) ----------------
 const mapaEl = document.getElementById('mapa'), roloEl = mapaEl.querySelector('.rolo'), folhaEl = mapaEl.querySelector('.folha'), papelEl = folhaEl.querySelector('canvas');
-const VW = 400, VH = 1820; // tamanho do desenho (a folha estica pra largura da tela e rola na vertical)
-const NOS = [[112, 1655], [292, 1505], [118, 1350], [286, 1195], [112, 1040], [290, 885], [124, 730], [282, 575], [120, 420], [232, 238]];
+const OFF = 1700, VW = 400, VH = 1820 + OFF; // tamanho do desenho (a folha estica pra largura da tela e rola na vertical); OFF: os estágios 1 a 10 ficam embaixo, 11 a 20 em cima
+const NOS = [[112, 1655], [292, 1505], [118, 1350], [286, 1195], [112, 1040], [290, 885], [124, 730], [282, 575], [120, 420], [232, 238]].map(([x, y]) => [x, y + OFF])
+  .concat([[112, 1760], [292, 1600], [118, 1440], [286, 1280], [112, 1120], [290, 960], [124, 800], [282, 640], [120, 480], [232, 250]]);
 function desenhaPapel() {
   const W = folhaEl.clientWidth || 400, px = Math.min(2, devicePixelRatio || 1), k = W / VW;
   papelEl.width = Math.round(W * px); papelEl.height = Math.round(VH * k * px);
@@ -1168,9 +1174,9 @@ function desenhaPapel() {
   const tinta = 'rgba(70,42,18,', borda = (x, y) => Math.min(x, VW - x, y, VH - y);
   // papel: base amarelada com manchas, fibras e as bordas queimadas e rasgadas
   g.fillStyle = '#e9d5a1'; g.fillRect(0, 0, VW, VH);
-  for (let i = 0; i < 700; i++) { const x = ra(0, VW), y = ra(0, VH), r = ra(6, 46), gr = g.createRadialGradient(x, y, 0, x, y, r), esc = rr() < 0.6;
+  for (let i = 0; i < 1350; i++) { const x = ra(0, VW), y = ra(0, VH), r = ra(6, 46), gr = g.createRadialGradient(x, y, 0, x, y, r), esc = rr() < 0.6;
     gr.addColorStop(0, esc ? 'rgba(150,105,50,' + ra(0.04, 0.1) + ')' : 'rgba(255,245,215,' + ra(0.05, 0.14) + ')'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2) }
-  g.lineWidth = 0.4; for (let i = 0; i < 500; i++) { const x = ra(0, VW), y = ra(0, VH), a = ra(0, 6.28), l = ra(3, 12); g.strokeStyle = 'rgba(120,85,40,' + ra(0.05, 0.12) + ')'; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke() }
+  g.lineWidth = 0.4; for (let i = 0; i < 950; i++) { const x = ra(0, VW), y = ra(0, VH), a = ra(0, 6.28), l = ra(3, 12); g.strokeStyle = 'rgba(120,85,40,' + ra(0.05, 0.12) + ')'; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke() }
   // dobras do pergaminho
   for (const y of [VH * 0.25, VH * 0.5, VH * 0.75]) { const gr = g.createLinearGradient(0, y - 8, 0, y + 8); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(0.5, 'rgba(110,70,30,.13)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, y - 8, VW, 16) }
   // ---- desenhos a tinta de cada região ----
@@ -1184,7 +1190,8 @@ function desenhaPapel() {
   const morro = (x, y, w) => { linha(0.55, 1); g.beginPath(); g.moveTo(x - w, y); g.quadraticCurveTo(x, y - w * 0.7, x + w, y); g.stroke(); linha(0.25, 0.7); g.beginPath(); g.moveTo(x - w * 0.5, y - 2); g.quadraticCurveTo(x, y - w * 0.45, x + w * 0.5, y - 2); g.stroke() };
   const capim = (x, y) => { linha(0.45, 0.7); g.beginPath(); g.moveTo(x - 3, y); g.lineTo(x - 1, y - 4); g.moveTo(x, y); g.lineTo(x, y - 5); g.moveTo(x + 3, y); g.lineTo(x + 1, y - 4); g.stroke() };
   const flor = (x, y, c) => { g.fillStyle = c; g.beginPath(); g.arc(x, y, 1.8, 0, 7); g.fill() };
-  const longe = (x, y, d) => NOS.every(([a, b]) => Math.hypot(a - x, b - y) > d); // não desenha em cima das bolinhas
+  let oy = OFF; const longe = (x, y, d) => NOS.every(([a, b]) => Math.hypot(a - x, b - y - oy) > d); // não desenha em cima das bolinhas (oy: deslocamento da metade de baixo)
+  g.save(); g.translate(0, OFF); // metade de baixo: estágios 1 a 10
   // rio que desce do norte, passa pelo lago e sai no sul
   { const rio = [[352, 0], [330, 160], [360, 330], [335, 520], [356, 720], [330, 980], [348, 1220], [320, 1420], [312, 1470], [260, 1600], [300, 1720], [270, VH]];
     for (const [w, a] of [[9, 'rgba(120,160,170,.45)'], [1.2, tinta + '.6)']]) { g.strokeStyle = a; g.lineWidth = w; g.beginPath(); g.moveTo(...rio[0]); for (let i = 1; i < rio.length - 1; i++) g.quadraticCurveTo(rio[i][0], rio[i][1], (rio[i][0] + rio[i + 1][0]) / 2, (rio[i][1] + rio[i + 1][1]) / 2); g.lineTo(...rio[rio.length - 1]); g.stroke() } }
@@ -1215,12 +1222,52 @@ function desenhaPapel() {
   // 9 Floresta Escura (com uma sombra por cima)
   { const gr = g.createRadialGradient(120, 430, 10, 120, 430, 150); gr.addColorStop(0, 'rgba(40,40,30,.28)'); gr.addColorStop(1, 'rgba(40,40,30,0)'); g.fillStyle = gr; g.fillRect(0, 280, 300, 300) }
   for (let i = 0; i < 70; i++) { const x = ra(15, 260), y = ra(340, 520); if (longe(x, y, 30)) pinheiro(x, y, ra(0.9, 1.3), 'rgba(40,60,36,.7)') }
-  // 10 Covil do Demônio: vulcão com fumaça e uma caveira
+  // 10 Pé do Vulcão: vulcão com fumaça e uma caveira
   { const x = 232, y = 205; g.fillStyle = 'rgba(110,60,40,.5)'; g.beginPath(); g.moveTo(x - 70, y + 20); g.lineTo(x - 18, y - 60); g.lineTo(x + 18, y - 60); g.lineTo(x + 70, y + 20); g.closePath(); g.fill(); linha(0.9, 1.3); g.stroke();
     g.fillStyle = 'rgba(210,60,30,.6)'; g.beginPath(); g.moveTo(x - 18, y - 60); g.lineTo(x - 8, y - 30); g.lineTo(x, y - 50); g.lineTo(x + 9, y - 25); g.lineTo(x + 18, y - 60); g.closePath(); g.fill();
     linha(0.4, 1); for (let i = 0; i < 4; i++) { g.beginPath(); g.arc(x - 6 + i * 6, y - 74 - i * 12, 7 + i * 2, 0, 7); g.stroke() }
     for (const [mx, my, s] of [[80, 230, 1.4], [360, 220, 1.3], [130, 160, 1], [330, 150, 1.1], [40, 120, 1.2], [370, 90, 1]]) monte(mx, my, s, true);
     for (let i = 0; i < 12; i++) { const sx = ra(140, 330), sy = ra(240, 320); if (longe(sx, sy, 30)) seca(sx, sy, ra(0.8, 1.1)) } }
+  g.restore(); oy = 0;
+  // metade de cima: estágios 11 a 20 (o rio continua subindo)
+  { const rio = [[300, 0], [340, 200], [318, 430], [360, 700], [336, 1000], [358, 1300], [338, 1520], [352, OFF]];
+    for (const [w, a] of [[9, 'rgba(120,160,170,.45)'], [1.2, tinta + '.6)']]) { g.strokeStyle = a; g.lineWidth = w; g.beginPath(); g.moveTo(...rio[0]); for (let i = 1; i < rio.length - 1; i++) g.quadraticCurveTo(rio[i][0], rio[i][1], (rio[i][0] + rio[i + 1][0]) / 2, (rio[i][1] + rio[i + 1][1]) / 2); g.lineTo(...rio[rio.length - 1]); g.stroke() } }
+  // 11 Cinzas do Vulcão: árvores secas e cinza no chão
+  for (let i = 0; i < 60; i++) { const x = ra(20, 240), y = ra(1680, 1800); if (longe(x, y, 28)) { g.fillStyle = 'rgba(90,85,80,' + ra(0.2, 0.4) + ')'; g.beginPath(); g.arc(x, y, ra(1.5, 4), 0, 7); g.fill() } }
+  for (let i = 0; i < 12; i++) { const x = ra(20, 240), y = ra(1680, 1800); if (longe(x, y, 32)) seca(x, y, ra(0.8, 1.1)) }
+  // 12 Brejo Sombrio: água parada, juncos e árvores secas
+  { g.fillStyle = 'rgba(80,110,90,.45)'; g.beginPath(); g.ellipse(250, 1660, 34, 16, 0.2, 0, 7); g.fill(); linha(0.7, 1); g.stroke();
+    for (let i = 0; i < 26; i++) { const x = ra(190, 390), y = ra(1540, 1700); if (longe(x, y, 30)) capim(x, y) }
+    for (let i = 0; i < 8; i++) { const x = ra(190, 390), y = ra(1540, 1700); if (longe(x, y, 32)) seca(x, y, ra(0.7, 1)) } }
+  // 13 Campos de Geada: pinheiros com gelo e manchas brancas
+  for (let i = 0; i < 40; i++) { const x = ra(20, 230), y = ra(1370, 1520), r = ra(5, 14); if (longe(x, y, 30)) { g.fillStyle = 'rgba(245,250,255,.5)'; g.beginPath(); g.ellipse(x, y, r, r * 0.5, 0, 0, 7); g.fill() } }
+  for (let i = 0; i < 18; i++) { const x = ra(20, 230), y = ra(1370, 1520); if (longe(x, y, 30)) pinheiro(x, y, ra(0.8, 1.1), 'rgba(110,140,130,.55)') }
+  // 14 Picos Nevados
+  for (const [x, y, s] of [[230, 1330, 1.2], [340, 1260, 1.5], [380, 1340, 1], [210, 1250, 0.9], [360, 1200, 1.1]]) monte(x, y, s, true);
+  // 15 Lago Congelado: gelo rachado
+  { g.fillStyle = 'rgba(200,225,240,.6)'; g.beginPath(); g.ellipse(170, 1170, 46, 24, 0.15, 0, 7); g.fill(); linha(0.8, 1.2); g.stroke(); linha(0.4, 0.7);
+    for (const [x, y, a] of [[150, 1165, 0.4], [180, 1175, -0.6], [195, 1160, 1.2]]) { g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * 12, y + Math.sin(a) * 6); g.lineTo(x + Math.cos(a) * 18, y + Math.sin(a) * 4); g.stroke() }
+    for (let i = 0; i < 10; i++) { const x = ra(20, 230), y = ra(1060, 1230); if (longe(x, y, 30) && Math.hypot((x - 170) / 50, (y - 1170) / 28) > 1) pinheiro(x, y, ra(0.8, 1)) } }
+  // 16 Bosque dos Cogumelos
+  for (let i = 0; i < 26; i++) { const x = ra(190, 390), y = ra(890, 1040), s = ra(0.7, 1.3); if (longe(x, y, 30)) { linha(0.7, 0.9); g.fillStyle = 'rgba(240,230,210,.8)'; g.fillRect(x - 1.5 * s, y - 5 * s, 3 * s, 6 * s); g.strokeRect(x - 1.5 * s, y - 5 * s, 3 * s, 6 * s);
+    g.fillStyle = i % 3 ? 'rgba(200,60,50,.7)' : 'rgba(170,110,200,.7)'; g.beginPath(); g.arc(x, y - 5 * s, 6 * s, Math.PI, 0); g.closePath(); g.fill(); g.stroke() } }
+  for (let i = 0; i < 10; i++) { const x = ra(190, 390), y = ra(890, 1040); if (longe(x, y, 32)) arvore(x, y, ra(0.8, 1.1)) }
+  // 17 Desfiladeiro Rubro: paredões vermelhos
+  for (const [x, y, s] of [[40, 860, 1.2], [200, 850, 1.1], [60, 760, 0.9], [210, 770, 1]]) { g.fillStyle = 'rgba(180,80,50,.4)'; g.beginPath(); g.moveTo(x - 20 * s, y); g.lineTo(x - 12 * s, y - 26 * s); g.lineTo(x + 10 * s, y - 28 * s); g.lineTo(x + 20 * s, y); g.closePath(); g.fill(); linha(0.8, 1.1); g.stroke() }
+  for (let i = 0; i < 12; i++) { const x = ra(20, 230), y = ra(730, 880); if (longe(x, y, 30)) { g.fillStyle = 'rgba(170,90,60,.6)'; g.beginPath(); g.ellipse(x, y, 4, 2.6, 0, 0, 7); g.fill(); linha(0.7, 0.8); g.stroke() } }
+  // 18 Vale das Sombras (escurecido)
+  { const gr = g.createRadialGradient(290, 620, 10, 290, 620, 140); gr.addColorStop(0, 'rgba(30,30,45,.3)'); gr.addColorStop(1, 'rgba(30,30,45,0)'); g.fillStyle = gr; g.fillRect(140, 470, 260, 300) }
+  for (let i = 0; i < 40; i++) { const x = ra(190, 390), y = ra(540, 720); if (longe(x, y, 30)) (rr() < 0.4 ? seca : pinheiro)(x, y, ra(0.8, 1.2), 'rgba(40,50,46,.7)') }
+  // 19 Ruínas Antigas: colunas quebradas
+  for (const [x, y, h] of [[50, 520, 22], [70, 515, 14], [190, 470, 18], [210, 500, 26], [40, 420, 12], [200, 420, 16]]) { g.fillStyle = 'rgba(200,190,170,.7)'; g.fillRect(x - 4, y - h, 8, h); linha(0.8, 0.9); g.strokeRect(x - 4, y - h, 8, h); g.beginPath(); g.moveTo(x - 4, y - h); g.lineTo(x - 1, y - h - 4); g.lineTo(x + 2, y - h); g.stroke() }
+  for (let i = 0; i < 8; i++) { const x = ra(20, 240), y = ra(400, 560); if (longe(x, y, 32)) seca(x, y, ra(0.7, 1)) }
+  // 20 Covil do Demônio: castelo sombrio com brilho vermelho
+  { const x = 232, y = 215, gr = g.createRadialGradient(x, y - 30, 5, x, y - 30, 110); gr.addColorStop(0, 'rgba(200,40,20,.35)'); gr.addColorStop(1, 'rgba(200,40,20,0)'); g.fillStyle = gr; g.fillRect(x - 120, y - 150, 240, 220);
+    g.fillStyle = 'rgba(60,40,40,.6)'; linha(0.9, 1.2);
+    for (const [tx, w, h] of [[-48, 16, 70], [-26, 20, 52], [0, 26, 92], [26, 20, 52], [48, 16, 70]]) { g.fillRect(x + tx - w / 2, y - h, w, h); g.strokeRect(x + tx - w / 2, y - h, w, h); g.beginPath(); g.moveTo(x + tx - w / 2 - 2, y - h); g.lineTo(x + tx, y - h - 16); g.lineTo(x + tx + w / 2 + 2, y - h); g.closePath(); g.fill(); g.stroke() }
+    g.fillStyle = 'rgba(230,80,30,.8)'; for (const [tx, ty] of [[-48, 50], [0, 70], [48, 50], [0, 40]]) g.fillRect(x + tx - 2, y - ty, 4, 6);
+    for (const [mx, my, s] of [[70, 240, 1.3], [370, 230, 1.2], [120, 150, 1], [340, 140, 1.1], [40, 110, 1.2]]) monte(mx, my, s, false);
+    for (let i = 0; i < 10; i++) { const sx = ra(120, 340), sy = ra(260, 330); if (longe(sx, sy, 30)) seca(sx, sy, ra(0.8, 1.1)) } }
   // caminhos entre os estágios: tracejado de tinta (vermelho onde já passou)
   for (let i = 1; i < NOS.length; i++) {
     const [ax, ay] = NOS[i - 1], [bx, by] = NOS[i], cx = (ax + bx) / 2 + (i % 2 ? -40 : 40), cy = (ay + by) / 2, feito = S.ok[i];
@@ -1413,7 +1460,7 @@ function heroina() {
     for (const [v, t] of [[5, '5 min'], [8, '8 min'], [15, '15 min'], [0, 'Normal']]) { const bt = el('button', telaMin() === v ? 'on' : null, t); bt.onclick = () => { S.tela = v; salva(); if (!v) soltaTela(); else prendeTela(); lista() }; sg.append(bt) }
     st.append(el('p', 'dica', 'Quanto tempo a tela fica acesa sem você tocar, com o jogo aberto. Depois disso o celular apaga no tempo normal dele.'), sg); listaEl.append(st) }
   const s4 = el('div', 'sec'); s4.append(el('h3', null, 'Como funciona'));
-  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 10 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede uns 2 níveis a mais que o anterior (o nível aparece no mapa): sem fazer as tarefas você não sobe de nível e não passa. Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. O herói luta sozinho (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Os monstros dão ouro pra loja. Hábito ruim e diária esquecida tiram vida; se zerar, perde e recomeça o estágio. Tudo fica salvo neste celular.';
+  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 20 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede uns 2 níveis a mais que o anterior, 3 a partir do 11 (o nível aparece no mapa): sem fazer as tarefas você não sobe de nível e não passa. Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. O herói luta sozinho (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Os monstros dão ouro pra loja. Hábito ruim e diária esquecida tiram vida; se zerar, perde e recomeça o estágio. Tudo fica salvo neste celular.';
   s4.append(p); const zn = el('button', null, 'Zerar nível e missão (mantém as tarefas)'); zn.style.marginTop = '8px'; zn.onclick = () => { if (confirm('Voltar pro nível 1 e pro estágio 1? As tarefas ficam.')) { zeraProgresso(); salva(); location.reload() } }; s4.append(zn);
   const z = el('button', null, 'Começar do zero'); z.style.marginTop = '8px'; z.onclick = () => { if (confirm('Apagar todo o progresso e as tarefas?')) { localStorage.removeItem(CHAVE); location.reload() } }; s4.append(z);
   listaEl.append(s4);
