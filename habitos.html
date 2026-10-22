@@ -128,6 +128,7 @@
   .atr .v{font-weight:900;font-size:18px;min-width:28px;text-align:center}
   .atr button{width:38px;height:38px;padding:0;font-size:20px;font-weight:900;border-radius:10px;background:#2f9a64;border-color:#4fc488}
   .atr button:disabled{opacity:.25}
+  .sec button.reset{width:100%;font-weight:800;background:#8a2e2e;border-color:#c05050}
   .skills{display:flex;flex-direction:column;gap:6px}
   .sk1{display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:10px;background:#2a3350;border-left:4px solid var(--esp)}
   .sk1.M{border-left-color:var(--mag)} .sk1.off{opacity:.5}
@@ -249,7 +250,9 @@ const PERS = [ // arquivo, nome
   ['avatarsample_a', 'Avatar A'], ['avatarsample_b', 'Avatar B'], ['avatarsample_c', 'Avatar C'],
 ];
 // recompensa por dificuldade: XP, ouro e vida perdida (hábito ruim ou diária esquecida)
-const DIF = { f: { n: 'Fácil', xp: 10, ouro: 3, dor: 6 }, m: { n: 'Médio', xp: 20, ouro: 6, dor: 12 }, d: { n: 'Difícil', xp: 35, ouro: 10, dor: 20 } };
+const DIF = { f: { n: 'Fácil', xp: 10, ouro: 3, dor: 0.06, cura: 0.04 }, m: { n: 'Médio', xp: 20, ouro: 6, dor: 0.11, cura: 0.07 }, d: { n: 'Difícil', xp: 35, ouro: 10, dor: 0.17, cura: 0.1 } }; // dor e cura: fração da vida máxima
+const dorDe = d => Math.round(hpMax() * DIF[d].dor), curaDe = d => Math.round(hpMax() * DIF[d].cura);
+const REGEN_H = 16; // horas pra vida encher do zero (de noite ela recupera tudo)
 const AFZ_X = 1.5; // afazer (tarefa única) vale 50% a mais
 const PTS_NIVEL = 3; // pontos de atributo a cada nível
 const ATR = [ // atributo, nome, o que faz
@@ -278,6 +281,11 @@ if (!S.lib) { S.lib = 1; S.est = 1; S.ok = {} }
 function zeraProgresso() { // nível, pontos, ouro, equipamento e missão voltam ao começo; as tarefas e as escolhas ficam
   const fica = {}; for (const k of ['pers', 'hab', 'diar', 'afz', 'aba', 'dia', 'auto', 'cheio', 'repete', 'meta', 'metas', 'hafz', 'per', 'tela']) if (k in S) fica[k] = S[k];
   for (const k in S) delete S[k]; Object.assign(S, padrao(), fica); S.attr = { for: 0, des: 0, vid: 0, est: 0, mag: 0 }; S.pontos = PTS_NIVEL; S.zerado = 1;
+}
+function resetaJogo() { // o jogo volta pro começo e o histórico das tarefas zera; a lista de hábitos, diárias e afazeres fica
+  zeraProgresso(); delete S.hafz; S.mr = 0; S.dia = hoje(); S.hpT = Date.now();
+  for (const t of S.hab) { t.c = t.cn = t.tot = t.totn = 0; t.hist = {} }
+  for (const d of S.diar) { d.hist = {}; d.racha = d.melhor = d.sem = d.v = 0; d.ok = false; d.pago = 0; d.dado = null; d.metas = []; for (const i of d.itens || []) i.ok = false; }
 }
 if (S.zerado !== 1) { zeraProgresso(); try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} } // o André pediu pra recomeçar do zero (uma vez só)
 function salva() { try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} }
@@ -1082,14 +1090,18 @@ function aviso(txt, t = 2.6) { avisoEl.textContent = txt; avisoEl.classList.add(
 
 // ---------------- recompensas das tarefas (a única fonte de XP) ----------------
 function ganha(xp, ouro, cura) {
-  S.xp += xp; S.ouro += ouro; if (cura) S.hp = Math.min(hpMax(), S.hp + cura);
+  S.xp += xp; S.ouro += ouro; if (cura) { const v = Math.min(hpMax() - S.hp, cura); if (v > 0) { S.hp += v; numero('+' + Math.round(v), P.x, P.y + ALT + 0.2, P.z, 'cura') } }
   numero('+' + xp + ' XP', P.x, P.y + ALT + 0.35, P.z, 'xp'); if (ouro) setTimeout(() => numero('+' + ouro + ' 🪙', P.x, P.y + ALT + 0.1, P.z, 'ouro'), 180);
   brilho(0xffe066); plim(0); comemora();
   let subiu = 0; while (S.xp >= xpProx()) { S.xp -= xpProx(); S.nv++; subiu++ }
   if (subiu) { S.pontos += PTS_NIVEL * subiu; S.hp = hpMax(); P.en = enMax(); som('vitoria', 0.8); faixa('Nível ' + S.nv + '!', '+' + PTS_NIVEL * subiu + ' pontos pra distribuir (aba Herói)', 2.4); setTimeout(() => brilho(0xffffff), 250) }
   salva(); hud(); if (aba === 'her') lista();
 }
-function perde(xp, ouro) { S.xp = Math.max(0, S.xp - xp); S.ouro = Math.max(0, S.ouro - ouro); salva(); hud() } // desmarcou: devolve (não desce de nível)
+function perde(xp, ouro, hp) { S.xp = Math.max(0, S.xp - xp); S.ouro = Math.max(0, S.ouro - ouro); if (hp) S.hp = Math.max(1, S.hp - hp); salva(); hud() } // desmarcou: devolve (não desce de nível)
+function regenera() { // a vida volta sozinha com o tempo (também com o jogo fechado)
+  const t = Date.now(), h = S.hpT ? Math.max(0, (t - S.hpT) / 36e5) : 0; S.hpT = t;
+  if (h && !P.desm && S.hp < hpMax()) S.hp = Math.min(hpMax(), S.hp + hpMax() * h / REGEN_H);
+}
 function machuca(v, motivo) {
   S.hp = Math.max(0, S.hp - v); numero('-' + v, P.x, P.y + ALT + 0.2, P.z, 'dor'); doi(); som('dor', 0.6); if (motivo) aviso(motivo);
   if (S.hp <= 0 && !P.desm) desmaia(); salva(); hud();
@@ -1126,9 +1138,9 @@ function confere(d) { // depois de mexer numa diária: dá ou devolve a recompen
   if (f && !d.pago) {
     const sem = d.freq.t === 'vezes', r = rachaVista(d) + 1, m = sem ? 0 : MARCOS[r] || 0;
     const xp = Math.round(DIF[d.d].xp * (1 + bonusRacha(d.racha))), ouro = DIF[d.d].ouro + m;
-    d.pago = 1; d.dado = { xp, ouro }; S.cont.t++; ganha(xp, ouro, 5);
+    const hp = curaDe(d.d); d.pago = 1; d.dado = { xp, ouro, hp }; S.cont.t++; ganha(xp, ouro, hp);
     if (m) setTimeout(() => faixa('🔥 ' + r + ' dias seguidos!', d.t + ' · +' + m + ' 🪙', 2.6), 700);
-  } else if (!f && d.pago) { d.pago = 0; S.cont.t = Math.max(0, S.cont.t - 1); if (d.dado) perde(d.dado.xp, d.dado.ouro); d.dado = null }
+  } else if (!f && d.pago) { d.pago = 0; S.cont.t = Math.max(0, S.cont.t - 1); if (d.dado) perde(d.dado.xp, d.dado.ouro, d.dado.hp); d.dado = null }
 }
 function podeJogar(n) { return n <= S.lib } // o que segura o próximo estágio é só a dificuldade (nível que vem das tarefas)
 function viraDia() { // fecha o(s) dia(s) que passaram: racha, histórico e vida perdida pelas diárias esquecidas; os contadores dos hábitos zeram
@@ -1141,7 +1153,7 @@ function viraDia() { // fecha o(s) dia(s) que passaram: racha, histórico e vida
       const ok = i === 0 && feito(d);
       if (d.freq.t === 'vezes') { // X vezes por semana: conta os dias feitos e fecha a semana no domingo
         const n = d.freq.n || 3; if (ok) { d.sem++; d.hist[dt] = 1 }
-        if (dData(dt).getDay() === 0) { if (d.sem >= n) { d.racha++; d.melhor = Math.max(d.melhor, d.racha) } else { d.racha = 0; if (!cobrou) { dano += DIF[d.d].dor * Math.min(3, n - d.sem); falt++; cobrou = true } } d.sem = 0 }
+        if (dData(dt).getDay() === 0) { if (d.sem >= n) { d.racha++; d.melhor = Math.max(d.melhor, d.racha) } else { d.racha = 0; if (!cobrou) { dano += dorDe(d.d) * Math.min(3, n - d.sem); falt++; cobrou = true } } d.sem = 0 }
         return;
       }
       if (!agendada(d, dt)) return;
@@ -1149,7 +1161,7 @@ function viraDia() { // fecha o(s) dia(s) que passaram: racha, histórico e vida
       if (ok) {
         d.racha++; d.melhor = Math.max(d.melhor, d.racha); S.mr = Math.max(S.mr || 0, d.racha);
         if (ehMax(d)) { const m = MARCOS[d.racha] || 0; xp += Math.round(DIF[d.d].xp * (1 + bonusRacha(d.racha - 1))); ouro += DIF[d.d].ouro + m; S.cont.t++; if (m) marco = [d.racha, d.t] }
-      } else { d.racha = 0; if (i === 0) { dano += DIF[d.d].dor; falt++ } }
+      } else { d.racha = 0; if (i === 0) { dano += dorDe(d.d); falt++ } }
     });
     zeraHoje(d); for (const k in d.hist) if (difDias(k, h) > 400) delete d.hist[k];
   }
@@ -1159,7 +1171,7 @@ function viraDia() { // fecha o(s) dia(s) que passaram: racha, histórico e vida
   if (dano) setTimeout(() => machuca(dano, falt === 1 ? 'Ficou 1 diária sem fazer: −' + dano + ' de vida.' : 'Ficaram ' + falt + ' diárias sem fazer: −' + dano + ' de vida.'), 1500);
   else setTimeout(() => aviso('Dia novo! As diárias voltaram.' + (xp ? ' Limites respeitados: +' + xp + ' XP.' : '')), 1500);
 }
-viraDia(); setInterval(() => { viraDia(); if (aba === 'diar') lista() }, 60000);
+regenera(); viraDia(); setInterval(() => { regenera(); viraDia(); salva(); hud(); if (aba === 'diar') lista() }, 60000);
 
 // ---------------- mapa da missão: um pergaminho com os 20 estágios ligados por caminhos (estilo Eternium) ----------------
 const mapaEl = document.getElementById('mapa'), roloEl = mapaEl.querySelector('.rolo'), folhaEl = mapaEl.querySelector('.folha'), papelEl = folhaEl.querySelector('canvas');
@@ -1395,9 +1407,9 @@ function lista() {
     if (!S.hab.length) listaEl.append(el('div', 'vazio', 'Hábitos são coisas que você faz várias vezes, boas (+) ou ruins (−). Toque em + quando fizer uma boa; em − quando cair numa ruim.'));
     for (const t of filtroCats(S.hab)) {
       const it = el('div', 'item');
-      if (t.neg) { const b = el('button', 'chk menos', '−'); b.setAttribute('aria-label', 'Fiz o hábito ruim'); b.onclick = () => { t.cn = (t.cn || 0) + 1; t.totn = (t.totn || 0) + 1; machuca(DIF[t.d].dor, null); lista() }; it.append(b) }
+      if (t.neg) { const b = el('button', 'chk menos', '−'); b.setAttribute('aria-label', 'Fiz o hábito ruim'); b.onclick = () => { t.cn = (t.cn || 0) + 1; t.totn = (t.totn || 0) + 1; machuca(dorDe(t.d), null); lista() }; it.append(b) }
       it.append(texto(t, 'hab', [t.c || t.cn ? mini((t.c ? '+' + t.c : '') + (t.cn ? ' −' + t.cn : '') + ' hoje') : null, t.tot || t.totn ? mini('total ' + (t.tot ? '+' + t.tot : '') + (t.totn ? ' −' + t.totn : '')) : null]));
-      if (t.pos) { const b = el('button', 'chk mais', '+'); b.setAttribute('aria-label', 'Fiz o hábito bom'); b.onclick = () => { t.c = (t.c || 0) + 1; t.tot = (t.tot || 0) + 1; S.cont.h++; ganha(DIF[t.d].xp, DIF[t.d].ouro); lista() }; it.append(b) }
+      if (t.pos) { const b = el('button', 'chk mais', '+'); b.setAttribute('aria-label', 'Fiz o hábito bom'); b.onclick = () => { t.c = (t.c || 0) + 1; t.tot = (t.tot || 0) + 1; S.cont.h++; ganha(DIF[t.d].xp, DIF[t.d].ouro, curaDe(t.d)); lista() }; it.append(b) }
       listaEl.append(it);
     }
   } else if (aba === 'diar') {
@@ -1412,7 +1424,7 @@ function lista() {
     const h = hoje();
     for (const t of filtroCats(S.afz)) {
       const it = el('div', 'item'), b = el('button', 'chk', ''); b.setAttribute('aria-label', 'Concluir');
-      b.onclick = () => { if (it.classList.contains('feito')) return; it.classList.add('feito'); b.textContent = '✓'; ganha(Math.round(DIF[t.d].xp * AFZ_X), Math.round(DIF[t.d].ouro * AFZ_X), 5); S.feitos++; S.cont.t++; S.hafz = S.hafz || {}; S.hafz[hoje()] = (S.hafz[hoje()] || 0) + 1;
+      b.onclick = () => { if (it.classList.contains('feito')) return; it.classList.add('feito'); b.textContent = '✓'; ganha(Math.round(DIF[t.d].xp * AFZ_X), Math.round(DIF[t.d].ouro * AFZ_X), curaDe(t.d)); S.feitos++; S.cont.t++; S.hafz = S.hafz || {}; S.hafz[hoje()] = (S.hafz[hoje()] || 0) + 1;
         setTimeout(() => { it.classList.add('some'); setTimeout(() => { S.afz.splice(S.afz.indexOf(t), 1); salva(); if (aba === 'afz') lista() }, 400) }, 500) };
       const k = t.prazo ? difDias(h, t.prazo) : null;
       it.append(b, texto(t, 'afz', [k == null ? null : mini(k < 0 ? 'atrasado (' + ddmm(t.prazo) + ')' : k === 0 ? '📅 hoje' : k === 1 ? '📅 amanhã' : '📅 até ' + ddmm(t.prazo), k < 0 ? 'mal' : null)])); listaEl.append(it);
@@ -1421,6 +1433,9 @@ function lista() {
   listaEl.scrollTop = top;
 }
 function heroina() {
+  { const sr = el('div', 'sec'), b = el('button', 'reset', '🔄 Resetar jogo'); sr.append(el('h3', null, 'Reiniciar'));
+    b.onclick = () => { if (confirm('Resetar o jogo? Volta pro nível 1 e pro estágio 1, e zera o histórico e as sequências das tarefas. Os hábitos, diárias e afazeres que você criou ficam.')) { resetaJogo(); salva(); location.reload() } };
+    sr.append(b, el('p', 'dica', 'Recomeça a aventura do zero. As tarefas que você criou continuam na lista.')); listaEl.append(sr) }
   // atributos
   const s0 = el('div', 'sec'), h0 = el('h3', null, 'Atributos'); if (S.pontos) h0.append(el('span', 'pts', S.pontos + ' pra distribuir')); s0.append(h0);
   for (const [k, nome, desc] of ATR) { const d = el('div', 'atr'), nm = el('div', 'nm'); nm.append(el('b', null, nome), el('small', null, desc));
@@ -1460,9 +1475,9 @@ function heroina() {
     for (const [v, t] of [[5, '5 min'], [8, '8 min'], [15, '15 min'], [0, 'Normal']]) { const bt = el('button', telaMin() === v ? 'on' : null, t); bt.onclick = () => { S.tela = v; salva(); if (!v) soltaTela(); else prendeTela(); lista() }; sg.append(bt) }
     st.append(el('p', 'dica', 'Quanto tempo a tela fica acesa sem você tocar, com o jogo aberto. Depois disso o celular apaga no tempo normal dele.'), sg); listaEl.append(st) }
   const s4 = el('div', 'sec'); s4.append(el('h3', null, 'Como funciona'));
-  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 20 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede uns 2 níveis a mais que o anterior, 3 a partir do 11 (o nível aparece no mapa): sem fazer as tarefas você não sobe de nível e não passa. Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. O herói luta sozinho (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Os monstros dão ouro pra loja. Hábito ruim e diária esquecida tiram vida; se zerar, perde e recomeça o estágio. Tudo fica salvo neste celular.';
-  s4.append(p); const zn = el('button', null, 'Zerar nível e missão (mantém as tarefas)'); zn.style.marginTop = '8px'; zn.onclick = () => { if (confirm('Voltar pro nível 1 e pro estágio 1? As tarefas ficam.')) { zeraProgresso(); salva(); location.reload() } }; s4.append(zn);
-  const z = el('button', null, 'Começar do zero'); z.style.marginTop = '8px'; z.onclick = () => { if (confirm('Apagar todo o progresso e as tarefas?')) { localStorage.removeItem(CHAVE); location.reload() } }; s4.append(z);
+  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 20 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede uns 2 níveis a mais que o anterior, 3 a partir do 11 (o nível aparece no mapa): sem fazer as tarefas você não sobe de nível e não passa. Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. O herói luta sozinho (Auto, toma poção quando a vida fica baixa) ou com você no controle (Manual). Os monstros dão ouro pra loja. Vida: cada tarefa cumprida cura um pouco (mais nas difíceis), e ela também volta sozinha com o tempo, enchendo em umas 16 horas (de manhã está cheia). Hábito ruim e diária esquecida tiram vida; se zerar, perde e recomeça o estágio. Tudo fica salvo neste celular.';
+  s4.append(p);
+  const z = el('button', null, 'Apagar tudo (inclusive as tarefas)'); z.style.marginTop = '8px'; z.onclick = () => { if (confirm('Apagar todo o progresso e as tarefas?')) { localStorage.removeItem(CHAVE); location.reload() } }; s4.append(z);
   listaEl.append(s4);
 }
 const nTxt = document.getElementById('nTxt'), nPos = document.getElementById('nPos'), nNeg = document.getElementById('nNeg');
