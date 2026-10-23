@@ -185,6 +185,10 @@
   #ed .botoes .apagar{background:#5a2020;border-color:#a04040}
   .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:10px 0 8px;text-align:center;font-size:12px}
   .cal b{color:var(--fg2);font-size:11px} .cal span{padding:5px 0;border-radius:7px;background:#2a3350;color:var(--fg2)}
+  .cal button{padding:8px 0;border-radius:7px;background:#2a3350;color:var(--fg2);font-size:13px;font-weight:700;border:2px solid transparent}
+  .cal button.b{background:#1f6b45;color:#fff} .cal button.r{background:#6a2a2a;color:#fff} .cal button.m{background:#7a6424;color:#fff} .cal button.hj{border-color:var(--accent)} .cal button.sel{border-color:#fff} .cal button:disabled{opacity:.3}
+  .calTopo{display:flex;align-items:center;justify-content:space-between;gap:8px} .calTopo button{width:44px;font-size:18px} .calTopo b{font-size:16px}
+  .calTag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#2a3350;color:var(--fg2);margin-left:6px} .calTag.ed{background:#1f6b45;color:#fff}
   .cal span.b{background:#1f6b45;color:#fff} .cal span.r{background:#6a2a2a;color:#fff} .cal span.hj{outline:2px solid var(--accent)} .cal span.fut{opacity:.3}
   /* ---------- itens com as configurações novas ---------- */
   .item .cat{margin-right:5px}
@@ -223,7 +227,7 @@
 <div id="painel">
   <button id="puxa" aria-label="Esconder ou mostrar as tarefas"></button>
   <div id="abas">
-    <button data-aba="hab">Hábitos</button><button data-aba="diar">Diárias</button><button data-aba="afz">Afazeres</button><button data-aba="her">Herói</button><button data-aba="inv">Inventário</button><button data-aba="prog">Progresso</button>
+    <button data-aba="hab">Hábitos</button><button data-aba="diar">Diárias</button><button data-aba="afz">Afazeres</button><button data-aba="cal">Calendário</button><button data-aba="her">Herói</button><button data-aba="inv">Inventário</button><button data-aba="prog">Progresso</button>
   </div>
   <div id="lista"></div>
   <div id="novo">
@@ -1455,7 +1459,7 @@ function linhaDiaria(t) {
     for (const i of t.itens) { const c = el('button', i.ok ? 'on' : null, (i.ok ? '✓ ' : '○ ') + i.t); c.onclick = () => { i.ok = !i.ok; confere(t); salva(); lista(); hud() }; L.append(c) } listaEl.append(L) }
 }
 function lista() {
-  const top = listaEl.scrollTop; listaEl.innerHTML = ''; document.getElementById('novo').hidden = aba === 'her' || aba === 'prog' || aba === 'inv';
+  const top = listaEl.scrollTop; listaEl.innerHTML = ''; document.getElementById('novo').hidden = aba === 'her' || aba === 'prog' || aba === 'inv' || aba === 'cal';
   document.getElementById('nPos').style.display = document.getElementById('nNeg').style.display = aba === 'hab' ? '' : 'none';
   document.getElementById('nTxt').placeholder = aba === 'hab' ? 'Novo hábito…' : aba === 'diar' ? 'Nova diária…' : 'Novo afazer…';
   if (aba === 'hab') {
@@ -1484,8 +1488,58 @@ function lista() {
       const k = t.prazo ? difDias(h, t.prazo) : null;
       it.append(b, texto(t, 'afz', [k == null ? null : mini(k < 0 ? 'atrasado (' + ddmm(t.prazo) + ')' : k === 0 ? '📅 hoje' : k === 1 ? '📅 amanhã' : '📅 até ' + ddmm(t.prazo), k < 0 ? 'mal' : null)])); listaEl.append(it);
     }
-  } else if (aba === 'prog') progresso(); else if (aba === 'inv') inventario(); else heroina();
+  } else if (aba === 'prog') progresso(); else if (aba === 'inv') inventario(); else if (aba === 'cal') abaCalendario(); else heroina();
   listaEl.scrollTop = top;
+}
+// ---------------- calendário: ver qualquer dia; hoje e ontem dá pra corrigir (ex.: marcou depois da meia-noite) ----------------
+const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+let calMes = null, calDia = null;
+const editavel = dt => dt >= somaDia(hoje(), -1) && dt <= hoje();
+function estadoDia(d, dt) { // 1 feita, 0 não feita, null sem registro
+  if (dt === hoje()) return feito(d) || semFeita(d) ? 1 : d.nao ? 0 : null; return d.hist[dt] ?? null }
+const diariasDoDia = dt => S.diar.map(prep).filter(d => d.hist[dt] != null || (dt >= d.criado && agendada(d, dt) && d.freq.t !== 'vezes') || (dt === hoje() && agendada(d, dt)));
+function resumoDia(dt) { let ok = 0, tot = 0; for (const d of diariasDoDia(dt)) { const v = estadoDia(d, dt); if (v != null) { tot++; ok += v } } return { ok, tot } }
+function refazRacha(d) { // sequência contada de novo pelo histórico (depois de corrigir ontem)
+  if (d.freq.t === 'vezes') return; let r = 0;
+  for (let dt = somaDia(hoje(), -1), i = 0; i < 400 && dt >= d.criado; dt = somaDia(dt, -1), i++) { if (!agendada(d, dt)) continue; if (d.hist[dt] === 1) r++; else break }
+  d.racha = r; d.melhor = Math.max(d.melhor, r); S.mr = Math.max(S.mr || 0, r);
+}
+function corrigeOntem(d) { // ontem já fechou: marcar dá a recompensa (e devolve a vida que a falta tirou); desmarcar tira de volta
+  const dt = somaDia(hoje(), -1), vez = d.freq.t === 'vezes', novo = d.hist[dt] === 1 ? 0 : 1, cobrado = !vez && d.hist[dt] === 0;
+  if (vez) { if (novo) d.hist[dt] = 1; else delete d.hist[dt]; if (dData(dt).getDay() !== 0) d.sem = Math.max(0, d.sem + (novo ? 1 : -1)) } else d.hist[dt] = novo;
+  const xp = DIF[d.d].xp, ouro = DIF[d.d].ouro;
+  if (novo) { S.cont.t++; ganha(xp, ouro, curaDe(d.d) + (cobrado ? dorDe(d.d) : 0)); aviso('Ontem: "' + d.t + '" feita. +' + xp + ' XP' + (cobrado ? ' e a vida que tinha perdido voltou.' : '.')) }
+  else { S.cont.t = Math.max(0, S.cont.t - 1); perde(xp, ouro, curaDe(d.d)); if (!vez) machuca(dorDe(d.d), 'Ontem: "' + d.t + '" não feita. −' + dorDe(d.d) + ' de vida.') }
+  refazRacha(d); salva(); hud(); lista();
+}
+function abaCalendario() {
+  viraDia(); const h = hoje(); calDia = calDia || h; calMes = calMes || h.slice(0, 8) + '01';
+  const sc = el('div', 'sec'), topo = el('div', 'calTopo'), ant = el('button', null, '‹'), prox = el('button', null, '›'), m = dData(calMes);
+  ant.onclick = () => { calMes = somaDia(calMes, -1).slice(0, 8) + '01'; lista() }; prox.onclick = () => { calMes = somaDia(calMes, 32).slice(0, 8) + '01'; lista() }; prox.disabled = calMes >= h.slice(0, 8) + '01';
+  ant.setAttribute('aria-label', 'Mês anterior'); prox.setAttribute('aria-label', 'Próximo mês');
+  topo.append(ant, el('b', null, MESES[m.getMonth()] + ' de ' + m.getFullYear()), prox); sc.append(topo);
+  const g = el('div', 'cal'); for (const x of SEM) g.append(el('b', null, x)); for (let i = 0; i < m.getDay(); i++) g.append(el('i'));
+  for (let dt = calMes; dt.slice(0, 7) === calMes.slice(0, 7); dt = somaDia(dt, 1)) { const r = resumoDia(dt), dd = dt;
+    const b = el('button', (dt > h || !r.tot ? '' : r.ok === r.tot ? 'b' : r.ok ? 'm' : 'r') + (dt === h ? ' hj' : '') + (dt === calDia ? ' sel' : ''), String(+dt.slice(8)));
+    b.disabled = dt > h; b.onclick = () => { calDia = dd; lista() }; g.append(b) }
+  sc.append(g, el('p', 'dica', 'Verde: fez todas as diárias · amarelo: parte · vermelho: nenhuma. Toque num dia pra ver.')); listaEl.append(sc);
+  // o dia escolhido
+  const dt = calDia, ed = editavel(dt), sd = el('div', 'sec'), t = el('h3', null, (dt === h ? 'Hoje' : dt === somaDia(h, -1) ? 'Ontem' : SEM_N[dData(dt).getDay()]) + ', ' + ddmm(dt));
+  t.append(el('span', 'calTag' + (ed ? ' ed' : ''), ed ? '✏️ dá pra corrigir' : '🔒 só consulta')); sd.append(t); listaEl.append(sd);
+  const L = diariasDoDia(dt);
+  if (L.length) listaEl.append(el('div', 'grupo', 'Diárias'));
+  for (const d of L) { const v = estadoDia(d, dt), it = el('div', 'item' + (v === 1 ? ' feito' : '')), b = el('button', 'chk' + (v === 0 ? ' mal' : ''), v === 1 ? '✓' : v === 0 ? '✗' : '');
+    if (!ed) b.disabled = true;
+    else if (dt === h) { if (d.tipo === 'sn') b.onclick = () => { if (d.ok) { d.ok = false; d.nao = true } else if (d.nao) d.nao = false; else d.ok = true; confere(d); salva(); lista(); hud() }; else b.onclick = () => trocaAba('diar') }
+    else b.onclick = () => corrigeOntem(d);
+    b.setAttribute('aria-label', v === 1 ? 'Feita' : v === 0 ? 'Não feita' : 'Sem marcar');
+    const tx = el('div', 'txt'); tx.append(el('span', null, d.t)); if (ed && dt !== h) tx.append(el('small', null, v === 1 ? 'toque pra marcar como não feita' : 'toque pra marcar como feita'));
+    it.append(b, tx); listaEl.append(it) }
+  const HB = S.hab.map(x => [x, dt === h ? [x.c || 0, x.cn || 0] : (x.hist || {})[dt]]).filter(([, v]) => v && (v[0] || v[1]));
+  if (HB.length) { listaEl.append(el('div', 'grupo', 'Hábitos')); for (const [x, [c, cn]] of HB) { const it = el('div', 'item'), tx = el('div', 'txt'); tx.append(el('span', null, x.t)); it.append(tx, el('span', 'mini', (c ? '+' + c : '') + (cn ? ' −' + cn : ''))); listaEl.append(it) } }
+  const af = (S.hafz || {})[dt]; if (af) listaEl.append(el('div', 'grupo', '✓ ' + af + (af === 1 ? ' afazer concluído' : ' afazeres concluídos')));
+  if (!L.length && !HB.length && !af) listaEl.append(el('div', 'vazio', 'Nada registrado neste dia.'));
+  if (ed && dt !== h) listaEl.append(el('p', 'dica', 'Ontem ainda dá pra corrigir: marcar como feita dá o XP e devolve a vida que a falta tirou. De anteontem pra trás fica só pra consulta.'));
 }
 function inventario() {
   const so = el('div', 'sec'); so.append(el('h3', null, 'Ouro'), el('div', 'ouroG', '🪙 ' + S.ouro), el('p', 'dica', 'Ganha ouro com as tarefas e matando monstros. A vida não volta sozinha: cura fazendo as tarefas ou com poção.')); listaEl.append(so);
