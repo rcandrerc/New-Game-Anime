@@ -85,6 +85,9 @@
   .calRes{display:flex;gap:6px} .calRes div{flex:1;background:var(--card);border-radius:10px;padding:7px 6px;text-align:center}
   .calRes b{display:block;font-size:18px} .calRes small{color:var(--fg2);font-size:11px}
   .calLeg{font-size:11.5px;color:var(--fg2);margin-top:6px;text-align:center}
+  @media (orientation:landscape) and (max-height:520px){ /* celular deitado: jogo à esquerda, tarefas à direita (empilhado não sobrava espaço pra lista) */
+    body{flex-direction:row} #arena{flex:1 1 0;min-width:0;min-height:0;height:100%} #painel{flex:0 0 min(46%,440px);min-width:0;border-top:none;border-left:1px solid var(--line)}
+    body.cheio #arena{flex:1 1 0} body.cheio #puxa{writing-mode:vertical-rl;height:100%;width:38px;padding:0 0 0 env(safe-area-inset-right,0px)}}
   @media (orientation:portrait){.calCorpo{flex-direction:column;overflow-y:auto}.calEsq,.calDir{overflow:visible;flex:none}}
   #mapa{position:fixed;inset:0;z-index:30;display:none;background:#1a120b}
   #mapa.on{display:block}
@@ -121,9 +124,9 @@
   #puxa::before{content:'';width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.35)}
   body.cheio #arena{flex:1 1 auto} body.cheio #painel{flex:0 0 auto} body.cheio #painel > :not(#puxa){display:none}
   body.cheio #puxa{height:34px;padding-bottom:env(safe-area-inset-bottom,0px);color:var(--fg)}
-  #abas{display:flex;gap:4px;padding:6px 6px 0}
+  #abas{display:flex;gap:4px;padding:6px 6px 0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch} #abas::-webkit-scrollbar{display:none}
   .ouroG{font-size:26px;font-weight:900;color:#ffd86b;margin:4px 0}
-  #abas button{flex:1 1 auto;padding:9px 2px;font-size:12.5px;font-weight:700;border-radius:10px 10px 0 0;border-bottom:none;background:var(--card);color:var(--fg2)}
+  #abas button{flex:1 0 auto;white-space:nowrap;padding:9px 8px;font-size:12.5px;font-weight:700;border-radius:10px 10px 0 0;border-bottom:none;background:var(--card);color:var(--fg2)}
   #abas button.on{background:var(--card2);color:var(--fg);box-shadow:inset 0 -3px 0 var(--accent)}
   #abas button b{display:inline-block;min-width:18px;margin-left:4px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--ink);font-size:11px}
   #lista{flex:1;overflow-y:auto;padding:8px 8px 4px;background:var(--card2);-webkit-overflow-scrolling:touch;touch-action:pan-y}
@@ -256,7 +259,7 @@
 <div id="painel">
   <button id="puxa" aria-label="Esconder ou mostrar as tarefas"></button>
   <div id="abas">
-    <button data-aba="hab">Hábitos</button><button data-aba="diar">Diárias</button><button data-aba="afz">Afazeres</button><button data-aba="cal">Calendário</button><button data-aba="her">Herói</button><button data-aba="inv">Inventário</button><button data-aba="prog">Progresso</button>
+    <button data-aba="hab">Hábitos</button><button data-aba="diar">Diárias</button><button data-aba="afz">Afazeres</button><button data-aba="cal">Agenda</button><button data-aba="her">Herói</button><button data-aba="inv">Itens</button><button data-aba="prog">Progresso</button>
   </div>
   <div id="lista"></div>
   <div id="novo">
@@ -292,10 +295,10 @@ const ITENS = { // inventário: o que a loja vende e dá pra usar fora da luta (
   pocao: { nome: 'Poção de vida', ic: '🧪', desc: 'recupera 40% da vida', preco: 15, cura: 0.4 },
   pocaoG: { nome: 'Poção grande', ic: '⚗️', desc: 'enche a vida toda', preco: 40, cura: 1 } };
 const EQUIP = { // compras pra sempre (aparecem na heroína ou dão bônus)
-  fada: { nome: 'Fada companheira', ic: '🧚', desc: 'voa do seu lado e dá +10% de XP nas tarefas', preco: 120 },
-  aura: { nome: 'Aura dourada', ic: '✨', desc: 'um brilho no chão em volta da heroína', preco: 80 },
-  amuleto: { nome: 'Amuleto da sorte', ic: '🍀', desc: '+25% de ouro dos monstros', preco: 150 } };
-const temEq = k => !!(S.equip && S.equip[k]);
+  fada: { nome: 'Fada companheira', ic: '🧚', desc: 'voa do seu lado e dá +10% de XP nas tarefas', preco: 60, dias: 7 },
+  amuleto: { nome: 'Amuleto da sorte', ic: '🍀', desc: '+25% de ouro dos monstros', preco: 70, dias: 7 },
+  aura: { nome: 'Aura dourada', ic: '✨', desc: 'um brilho no chão em volta da heroína (enfeite, pra sempre)', preco: 80 } };
+const temEq = k => { const v = S.equip && S.equip[k]; return EQUIP[k].dias ? typeof v === 'string' && v >= hoje() : !!v }; // fada e amuleto valem até a data guardada
 const AFZ_X = 1.5; // afazer (tarefa única) vale 50% a mais
 const PTS_NIVEL = 3; // pontos de atributo a cada nível
 const ATR = [ // atributo, nome, o que faz
@@ -321,6 +324,8 @@ function padrao() {
 let S; try { S = Object.assign(padrao(), JSON.parse(localStorage.getItem(CHAVE) || 'null') || {}) } catch (e) { S = padrao() }
 if (!S.attr) { S.attr = { for: 0, des: 0, vid: 0, est: 0, mag: 0 }; S.pontos = PTS_NIVEL * S.nv } // começa com 3 pontos (e quem já tinha nível ganha os dele)
 if (!S.lib) { S.lib = 1; S.est = 1; S.ok = {} }
+if (S.armad > 0) { S.armadT = (S.armadT || 0) + 3 * S.armad; S.armad = 0 } // armadura antiga (permanente) vira estágios de armadura
+if (S.equip) for (const k of ['fada', 'amuleto']) if (S.equip[k] === 1) { const d = new Date(); d.setDate(d.getDate() + 7); S.equip[k] = isoDe(d) } // os bônus agora duram 7 dias
 if ('pocoes' in S) { S.inv = { pocao: S.pocoes || 0 }; delete S.pocoes } // as poções antigas viram itens do inventário
 function zeraProgresso() { // nível, pontos, ouro, equipamento e missão voltam ao começo; as tarefas e as escolhas ficam
   const fica = {}; for (const k of ['pers', 'hab', 'diar', 'afz', 'aba', 'dia', 'auto', 'cheio', 'repete', 'meta', 'metas', 'hafz', 'per', 'tela', 'backup']) if (k in S) fica[k] = S[k];
@@ -342,7 +347,7 @@ const atkEsp = () => 8 + 2 * (S.nv - 1) + 3 * A_('for') + 4 * S.espada;
 const atkMag = () => 8 + 2 * (S.nv - 1) + 3.5 * A_('mag');
 const critChance = () => Math.min(0.5, 0.06 + 0.015 * A_('des'));
 const velAtk = () => 1 + Math.min(0.6, 0.035 * A_('des'));
-const defesa = () => Math.min(0.6, 0.07 * S.armad); // fração do dano dos monstros que a armadura segura
+const defesa = () => S.armadT > 0 ? 0.3 : 0; // fração do dano dos monstros que a armadura segura (só enquanto ela dura)
 // ---------------- estágios (a missão é passar dos 30; cada um mais difícil que o outro) ----------------
 const EST = [ // nome, tempo do dia
   ['Trilha do Vale', 0], ['Beira do Lago', 0], ['Bosque Dourado', 1], ['Colina das Pedras', 1], ['Campo das Flores', 2],
@@ -371,7 +376,7 @@ const sol = new THREE.DirectionalLight(0xffc890, 1.0); sol.castShadow = true; so
 Object.assign(sol.shadow.camera, { left: -11, right: 11, top: 11, bottom: -11, near: 1, far: 50 }); sol.shadow.bias = -0.0006; sc.add(sol, sol.target);
 const cam = new THREE.PerspectiveCamera(50, 1, 0.05, 120);
 function tam() { const w = arena.clientWidth, h = arena.clientHeight; r.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix() }
-addEventListener('resize', tam); tam();
+addEventListener('resize', tam); tam(); if (window.ResizeObserver) new ResizeObserver(tam).observe(arena); // o painel muda de tamanho sem a janela mudar
 const M = c => new THREE.MeshLambertMaterial({ color: new THREE.Color(c).convertSRGBToLinear() });
 const rnd = (a, b) => a + Math.random() * (b - a);
 let semente = 21; const rd = () => { semente = (semente * 16807) % 2147483647; return (semente - 1) / 2147483646 }, ru = (a, b) => a + rd() * (b - a);
@@ -990,7 +995,8 @@ function comecaEstagio(n, quieto) { // quieto: só monta a fase e deixa ela para
   P.x = TP[F.ini][0]; P.z = TP[F.ini][1]; P.y = altura(P.x, P.z); P.si = ultimoSi = F.ini; P.atk = null;
   const j = F.ini + 20; P.face = Math.atan2(TP[j][0] - P.x, TP[j][1] - P.z); yaw = P.face + Math.PI; camAlvo.set(P.x, P.y, P.z);
   ambiente(EST[n - 1][1]); if (quieto) { F.fim = true; hud(); return }
-  faixa('Estágio ' + n, EST[n - 1][0] + (n === N_EST ? ' · chefe final' : ''), 2.2); hud();
+  if (S.armadT > 0) { S.armadT--; salva() } // cada estágio jogado gasta 1 da armadura
+  faixa('Estágio ' + n, EST[n - 1][0] + (n === N_EST ? ' · chefe final' : '') + (S.armadT > 0 || defesa() ? ' · 🛡' : ''), 2.2); hud();
 }
 function venceEstagio() {
   F.fim = true; const n = F.n, primeira = !S.ok[n], bonus = primeira ? 25 * n : 5 * n;
@@ -1456,7 +1462,7 @@ function hudRapido() { // energia e recarga das skills (mudam o tempo todo)
 let aba = S.aba || 'diar', novoPos = true, novoNeg = false;
 const listaEl = document.getElementById('lista');
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e };
-function trocaAba(a) { if (a === 'cal' && document.readyState === 'complete' && !calEl.classList.contains('on')) setTimeout(abreCal, 0); const igual = aba === a; aba = a; S.aba = a; salva(); for (const b of document.querySelectorAll('#abas button')) b.classList.toggle('on', b.dataset.aba === a); if (!igual) listaEl.scrollTop = 0; lista() }
+function trocaAba(a) { if (a === 'cal' && document.readyState === 'complete' && !calEl.classList.contains('on')) setTimeout(abreCal, 0); const igual = aba === a; aba = a; S.aba = a; salva(); for (const b of document.querySelectorAll('#abas button')) { b.classList.toggle('on', b.dataset.aba === a); if (b.dataset.aba === a && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' }) } if (!igual) listaEl.scrollTop = 0; lista() }
 for (const b of document.querySelectorAll('#abas button')) b.onclick = () => trocaAba(b.dataset.aba);
 const mini = (txt, cls) => el('span', 'mini' + (cls ? ' ' + cls : ''), txt);
 function texto(t, kind, extra) { const d = el('div', 'txt'); if (t.cat) d.append(el('span', 'cat', catDe(t)[1])); d.append(t.t);
@@ -1693,6 +1699,8 @@ function enfeitesPasso(dt) {
   if (temEq('fada') && !FADA) { FADA = new THREE.Group(); const m = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 8), new THREE.MeshBasicMaterial({ color: 0xc8fff0 })), g = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 8), new THREE.MeshBasicMaterial({ color: 0x7dffd8, transparent: true, opacity: 0.3, depthWrite: false }));
     FADA.add(m, g, new THREE.PointLight(0x9dffe0, 0.8, 3, 2)); sc.add(FADA) }
   if (temEq('aura') && !AURA) { AURA = new THREE.Mesh(new THREE.RingGeometry(0.45, 0.62, 40), new THREE.MeshBasicMaterial({ color: 0xffd86b, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide })); AURA.rotation.x = -Math.PI / 2; sc.add(AURA) }
+  if (FADA && !temEq('fada')) { sc.remove(FADA); FADA = null }
+  if (AURA && !temEq('aura')) { sc.remove(AURA); AURA = null }
   if (FADA) { const a = tempo * 1.6, k = K / 0.64; FADA.position.set(P.x + Math.cos(a) * 0.75 * k, P.y + (1.5 + Math.sin(tempo * 3) * 0.12) * k, P.z + Math.sin(a) * 0.75 * k) }
   if (AURA) { AURA.position.set(P.x, P.y + 0.04, P.z); AURA.scale.setScalar((1 + Math.sin(tempo * 2.5) * 0.06) * K / 0.64); AURA.material.opacity = 0.4 + Math.sin(tempo * 2.5) * 0.15 }
 }
@@ -1701,16 +1709,20 @@ function inventario() {
   const si = el('div', 'sec'); si.append(el('h3', null, 'Itens')); const li = el('div', 'loja'); let tem = false;
   for (const k in ITENS) { const n = S.inv[k] || 0; if (!n) continue; tem = true; const it = ITENS[k], b = el('button'), e = el('div');
     e.append(it.ic + ' ' + it.nome + ' ×' + n, el('small', null, it.desc + (emLuta() ? ' · só antes de começar o estágio' : ''))); b.append(e, el('span', 'preco', emLuta() ? '🔒' : 'Tomar')); b.disabled = emLuta() || S.hp >= hpMax(); b.onclick = () => usaItem(k); li.append(b) }
+  const ativos = []; if (S.armadT > 0) ativos.push('🛡 Armadura: ' + S.armadT + (S.armadT === 1 ? ' estágio' : ' estágios')); for (const k in EQUIP) if (EQUIP[k].dias && temEq(k)) ativos.push(EQUIP[k].ic + ' ' + EQUIP[k].nome + ' até ' + ddmm(S.equip[k]));
+  if (ativos.length) si.append(el('p', 'dica', 'Ativos: ' + ativos.join(' · ')));
   if (!tem) li.append(el('p', 'dica', 'Nenhum item. Compre na loja aqui embaixo.'));
   si.append(li); listaEl.append(si);
   // loja
   const s2 = el('div', 'sec'); s2.append(el('h3', null, 'Loja')); const lj = el('div', 'loja');
   const item = (nome, desc, preco, ok, f) => { const b = el('button'); const e = el('div'); e.append(nome, el('small', null, desc)); b.append(e, el('span', 'preco', '🪙 ' + preco)); b.disabled = S.ouro < preco || !ok;
     b.onclick = () => { if (S.ouro < preco) return; S.ouro -= preco; f(); salva(); hud(); lista(); plim(5) }; lj.append(b) };
-  for (const k in EQUIP) { const it = EQUIP[k]; item(it.ic + ' ' + it.nome + (temEq(k) ? ' ✓' : ''), temEq(k) ? 'já é seu' : it.desc, it.preco, !temEq(k), () => { S.equip = S.equip || {}; S.equip[k] = 1; aviso(it.ic + ' ' + it.nome + ' é sua!') }) }
+  for (const k in EQUIP) { const it = EQUIP[k], at = temEq(k);
+    if (it.dias) item(it.ic + ' ' + it.nome + ' (' + it.dias + ' dias)', it.desc + (at ? ' · ativo até ' + ddmm(S.equip[k]) + ', comprar soma mais ' + it.dias : ''), it.preco, true, () => { S.equip = S.equip || {}; S.equip[k] = somaDia(at ? S.equip[k] : hoje(), it.dias - (at ? 0 : 1)); aviso(it.ic + ' ' + it.nome + ' até ' + ddmm(S.equip[k])) });
+    else item(it.ic + ' ' + it.nome + (at ? ' ✓' : ''), at ? 'já é seu' : it.desc, it.preco, !at, () => { S.equip = S.equip || {}; S.equip[k] = 1; aviso(it.ic + ' ' + it.nome + ' é sua!') }) }
   for (const k in ITENS) { const it = ITENS[k]; item(it.ic + ' ' + it.nome, it.desc + ' · tome antes de começar o estágio', it.preco, true, () => { S.inv[k] = (S.inv[k] || 0) + 1 }) }
   const pe = 40 + 35 * S.espada; item('Espada melhor (' + (S.espada + 1) + ')', '+4 de dano de espada' + ([1, 3, 6, 9].includes(S.espada + 1) ? ' · a lâmina muda de cor' : ''), pe, S.espada < 10, () => { S.espada++; corEspada(); aviso('Espada melhorada!') });
-  const pa = 35 + 30 * S.armad; item('Armadura (' + (S.armad + 1) + ')', 'segura +7% do dano dos monstros', pa, S.armad < 8, () => { S.armad++; aviso('Armadura melhorada!') });
+  const pa = 30 + 3 * S.nv; item('🛡 Armadura (5 estágios)', 'segura 30% do dano dos monstros nos próximos 5 estágios' + (S.armadT > 0 ? ' · faltam ' + S.armadT : ''), pa, true, () => { S.armadT = (S.armadT || 0) + 5; aviso('🛡 Armadura: ' + S.armadT + ' estágios') });
   s2.append(lj); listaEl.append(s2);
 }
 function heroina() {
