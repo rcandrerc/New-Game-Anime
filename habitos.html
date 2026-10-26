@@ -58,6 +58,19 @@
   #dor{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 46px 12px rgba(220,30,20,.45);opacity:0;transition:opacity .35s}
   #bEst{font-weight:800;font-size:12.5px;padding:5px 10px;border-radius:999px;background:linear-gradient(#5b3a8a,#3a2560);border-color:#b98cff;white-space:nowrap}
   #bEst small{font-weight:700;opacity:.85;margin-left:4px}
+  #calTela{position:fixed;inset:0;z-index:32;display:none;flex-direction:column;background:var(--bg);color:var(--fg);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}
+  #calTela.on{display:flex}
+  .calCab{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line)} .calCab b{font-size:17px}
+  .calCab .fecha{width:42px;height:42px;padding:0;font-size:18px;border-radius:10px}
+  .calCorpo{flex:1;min-height:0;display:flex;gap:12px;padding:10px 12px}
+  .calEsq{flex:1.15;min-width:0;overflow-y:auto} .calDir{flex:1;min-width:0;overflow-y:auto;padding-bottom:20px}
+  .calDir h3{margin:2px 0 4px;font-size:16px}
+  .calG{gap:4px;margin:6px 0} .calG button{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:38px;padding:2px 0;line-height:1.05}
+  .calG button .n{font-size:15px;font-weight:800;background:none;padding:0;color:inherit} .calG button small{font-size:10px;font-weight:700;opacity:.9;min-height:11px}
+  .calRes{display:flex;gap:6px} .calRes div{flex:1;background:var(--card);border-radius:10px;padding:7px 6px;text-align:center}
+  .calRes b{display:block;font-size:18px} .calRes small{color:var(--fg2);font-size:11px}
+  .calLeg{font-size:11.5px;color:var(--fg2);margin-top:6px;text-align:center}
+  @media (orientation:portrait){.calCorpo{flex-direction:column;overflow-y:auto}.calEsq,.calDir{overflow:visible;flex:none}}
   #mapa{position:fixed;inset:0;z-index:30;display:none;background:#1a120b}
   #mapa.on{display:block}
   #mapa .rolo{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
@@ -239,6 +252,7 @@
 </div>
 <div id="aviso"></div>
 <div id="ed" role="dialog" aria-label="Configurar tarefa"></div>
+<div id="calTela" role="dialog" aria-label="Calendário"></div>
 <div id="mapa"><div class="rolo"><div class="folha"><canvas aria-hidden="true"></canvas></div></div><div class="topo"><b>Mapa da Missão</b><small></small></div>
   <div class="info"><div></div><button class="pocao" aria-label="Tomar poção">🧪</button><button class="tarefas" aria-label="Ver as tarefas">📋</button><button class="repete" aria-pressed="false" aria-label="Repetir o mesmo estágio depois de vencer">🔁</button><button class="jogar">▶ Jogar</button></div></div>
 <script src="js/three.min.js"></script>
@@ -1419,7 +1433,7 @@ function hudRapido() { // energia e recarga das skills (mudam o tempo todo)
 let aba = S.aba || 'diar', novoPos = true, novoNeg = false;
 const listaEl = document.getElementById('lista');
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e };
-function trocaAba(a) { const igual = aba === a; aba = a; S.aba = a; salva(); for (const b of document.querySelectorAll('#abas button')) b.classList.toggle('on', b.dataset.aba === a); if (!igual) listaEl.scrollTop = 0; lista() }
+function trocaAba(a) { if (a === 'cal' && document.readyState === 'complete' && !calEl.classList.contains('on')) setTimeout(abreCal, 0); const igual = aba === a; aba = a; S.aba = a; salva(); for (const b of document.querySelectorAll('#abas button')) b.classList.toggle('on', b.dataset.aba === a); if (!igual) listaEl.scrollTop = 0; lista() }
 for (const b of document.querySelectorAll('#abas button')) b.onclick = () => trocaAba(b.dataset.aba);
 const mini = (txt, cls) => el('span', 'mini' + (cls ? ' ' + cls : ''), txt);
 function texto(t, kind, extra) { const d = el('div', 'txt'); if (t.cat) d.append(el('span', 'cat', catDe(t)[1])); d.append(t.t);
@@ -1510,36 +1524,55 @@ function corrigeOntem(d) { // ontem já fechou: marcar dá a recompensa (e devol
   const xp = DIF[d.d].xp, ouro = DIF[d.d].ouro;
   if (novo) { S.cont.t++; ganha(xp, ouro, curaDe(d.d) + (cobrado ? dorDe(d.d) : 0)); aviso('Ontem: "' + d.t + '" feita. +' + xp + ' XP' + (cobrado ? ' e a vida que tinha perdido voltou.' : '.')) }
   else { S.cont.t = Math.max(0, S.cont.t - 1); perde(xp, ouro, curaDe(d.d)); if (!vez) machuca(dorDe(d.d), 'Ontem: "' + d.t + '" não feita. −' + dorDe(d.d) + ' de vida.') }
-  refazRacha(d); salva(); hud(); lista();
+  refazRacha(d); salva(); hud(); atualizaCal();
 }
-function abaCalendario() {
-  viraDia(); const h = hoje(); calDia = calDia || h; calMes = calMes || h.slice(0, 8) + '01';
-  const sc = el('div', 'sec'), topo = el('div', 'calTopo'), ant = el('button', null, '‹'), prox = el('button', null, '›'), m = dData(calMes);
-  ant.onclick = () => { calMes = somaDia(calMes, -1).slice(0, 8) + '01'; lista() }; prox.onclick = () => { calMes = somaDia(calMes, 32).slice(0, 8) + '01'; lista() }; prox.disabled = calMes >= h.slice(0, 8) + '01';
+function abaCalendario() { // a aba só resume e abre o calendário em tela cheia (no celular deitado a lista fica pequena demais)
+  const h = hoje(), r = resumoDia(h), sc = el('div', 'sec'), b = el('button', 'reset abreCal', '📅 Abrir calendário');
+  sc.append(el('h3', null, 'Calendário'), el('p', 'dica', 'Hoje: ' + r.ok + ' de ' + r.tot + ' diárias feitas. Veja qualquer dia; hoje e ontem dá pra corrigir.'), b); b.onclick = abreCal; listaEl.append(sc);
+}
+const calEl = document.getElementById('calTela');
+function abreCal() { viraDia(); calDia = calDia || hoje(); calMes = calDia.slice(0, 8) + '01'; calEl.classList.add('on'); desenhaCal() }
+function fechaCal() { calEl.classList.remove('on'); calEl.innerHTML = ''; lista() }
+function atualizaCal() { if (calEl.classList.contains('on')) desenhaCal(); else lista() }
+function desenhaCal() {
+  const h = hoje(), m = dData(calMes), corpo = el('div', 'calCorpo'), esq = el('div', 'calEsq'), dir = el('div', 'calDir'), velho = calEl.querySelector('.calDir'), topoDir = velho ? velho.scrollTop : 0;
+  calEl.innerHTML = '';
+  const cab = el('div', 'calCab'), x = el('button', 'fecha', '✕'); x.setAttribute('aria-label', 'Fechar o calendário'); x.onclick = fechaCal;
+  cab.append(el('b', null, '📅 Calendário'), x); calEl.append(cab, corpo); corpo.append(esq, dir);
+  // mês
+  const topo = el('div', 'calTopo'), ant = el('button', null, '‹'), prox = el('button', null, '›');
+  ant.onclick = () => { calMes = somaDia(calMes, -1).slice(0, 8) + '01'; desenhaCal() }; prox.onclick = () => { calMes = somaDia(calMes, 32).slice(0, 8) + '01'; desenhaCal() }; prox.disabled = calMes >= h.slice(0, 8) + '01';
   ant.setAttribute('aria-label', 'Mês anterior'); prox.setAttribute('aria-label', 'Próximo mês');
-  topo.append(ant, el('b', null, MESES[m.getMonth()] + ' de ' + m.getFullYear()), prox); sc.append(topo);
-  const g = el('div', 'cal'); for (const x of SEM) g.append(el('b', null, x)); for (let i = 0; i < m.getDay(); i++) g.append(el('i'));
-  for (let dt = calMes; dt.slice(0, 7) === calMes.slice(0, 7); dt = somaDia(dt, 1)) { const r = resumoDia(dt), dd = dt;
-    const b = el('button', (dt > h || !r.tot ? '' : r.ok === r.tot ? 'b' : r.ok ? 'm' : 'r') + (dt === h ? ' hj' : '') + (dt === calDia ? ' sel' : ''), String(+dt.slice(8)));
-    b.disabled = dt > h; b.onclick = () => { calDia = dd; lista() }; g.append(b) }
-  sc.append(g, el('p', 'dica', 'Verde: fez todas as diárias · amarelo: parte · vermelho: nenhuma. Toque num dia pra ver.')); listaEl.append(sc);
-  // o dia escolhido
-  const dt = calDia, ed = editavel(dt), sd = el('div', 'sec'), t = el('h3', null, (dt === h ? 'Hoje' : dt === somaDia(h, -1) ? 'Ontem' : SEM_N[dData(dt).getDay()]) + ', ' + ddmm(dt));
-  t.append(el('span', 'calTag' + (ed ? ' ed' : ''), ed ? '✏️ dá pra corrigir' : '🔒 só consulta')); sd.append(t); listaEl.append(sd);
+  topo.append(ant, el('b', null, MESES[m.getMonth()] + ' de ' + m.getFullYear()), prox); esq.append(topo);
+  const g = el('div', 'cal calG'); for (const s of SEM) g.append(el('b', null, s)); for (let i = 0; i < m.getDay(); i++) g.append(el('i'));
+  let perf = 0, comD = 0, okT = 0, totT = 0;
+  for (let dt = calMes; dt.slice(0, 7) === calMes.slice(0, 7); dt = somaDia(dt, 1)) {
+    const r = dt > h ? { ok: 0, tot: 0 } : resumoDia(dt), dd = dt, cls = dt > h || !r.tot ? '' : r.ok === r.tot ? 'b' : r.ok ? 'm' : 'r';
+    if (r.tot) { comD++; okT += r.ok; totT += r.tot; if (r.ok === r.tot) perf++ }
+    const b = el('button', cls + (dt === h ? ' hj' : '') + (dt === calDia ? ' sel' : '')); b.append(el('span', 'n', String(+dt.slice(8))), el('small', null, r.tot ? r.ok + '/' + r.tot : ''));
+    b.disabled = dt > h; b.onclick = () => { calDia = dd; desenhaCal() }; b.setAttribute('aria-label', ddmm(dt) + (r.tot ? ': ' + r.ok + ' de ' + r.tot + ' diárias' : '')); g.append(b) }
+  esq.append(g);
+  const res = el('div', 'calRes'), cx = (v, t) => { const d = el('div'); d.append(el('b', null, v), el('small', null, t)); res.append(d) };
+  cx(perf + '/' + comD, 'dias perfeitos'); cx(totT ? Math.round(okT / totT * 100) + '%' : '—', 'diárias feitas'); cx('🔥 ' + melhorRacha(), 'melhor sequência');
+  esq.append(res, el('div', 'calLeg', '🟩 todas · 🟨 parte · 🟥 nenhuma'));
+  // dia escolhido
+  const dt = calDia, ed = editavel(dt), t = el('h3', null, (dt === h ? 'Hoje' : dt === somaDia(h, -1) ? 'Ontem' : SEM_N[dData(dt).getDay()]) + ', ' + ddmm(dt));
+  t.append(el('span', 'calTag' + (ed ? ' ed' : ''), ed ? '✏️ dá pra corrigir' : '🔒 só consulta')); dir.append(t);
   const L = diariasDoDia(dt);
-  if (L.length) listaEl.append(el('div', 'grupo', 'Diárias'));
+  if (L.length) dir.append(el('div', 'grupo', 'Diárias'));
   for (const d of L) { const v = estadoDia(d, dt), it = el('div', 'item' + (v === 1 ? ' feito' : '')), b = el('button', 'chk' + (v === 0 ? ' mal' : ''), v === 1 ? '✓' : v === 0 ? '✗' : '');
     if (!ed) b.disabled = true;
-    else if (dt === h) { if (d.tipo === 'sn') b.onclick = () => { if (d.ok) { d.ok = false; d.nao = true } else if (d.nao) d.nao = false; else d.ok = true; confere(d); salva(); lista(); hud() }; else b.onclick = () => trocaAba('diar') }
+    else if (dt === h) { if (d.tipo === 'sn') b.onclick = () => { if (d.ok) { d.ok = false; d.nao = true } else if (d.nao) d.nao = false; else d.ok = true; confere(d); salva(); hud(); desenhaCal() }; else b.onclick = () => { fechaCal(); trocaAba('diar') } }
     else b.onclick = () => corrigeOntem(d);
     b.setAttribute('aria-label', v === 1 ? 'Feita' : v === 0 ? 'Não feita' : 'Sem marcar');
-    const tx = el('div', 'txt'); tx.append(el('span', null, d.t)); if (ed && dt !== h) tx.append(el('small', null, v === 1 ? 'toque pra marcar como não feita' : 'toque pra marcar como feita'));
-    it.append(b, tx); listaEl.append(it) }
+    const tx = el('div', 'txt'); tx.append(el('span', null, d.t)); if (ed) tx.append(el('small', null, dt !== h ? (v === 1 ? 'toque pra marcar como não feita' : 'toque pra marcar como feita') : d.tipo === 'sn' ? '1 toque feita · 2 não feita' : 'toque pra marcar na aba Diárias'));
+    it.append(b, tx); dir.append(it) }
   const HB = S.hab.map(x => [x, dt === h ? [x.c || 0, x.cn || 0] : (x.hist || {})[dt]]).filter(([, v]) => v && (v[0] || v[1]));
-  if (HB.length) { listaEl.append(el('div', 'grupo', 'Hábitos')); for (const [x, [c, cn]] of HB) { const it = el('div', 'item'), tx = el('div', 'txt'); tx.append(el('span', null, x.t)); it.append(tx, el('span', 'mini', (c ? '+' + c : '') + (cn ? ' −' + cn : ''))); listaEl.append(it) } }
-  const af = (S.hafz || {})[dt]; if (af) listaEl.append(el('div', 'grupo', '✓ ' + af + (af === 1 ? ' afazer concluído' : ' afazeres concluídos')));
-  if (!L.length && !HB.length && !af) listaEl.append(el('div', 'vazio', 'Nada registrado neste dia.'));
-  if (ed && dt !== h) listaEl.append(el('p', 'dica', 'Ontem ainda dá pra corrigir: marcar como feita dá o XP e devolve a vida que a falta tirou. De anteontem pra trás fica só pra consulta.'));
+  if (HB.length) { dir.append(el('div', 'grupo', 'Hábitos')); for (const [x, [c, cn]] of HB) { const it = el('div', 'item'), tx = el('div', 'txt'); tx.append(el('span', null, x.t)); it.append(tx, el('span', 'mini', (c ? '+' + c : '') + (cn ? ' −' + cn : ''))); dir.append(it) } }
+  const af = (S.hafz || {})[dt]; if (af) dir.append(el('div', 'grupo', '✓ ' + af + (af === 1 ? ' afazer concluído' : ' afazeres concluídos')));
+  if (!L.length && !HB.length && !af) dir.append(el('div', 'vazio', 'Nada registrado neste dia.'));
+  if (ed && dt !== h) dir.append(el('p', 'dica', 'Ontem ainda dá pra corrigir: marcar como feita dá o XP e devolve a vida que a falta tirou. De anteontem pra trás fica só pra consulta.'));
+  dir.scrollTop = topoDir;
 }
 function inventario() {
   const so = el('div', 'sec'); so.append(el('h3', null, 'Ouro'), el('div', 'ouroG', '🪙 ' + S.ouro), el('p', 'dica', 'Ganha ouro com as tarefas e matando monstros. A vida não volta sozinha: cura fazendo as tarefas ou com poção.')); listaEl.append(so);
