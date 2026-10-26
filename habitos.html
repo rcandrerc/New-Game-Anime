@@ -2,6 +2,7 @@
 <html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#141a28">
+<link rel="manifest" href="habitos.webmanifest"><link rel="apple-touch-icon" href="icones/habitos-192.png"><link rel="icon" href="icones/habitos-192.png">
 <title>New Game Anime — hábitos</title>
 <style>
   :root{--bg:#141a28;--fg:#f4f6fb;--fg2:#b9c2d6;--glass:rgba(20,26,40,.6);--card:#1e2638;--card2:#263049;--line:rgba(255,255,255,.14);--accent:#f0a83a;--ink:#16130e;
@@ -58,6 +59,20 @@
   #dor{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 46px 12px rgba(220,30,20,.45);opacity:0;transition:opacity .35s}
   #bEst{font-weight:800;font-size:12.5px;padding:5px 10px;border-radius:999px;background:linear-gradient(#5b3a8a,#3a2560);border-color:#b98cff;white-space:nowrap}
   #bEst small{font-weight:700;opacity:.85;margin-left:4px}
+  #hojeTela{position:fixed;inset:0;z-index:33;display:none;align-items:center;justify-content:center;background:rgba(8,10,18,.72);padding:12px}
+  #hojeTela.on{display:flex}
+  .hojeCx{width:100%;max-width:640px;max-height:100%;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:0 10px 40px #000a}
+  .hojeCx h2{margin:0 0 2px;font-size:20px} .hojeCx .hsub{color:var(--fg2);font-size:13px;margin-bottom:8px}
+  .pbar{height:14px;border-radius:8px;background:#2a3350;overflow:hidden;margin:6px 0 4px} .pbar i{display:block;height:100%;background:linear-gradient(90deg,#2f9a64,#7ddc8a);border-radius:8px}
+  .pbar.chefe i{background:linear-gradient(90deg,#b0303a,#ff6a5a)}
+  .hojeBot{display:flex;gap:8px;margin-top:12px} .hojeBot button{flex:1;padding:12px;font-weight:800;font-size:15px;border-radius:12px}
+  .hojeBot .jg{background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border-color:#fff3c4}
+  .bau{width:100%;padding:12px;margin:8px 0;font-size:16px;font-weight:900;border-radius:12px;background:linear-gradient(#ffd86b,#d08a1a);color:#3a2000;border:2px solid #fff3c4;animation:pulsa 1.2s ease-in-out infinite}
+  .bau.off{animation:none;background:#2a3350;color:var(--fg2);border-color:var(--line);font-weight:700;font-size:14px}
+  .hojeBar{background:var(--card);border-radius:12px;padding:8px 12px;margin:4px 0 8px;cursor:pointer} .hojeBar b{font-size:13.5px}
+  .conq{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px} .conq div{background:var(--card2);border-radius:10px;padding:7px 4px;text-align:center;font-size:11px;color:var(--fg2)}
+  .conq div b{display:block;font-size:24px} .conq div.off{opacity:.35;filter:grayscale(1)} .conq div span{display:block;color:var(--fg);font-weight:700;font-size:11.5px}
+  .graf{width:100%;max-width:480px;height:auto;display:block;margin:0 auto} .tend{display:flex;justify-content:space-between;font-size:13px;padding:4px 2px;border-bottom:1px solid var(--line)} .tend .up{color:#7ddc8a;font-weight:800} .tend .dn{color:#ff8a7a;font-weight:800}
   #calTela{position:fixed;inset:0;z-index:32;display:none;flex-direction:column;background:var(--bg);color:var(--fg);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}
   #calTela.on{display:flex}
   .calCab{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line)} .calCab b{font-size:17px}
@@ -142,6 +157,7 @@
   .atr .v{font-weight:900;font-size:18px;min-width:28px;text-align:center}
   .atr button{width:38px;height:38px;padding:0;font-size:20px;font-weight:900;border-radius:10px;background:#2f9a64;border-color:#4fc488}
   .atr button:disabled{opacity:.25}
+  .sec button.reset.verde{background:#1f6b45;border-color:#2f9a64}
   .sec button.reset{width:100%;font-weight:800;background:#8a2e2e;border-color:#c05050}
   .skills{display:flex;flex-direction:column;gap:6px}
   .sk1{display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:10px;background:#2a3350;border-left:4px solid var(--esp)}
@@ -252,6 +268,7 @@
 </div>
 <div id="aviso"></div>
 <div id="ed" role="dialog" aria-label="Configurar tarefa"></div>
+<div id="hojeTela" role="dialog" aria-label="Hoje"></div>
 <div id="calTela" role="dialog" aria-label="Calendário"></div>
 <div id="mapa"><div class="rolo"><div class="folha"><canvas aria-hidden="true"></canvas></div></div><div class="topo"><b>Mapa da Missão</b><small></small></div>
   <div class="info"><div></div><button class="pocao" aria-label="Tomar poção">🧪</button><button class="tarefas" aria-label="Ver as tarefas">📋</button><button class="repete" aria-pressed="false" aria-label="Repetir o mesmo estágio depois de vencer">🔁</button><button class="jogar">▶ Jogar</button></div></div>
@@ -274,6 +291,11 @@ const dorDe = d => Math.round(hpMax() * DIF[d].dor), curaDe = d => Math.round(hp
 const ITENS = { // inventário: o que a loja vende e dá pra usar fora da luta (antes de começar o estágio)
   pocao: { nome: 'Poção de vida', ic: '🧪', desc: 'recupera 40% da vida', preco: 15, cura: 0.4 },
   pocaoG: { nome: 'Poção grande', ic: '⚗️', desc: 'enche a vida toda', preco: 40, cura: 1 } };
+const EQUIP = { // compras pra sempre (aparecem na heroína ou dão bônus)
+  fada: { nome: 'Fada companheira', ic: '🧚', desc: 'voa do seu lado e dá +10% de XP nas tarefas', preco: 120 },
+  aura: { nome: 'Aura dourada', ic: '✨', desc: 'um brilho no chão em volta da heroína', preco: 80 },
+  amuleto: { nome: 'Amuleto da sorte', ic: '🍀', desc: '+25% de ouro dos monstros', preco: 150 } };
+const temEq = k => !!(S.equip && S.equip[k]);
 const AFZ_X = 1.5; // afazer (tarefa única) vale 50% a mais
 const PTS_NIVEL = 3; // pontos de atributo a cada nível
 const ATR = [ // atributo, nome, o que faz
@@ -301,7 +323,7 @@ if (!S.attr) { S.attr = { for: 0, des: 0, vid: 0, est: 0, mag: 0 }; S.pontos = P
 if (!S.lib) { S.lib = 1; S.est = 1; S.ok = {} }
 if ('pocoes' in S) { S.inv = { pocao: S.pocoes || 0 }; delete S.pocoes } // as poções antigas viram itens do inventário
 function zeraProgresso() { // nível, pontos, ouro, equipamento e missão voltam ao começo; as tarefas e as escolhas ficam
-  const fica = {}; for (const k of ['pers', 'hab', 'diar', 'afz', 'aba', 'dia', 'auto', 'cheio', 'repete', 'meta', 'metas', 'hafz', 'per', 'tela']) if (k in S) fica[k] = S[k];
+  const fica = {}; for (const k of ['pers', 'hab', 'diar', 'afz', 'aba', 'dia', 'auto', 'cheio', 'repete', 'meta', 'metas', 'hafz', 'per', 'tela', 'backup']) if (k in S) fica[k] = S[k];
   for (const k in S) delete S[k]; Object.assign(S, padrao(), fica); S.attr = { for: 0, des: 0, vid: 0, est: 0, mag: 0 }; S.pontos = PTS_NIVEL; S.zerado = 1;
 }
 function resetaJogo() { // o jogo volta pro começo e o histórico das tarefas zera; a lista de hábitos, diárias e afazeres fica
@@ -661,7 +683,7 @@ function poeEspada() { // espada na mão direita
   espada.userData.base = new THREE.Object3D(); espada.userData.base.position.y = 0.2; espada.userData.ponta = new THREE.Object3D(); espada.userData.ponta.position.y = 0.12 + L + 0.08; espada.add(espada.userData.base, espada.userData.ponta);
   espada.userData.aco = aco; corEspada();
 }
-function corEspada() { if (espada) espada.userData.aco.emissive.set(S.espada >= 3 ? 0x6a3a00 : S.espada >= 1 ? 0x3a4a6a : 0x223344) }
+function corEspada() { if (espada) espada.userData.aco.emissive.set(S.espada >= 9 ? 0xb01020 : S.espada >= 6 ? 0x5a2a9a : S.espada >= 3 ? 0x6a3a00 : S.espada >= 1 ? 0x3a4a6a : 0x223344) } // a lâmina muda de cor: azul, dourada, roxa, vermelha
 // movimento de raiz: os golpes do Mixamo avançam o corpo pela curva gravada no .glb (extras.root)
 function curva(n) { return R && R.root.userData.vrm.root && R.root.userData.vrm.root[n] }
 function naCurva(c, t) {
@@ -924,7 +946,7 @@ const barrasEl = document.getElementById('barras');
 function novoBicho(tipo, x, z, chefe) {
   const p = perigo(), k = K / 0.64 * (chefe ? 1.4 + 0.055 * (p - 1) : 1), b = { tipo, x, z, y: altura(x, z), face: Math.atan2(P.x - x, P.z - z), vivo: true, est: 'parado', t: 0, cd: 1 + Math.random(), nasce: 0, morto: 0, chefe,
     max: Math.round(HPM * forcaM(p)[0] * (chefe ? 4.5 : 1)), dano: Math.round(DNM * forcaM(p)[1] * (chefe ? 1.6 : 1)), g: new THREE.Group(), mats: [], kx: 0, kz: 0,
-    r: 0.55 * k, alt: 1.75 * k, peso: chefe ? 4 : 2.2, ouro: Math.round((3 + p) * (chefe ? 6 : 1)) };
+    r: 0.55 * k, alt: 1.75 * k, peso: chefe ? 4 : 2.2, ouro: Math.round((3 + p) * (chefe ? 6 : 1) * (temEq('amuleto') ? 1.25 : 1)) };
   b.hp = b.max; b.g.position.set(x, b.y, z); b.g.scale.setScalar(0.001); sc.add(b.g);
   b.bar = document.createElement('div'); b.bar.innerHTML = '<i></i>'; if (chefe) b.bar.className = 'chefe'; barrasEl.appendChild(b.bar);
   BUF[tipo].then(buf => _gl.parse(buf, '', g => {
@@ -1127,14 +1149,14 @@ function aviso(txt, t = 2.6) { avisoEl.textContent = txt; avisoEl.classList.add(
 
 // ---------------- recompensas das tarefas (a única fonte de XP) ----------------
 function ganha(xp, ouro, cura) {
-  S.xp += xp; S.ouro += ouro; if (cura) { const v = Math.min(hpMax() - S.hp, cura); if (v > 0) { S.hp += v; numero('+' + Math.round(v), P.x, P.y + ALT + 0.2, P.z, 'cura') } }
+  chefeDano(xp); if (temEq('fada')) xp = Math.round(xp * 1.1); S.xp += xp; S.ouro += ouro; if (cura) { const v = Math.min(hpMax() - S.hp, cura); if (v > 0) { S.hp += v; numero('+' + Math.round(v), P.x, P.y + ALT + 0.2, P.z, 'cura') } }
   numero('+' + xp + ' XP', P.x, P.y + ALT + 0.35, P.z, 'xp'); if (ouro) setTimeout(() => numero('+' + ouro + ' 🪙', P.x, P.y + ALT + 0.1, P.z, 'ouro'), 180);
   brilho(0xffe066); plim(0); comemora();
   let subiu = 0; while (S.xp >= xpProx()) { S.xp -= xpProx(); S.nv++; subiu++ }
   if (subiu) { S.pontos += PTS_NIVEL * subiu; P.en = enMax(); som('vitoria', 0.8); faixa('Nível ' + S.nv + '!', '+' + PTS_NIVEL * subiu + ' pontos pra distribuir (aba Herói)', 2.4); setTimeout(() => brilho(0xffffff), 250) }
   salva(); hud(); if (aba === 'her') lista();
 }
-function perde(xp, ouro, hp) { S.xp = Math.max(0, S.xp - xp); S.ouro = Math.max(0, S.ouro - ouro); if (hp) S.hp = Math.max(1, S.hp - hp); salva(); hud() } // desmarcou: devolve (não desce de nível)
+function perde(xp, ouro, hp) { chefeDano(-xp); if (temEq('fada')) xp = Math.round(xp * 1.1); S.xp = Math.max(0, S.xp - xp); S.ouro = Math.max(0, S.ouro - ouro); if (hp) S.hp = Math.max(1, S.hp - hp); salva(); hud() } // desmarcou: devolve (não desce de nível)
 
 function machuca(v, motivo) {
   S.hp = Math.max(0, S.hp - v); numero('-' + v, P.x, P.y + ALT + 0.2, P.z, 'dor'); doi(); som('dor', 0.6); if (motivo) aviso(motivo);
@@ -1403,6 +1425,7 @@ document.getElementById('bEst').addEventListener('click', () => mapaEl.classList
 
 // ---------------- HUD ----------------
 function hud() {
+  checaConquistas();
   document.getElementById('hNome').firstChild.textContent = PERS[S.pers][1];
   document.getElementById('hNv').textContent = 'Nível ' + S.nv;
   const hp = document.getElementById('hPts'); hp.hidden = !S.pontos; hp.textContent = '+' + S.pontos + ' pontos';
@@ -1486,6 +1509,7 @@ function lista() {
       listaEl.append(it);
     }
   } else if (aba === 'diar') {
+    if (S.diar.length) listaEl.append(barraHoje());
     if (!S.diar.length) listaEl.append(el('div', 'vazio', 'Diárias são as tarefas de rotina. Se ficar alguma sem fazer no dia dela, o herói perde vida quando o dia vira.'));
     const L = filtroCats(S.diar).map(prep), h = hoje(), hj = L.filter(d => agendada(d, h)), fora = L.filter(d => !agendada(d, h));
     hj.sort((a, b) => (a.hora || '99') < (b.hora || '99') ? -1 : (a.hora || '99') > (b.hora || '99') ? 1 : 0); // com horário primeiro, na ordem do relógio
@@ -1512,7 +1536,7 @@ const editavel = dt => dt >= somaDia(hoje(), -1) && dt <= hoje();
 function estadoDia(d, dt) { // 1 feita, 0 não feita, null sem registro
   if (dt === hoje()) return feito(d) || semFeita(d) ? 1 : d.nao ? 0 : null; return d.hist[dt] ?? null }
 const diariasDoDia = dt => S.diar.map(prep).filter(d => d.hist[dt] != null || (dt >= d.criado && agendada(d, dt) && d.freq.t !== 'vezes') || (dt === hoje() && agendada(d, dt)));
-function resumoDia(dt) { let ok = 0, tot = 0; for (const d of diariasDoDia(dt)) { const v = estadoDia(d, dt); if (v != null) { tot++; ok += v } } return { ok, tot } }
+function resumoDia(dt) { if (dt === hoje()) return statusHoje(); let ok = 0, tot = 0; for (const d of diariasDoDia(dt)) { const v = estadoDia(d, dt); if (v != null) { tot++; ok += v } } return { ok, tot } }
 function refazRacha(d) { // sequência contada de novo pelo histórico (depois de corrigir ontem)
   if (d.freq.t === 'vezes') return; let r = 0;
   for (let dt = somaDia(hoje(), -1), i = 0; i < 400 && dt >= d.criado; dt = somaDia(dt, -1), i++) { if (!agendada(d, dt)) continue; if (d.hist[dt] === 1) r++; else break }
@@ -1574,6 +1598,104 @@ function desenhaCal() {
   if (ed && dt !== h) dir.append(el('p', 'dica', 'Ontem ainda dá pra corrigir: marcar como feita dá o XP e devolve a vida que a falta tirou. De anteontem pra trás fica só pra consulta.'));
   dir.scrollTop = topoDir;
 }
+// ---------------- hoje: o que falta, baú do dia ----------------
+function statusHoje() { const h = hoje(), L = S.diar.map(prep).filter(d => agendada(d, h) && (d.freq.t !== 'vezes' || feito(d) || semFeita(d)));
+  return { ok: L.filter(d => feito(d) || semFeita(d)).length, tot: L.length, L } }
+const bauPronto = () => { const r = statusHoje(); return r.tot > 0 && r.ok === r.tot && S.bauDia !== hoje() };
+function abreBau() {
+  if (!bauPronto()) return; S.bauDia = hoje(); S.baus = (S.baus || 0) + 1;
+  const ouro = 15 + 2 * S.nv + ((Math.random() * 16) | 0), x = Math.random(), it = x < 0.1 ? 'pocaoG' : x < 0.45 ? 'pocao' : null;
+  S.ouro += ouro; if (it) S.inv[it] = (S.inv[it] || 0) + 1;
+  som('vitoria', 0.7); brilho(0xffd86b); plim(6); faixa('🎁 Baú do dia!', '+' + ouro + ' 🪙' + (it ? ' · ' + ITENS[it].ic + ' ' + ITENS[it].nome : ''), 2.8);
+  salva(); hud(); lista(); if (hojeEl.classList.contains('on')) desenhaHoje();
+}
+function barraHoje() { const r = statusHoje(), c = el('div', 'hojeBar'), pb = el('div', 'pbar'), i = el('i'); i.style.width = (r.tot ? r.ok / r.tot * 100 : 0) + '%'; pb.append(i);
+  c.append(el('b', null, '☀ Hoje: ' + r.ok + ' de ' + r.tot + ' diárias' + (S.bauDia === hoje() ? ' · 🎁 baú aberto' : r.ok === r.tot && r.tot ? ' · 🎁 baú liberado!' : ' · faça todas pra abrir o baú 🎁')), pb); c.onclick = abreHoje; return c }
+const hojeEl = document.getElementById('hojeTela');
+function abreHoje() { viraDia(); chefeSemana(); hojeEl.classList.add('on'); desenhaHoje() }
+function fechaHoje() { hojeEl.classList.remove('on'); hojeEl.innerHTML = '' }
+function desenhaHoje() {
+  const h = hoje(), r = statusHoje(), cx = el('div', 'hojeCx'), hr = new Date().getHours(); hojeEl.innerHTML = ''; hojeEl.append(cx);
+  cx.append(el('h2', null, (hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite') + '! ☀'), el('div', 'hsub', SEM_N[dData(h).getDay()] + ', ' + ddmm(h) + ' · ' + PERS[S.pers][1] + ' nível ' + S.nv));
+  const pb = el('div', 'pbar'), i = el('i'); i.style.width = (r.tot ? r.ok / r.tot * 100 : 0) + '%'; pb.append(i);
+  cx.append(el('b', null, r.tot ? r.ok + ' de ' + r.tot + ' diárias feitas' + (r.ok === r.tot ? ' 🎉' : '') : 'Nenhuma diária pra hoje'), pb);
+  const falta = r.L.filter(d => !(feito(d) || semFeita(d)));
+  for (const d of falta) { const it = el('div', 'item'), b = el('button', 'chk' + (d.nao ? ' mal' : ''), d.nao ? '✗' : ''), tx = el('div', 'txt'); tx.append(el('span', null, d.t), el('small', null, d.tipo === 'sn' ? 'toque quando fizer' : 'marque na aba Diárias'));
+    b.onclick = () => { if (d.tipo !== 'sn') { fechaHoje(); fechaMapa(); trocaAba('diar'); return } d.ok = true; d.nao = false; confere(d); salva(); hud(); lista(); desenhaHoje() }; it.append(b, tx); cx.append(it) }
+  const bb = el('button', 'bau' + (bauPronto() ? '' : ' off'), S.bauDia === h ? '🎁 Baú de hoje já aberto' : bauPronto() ? '🎁 Abrir o baú do dia!' : '🎁 Faça todas as diárias pra abrir o baú'); bb.onclick = abreBau; cx.append(bb);
+  const c = S.cs; if (c) { const pc = el('div', 'pbar chefe'), ic = el('i'); ic.style.width = (c.venceu ? 0 : c.hp / c.max * 100) + '%'; pc.append(ic);
+    cx.append(el('b', null, '🐉 ' + c.nome + (c.venceu ? ' · derrotado! ✓' : ' · ' + Math.ceil(c.hp) + '/' + c.max + ' de vida')), pc, el('div', 'hsub', c.venceu ? 'Volta mais forte no domingo.' : 'Cada tarefa feita bate nele (o XP vira dano). Derrote até sábado pra ganhar o prêmio.')) }
+  if (!S.backup || difDias(S.backup, h) > 7) { const bk = el('div', 'hsub', '💾 Faz tempo que você não salva um backup (aba Herói).'); cx.append(bk) }
+  const bt = el('div', 'hojeBot'), t = el('button', null, '📋 Tarefas'), j = el('button', 'jg', '⚔ Jogar');
+  t.onclick = () => { fechaHoje(); fechaMapa(); trocaAba('diar') }; j.onclick = () => { fechaHoje(); abreMapa(null, S.lib) }; bt.append(t, j); cx.append(bt);
+}
+hojeEl.addEventListener('click', e => { if (e.target === hojeEl) fechaHoje() });
+// ---------------- chefe da semana: perde vida com o XP das tarefas ----------------
+const CHEFES_S = ['Dragão da Preguiça', 'Rei da Procrastinação', 'Sombra do Cansaço', 'Golem da Bagunça', 'Hidra das Desculpas'];
+function chefeSemana() {
+  const h = hoje(), ini = somaDia(h, -dData(h).getDay()); if (S.cs && S.cs.ini === ini) return S.cs;
+  let xp = 0; for (const d of S.diar.map(prep)) { if (d.pausa) continue; if (d.freq.t === 'vezes') { xp += (d.freq.n || 3) * DIF[d.d].xp; continue } for (let i = 0; i < 7; i++) if (agendada(d, somaDia(ini, i))) xp += DIF[d.d].xp }
+  const max = Math.max(100, Math.round(xp * 0.75)), n = Math.round(dData(ini) / 6048e5);
+  S.cs = { ini, max, hp: max, nome: CHEFES_S[((n % CHEFES_S.length) + CHEFES_S.length) % CHEFES_S.length], venceu: false }; salva(); return S.cs;
+}
+function chefeDano(v) {
+  const c = chefeSemana(); if (c.venceu) return; c.hp = Math.min(c.max, Math.max(0, c.hp - v));
+  if (c.hp <= 0) { c.venceu = true; S.chefesV = (S.chefesV || 0) + 1; const ouro = 60 + 5 * S.nv; S.ouro += ouro; S.inv.pocaoG = (S.inv.pocaoG || 0) + 1;
+    setTimeout(() => { som('vitoria', 0.8); faixa('🐉 ' + c.nome + ' derrotado!', '+' + ouro + ' 🪙 · ⚗️ Poção grande', 3) }, 1200) }
+}
+function secChefe(sec) { const c = chefeSemana(), s = sec('🐉 Chefe da semana'), pc = el('div', 'pbar chefe'), ic = el('i'); ic.style.width = (c.venceu ? 0 : c.hp / c.max * 100) + '%'; pc.append(ic);
+  s.append(el('b', null, c.nome + (c.venceu ? ' · derrotado! ✓' : ' · ' + Math.ceil(c.hp) + '/' + c.max)), pc, el('p', 'dica', 'Toda tarefa feita bate nele com o XP que ela dá. Derrotando até sábado: ouro e uma poção grande. Todo domingo vem outro.')) }
+// ---------------- conquistas ----------------
+const CONQ = [ // id, ícone, nome, como ganha, teste, ouro
+  ['pri', '✅', 'Primeiro passo', '1 tarefa feita', () => S.cont.t + S.cont.h >= 1, 10], ['t50', '📋', 'Dedicado', '50 tarefas', () => S.cont.t + S.cont.h >= 50, 40],
+  ['t200', '🏅', 'Incansável', '200 tarefas', () => S.cont.t + S.cont.h >= 200, 100], ['t1000', '👑', 'Lenda', '1000 tarefas', () => S.cont.t + S.cont.h >= 1000, 300],
+  ['r7', '🔥', 'Uma semana', '7 dias seguidos', () => melhorRacha() >= 7, 40], ['r30', '🔥', 'Um mês', '30 dias seguidos', () => melhorRacha() >= 30, 120], ['r100', '💯', 'Cem dias', '100 dias seguidos', () => melhorRacha() >= 100, 400],
+  ['b1', '🎁', 'Dia perfeito', '1º baú do dia', () => (S.baus || 0) >= 1, 15], ['b10', '🎁', 'Colecionador', '10 baús', () => (S.baus || 0) >= 10, 60], ['b50', '💎', 'Tesoureiro', '50 baús', () => (S.baus || 0) >= 50, 200],
+  ['cs1', '🐉', 'Caçador', '1º chefe da semana', () => (S.chefesV || 0) >= 1, 30], ['cs10', '🐲', 'Domador', '10 chefes da semana', () => (S.chefesV || 0) >= 10, 200],
+  ['nv10', '⭐', 'Aventureira', 'nível 10', () => S.nv >= 10, 40], ['nv30', '🌟', 'Heroína', 'nível 30', () => S.nv >= 30, 150], ['nv60', '💫', 'Lendária', 'nível 60', () => S.nv >= 60, 400],
+  ['e10', '⚔️', 'Pé do Vulcão', '10 estágios', () => Object.keys(S.ok).length >= 10, 80], ['e20', '🏰', 'Castelo', '20 estágios', () => Object.keys(S.ok).length >= 20, 200], ['e30', '👹', 'Missão cumprida', '30 estágios', () => Object.keys(S.ok).length >= 30, 500],
+  ['m100', '💀', 'Exterminadora', '100 monstros', () => (S.mortos || 0) >= 100, 40], ['m1000', '☠️', 'Pesadelo', '1000 monstros', () => (S.mortos || 0) >= 1000, 200]];
+function checaConquistas() {
+  S.conq = S.conq || {}; const novas = CONQ.filter(c => !S.conq[c[0]] && c[4]()); if (!novas.length) return;
+  let ouro = 0; for (const c of novas) { S.conq[c[0]] = hoje(); ouro += c[5] } S.ouro += ouro; salva();
+  setTimeout(() => faixa('🏆 ' + (novas.length === 1 ? novas[0][1] + ' ' + novas[0][2] : novas.length + ' conquistas!'), (novas.length === 1 ? novas[0][3] + ' · ' : '') + '+' + ouro + ' 🪙', 2.8), 1600);
+}
+function secConquistas(sec) { const s = sec('🏆 Conquistas (' + Object.keys(S.conq || {}).length + ' de ' + CONQ.length + ')'), g = el('div', 'conq');
+  for (const [id, ic, nome, como, , ouro] of CONQ) { const d = el('div', S.conq && S.conq[id] ? '' : 'off'); d.append(el('b', null, ic), el('span', null, nome), como + ' · ' + ouro + ' 🪙'); g.append(d) } s.append(g) }
+// ---------------- gráfico: semana a semana ----------------
+function secGrafico(sec) {
+  const h = hoje(), s = sec('📈 Semana a semana'), ini0 = somaDia(h, -dData(h).getDay()), W = 320, H = 120, N = 8, sem = [];
+  for (let k = N - 1; k >= 0; k--) { const ini = somaDia(ini0, -7 * k); let ok = 0, tot = 0; for (let i = 0; i < 7; i++) { const dt = somaDia(ini, i); if (dt > h) break; const r = resumoDia(dt); ok += r.ok; tot += r.tot } sem.push([ini, tot ? Math.round(ok / tot * 100) : null]) }
+  const ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg'), mk = (t, a) => { const e = document.createElementNS(ns, t); for (const k in a) e.setAttribute(k, a[k]); svg.append(e); return e };
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + (H + 30)); svg.setAttribute('class', 'graf'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', '% de diárias feitas nas últimas 8 semanas');
+  for (const y of [0, 50, 100]) mk('line', { x1: 0, x2: W, y1: H - y * H / 100 + 10, y2: H - y * H / 100 + 10, stroke: 'rgba(255,255,255,.12)' });
+  sem.forEach(([ini, p], i) => { const bw = W / N, x = i * bw + bw * 0.18, w = bw * 0.64, hh = (p || 0) * H / 100;
+    if (p != null) { mk('rect', { x, y: H - hh + 10, width: w, height: Math.max(2, hh), rx: 4, fill: p >= 80 ? '#2f9a64' : p >= 50 ? '#c9a23a' : '#b04444' }); mk('text', { x: x + w / 2, y: H - hh + 4, 'text-anchor': 'middle', 'font-size': 11, fill: '#f4f6fb', 'font-weight': 700 }).textContent = p + '%' }
+    mk('text', { x: x + w / 2, y: H + 26, 'text-anchor': 'middle', 'font-size': 10, fill: '#b9c2d6' }).textContent = i === N - 1 ? 'esta' : ddmm(ini) });
+  s.append(svg, el('p', 'dica', '% das diárias feitas em cada semana (domingo a sábado).'));
+  // quem subiu e quem caiu: últimos 7 dias contra os 7 de antes
+  const L = S.diar.map(prep).filter(d => !d.pausa).map(d => [d, pctDe(taxa(d, somaDia(h, -6), h)), pctDe(taxa(d, somaDia(h, -13), somaDia(h, -7)))]).filter(([, a]) => a != null);
+  if (L.length) { s.append(el('div', 'grupo', 'Últimos 7 dias × 7 antes')); for (const [d, a, b] of L) { const r = el('div', 'tend'), v = el('span'); v.textContent = a + '%' + (b == null ? '' : a > b ? ' ▲' + (a - b) : a < b ? ' ▼' + (b - a) : ' ='); if (b != null && a !== b) v.className = a > b ? 'up' : 'dn'; r.append(el('span', null, d.t), v); s.append(r) } }
+}
+// ---------------- backup e app ----------------
+function exportaBackup() { S.backup = hoje(); salva(); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S)], { type: 'application/json' })); a.download = 'habitos-backup-' + hoje() + '.json';
+  document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove() }, 2000); aviso('💾 Backup salvo nos downloads do celular.'); lista() }
+function importaBackup() { const i = document.createElement('input'); i.type = 'file'; i.accept = '.json,application/json';
+  i.onchange = () => { const f = i.files[0]; if (!f) return; f.text().then(t => { let d; try { d = JSON.parse(t) } catch (e) { d = null }
+    if (!d || !Array.isArray(d.diar) || !Array.isArray(d.hab)) { aviso('Esse arquivo não é um backup do jogo.'); return }
+    if (!confirm('Trocar tudo pelo backup' + (d.backup ? ' de ' + ddmm(d.backup) : '') + '? O que está no celular agora some.')) return; localStorage.setItem(CHAVE, JSON.stringify(d)); location.reload() }) }; i.click() }
+let instalaEv = null; addEventListener('beforeinstallprompt', e => { e.preventDefault(); instalaEv = e; if (aba === 'her') lista() });
+function instalaApp() { if (!instalaEv) return; instalaEv.prompt(); instalaEv.userChoice.finally(() => { instalaEv = null; lista() }) }
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw-habitos.js').catch(() => {});
+// ---------------- enfeites da heroína: fada e aura ----------------
+let FADA = null, AURA = null;
+function enfeitesPasso(dt) {
+  if (temEq('fada') && !FADA) { FADA = new THREE.Group(); const m = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 8), new THREE.MeshBasicMaterial({ color: 0xc8fff0 })), g = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 8), new THREE.MeshBasicMaterial({ color: 0x7dffd8, transparent: true, opacity: 0.3, depthWrite: false }));
+    FADA.add(m, g, new THREE.PointLight(0x9dffe0, 0.8, 3, 2)); sc.add(FADA) }
+  if (temEq('aura') && !AURA) { AURA = new THREE.Mesh(new THREE.RingGeometry(0.45, 0.62, 40), new THREE.MeshBasicMaterial({ color: 0xffd86b, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide })); AURA.rotation.x = -Math.PI / 2; sc.add(AURA) }
+  if (FADA) { const a = tempo * 1.6, k = K / 0.64; FADA.position.set(P.x + Math.cos(a) * 0.75 * k, P.y + (1.5 + Math.sin(tempo * 3) * 0.12) * k, P.z + Math.sin(a) * 0.75 * k) }
+  if (AURA) { AURA.position.set(P.x, P.y + 0.04, P.z); AURA.scale.setScalar((1 + Math.sin(tempo * 2.5) * 0.06) * K / 0.64); AURA.material.opacity = 0.4 + Math.sin(tempo * 2.5) * 0.15 }
+}
 function inventario() {
   const so = el('div', 'sec'); so.append(el('h3', null, 'Ouro'), el('div', 'ouroG', '🪙 ' + S.ouro), el('p', 'dica', 'Ganha ouro com as tarefas e matando monstros. A vida não volta sozinha: cura fazendo as tarefas ou com poção.')); listaEl.append(so);
   const si = el('div', 'sec'); si.append(el('h3', null, 'Itens')); const li = el('div', 'loja'); let tem = false;
@@ -1585,8 +1707,9 @@ function inventario() {
   const s2 = el('div', 'sec'); s2.append(el('h3', null, 'Loja')); const lj = el('div', 'loja');
   const item = (nome, desc, preco, ok, f) => { const b = el('button'); const e = el('div'); e.append(nome, el('small', null, desc)); b.append(e, el('span', 'preco', '🪙 ' + preco)); b.disabled = S.ouro < preco || !ok;
     b.onclick = () => { if (S.ouro < preco) return; S.ouro -= preco; f(); salva(); hud(); lista(); plim(5) }; lj.append(b) };
+  for (const k in EQUIP) { const it = EQUIP[k]; item(it.ic + ' ' + it.nome + (temEq(k) ? ' ✓' : ''), temEq(k) ? 'já é seu' : it.desc, it.preco, !temEq(k), () => { S.equip = S.equip || {}; S.equip[k] = 1; aviso(it.ic + ' ' + it.nome + ' é sua!') }) }
   for (const k in ITENS) { const it = ITENS[k]; item(it.ic + ' ' + it.nome, it.desc + ' · tome antes de começar o estágio', it.preco, true, () => { S.inv[k] = (S.inv[k] || 0) + 1 }) }
-  const pe = 40 + 35 * S.espada; item('Espada melhor (' + (S.espada + 1) + ')', '+4 de dano de espada', pe, S.espada < 10, () => { S.espada++; corEspada(); aviso('Espada melhorada!') });
+  const pe = 40 + 35 * S.espada; item('Espada melhor (' + (S.espada + 1) + ')', '+4 de dano de espada' + ([1, 3, 6, 9].includes(S.espada + 1) ? ' · a lâmina muda de cor' : ''), pe, S.espada < 10, () => { S.espada++; corEspada(); aviso('Espada melhorada!') });
   const pa = 35 + 30 * S.armad; item('Armadura (' + (S.armad + 1) + ')', 'segura +7% do dano dos monstros', pa, S.armad < 8, () => { S.armad++; aviso('Armadura melhorada!') });
   s2.append(lj); listaEl.append(s2);
 }
@@ -1594,6 +1717,11 @@ function heroina() {
   { const sr = el('div', 'sec'), b = el('button', 'reset', '🔄 Resetar jogo'); sr.append(el('h3', null, 'Reiniciar'));
     b.onclick = () => { if (confirm('Resetar o jogo? Volta pro nível 1 e pro estágio 1, e zera o histórico e as sequências das tarefas. Os hábitos, diárias e afazeres que você criou ficam.')) { resetaJogo(); salva(); location.reload() } };
     sr.append(b, el('p', 'dica', 'Recomeça a aventura do zero. As tarefas que você criou continuam na lista.')); listaEl.append(sr) }
+  { const sb = el('div', 'sec'), ex = el('button', 'reset verde', '💾 Salvar backup'), im = el('button', null, '📂 Restaurar backup'); im.style.marginTop = '8px'; im.style.width = '100%';
+    sb.append(el('h3', null, 'Backup'), el('p', 'dica', 'Tudo fica só neste celular. O backup salva um arquivo nos downloads; se trocar de celular ou limpar os dados, é só restaurar. ' + (S.backup ? 'Último backup: ' + ddmm(S.backup) + '.' : 'Você ainda não fez nenhum.')), ex, im);
+    ex.onclick = exportaBackup; im.onclick = importaBackup;
+    if (instalaEv) { const ins = el('button', null, '📲 Instalar como app'); ins.style.marginTop = '8px'; ins.style.width = '100%'; ins.onclick = instalaApp; sb.append(ins) }
+    listaEl.append(sb) }
   // atributos
   const s0 = el('div', 'sec'), h0 = el('h3', null, 'Atributos'); if (S.pontos) h0.append(el('span', 'pts', S.pontos + ' pra distribuir')); s0.append(h0);
   for (const [k, nome, desc] of ATR) { const d = el('div', 'atr'), nm = el('div', 'nm'); nm.append(el('b', null, nome), el('small', null, desc));
@@ -1625,7 +1753,7 @@ function heroina() {
     for (const [v, t] of [[5, '5 min'], [8, '8 min'], [15, '15 min'], [0, 'Normal']]) { const bt = el('button', telaMin() === v ? 'on' : null, t); bt.onclick = () => { S.tela = v; salva(); if (!v) soltaTela(); else prendeTela(); lista() }; sg.append(bt) }
     st.append(el('p', 'dica', 'Quanto tempo a tela fica acesa sem você tocar, com o jogo aberto. Depois disso o celular apaga no tempo normal dele.'), sg); listaEl.append(st) }
   const s4 = el('div', 'sec'); s4.append(el('h3', null, 'Como funciona'));
-  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 30 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede 2 níveis a mais que o anterior, 3 a partir do 11 (o nível aparece no mapa): sem esse nível o estágio não abre, então sem fazer as tarefas você não passa. Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. O herói luta sozinho (Auto) ou com você no controle (Manual). Os monstros dão ouro pra loja. Vida: não volta sozinha (nem ao vencer). Cada tarefa cumprida cura um pouco (mais nas difíceis); fora isso, só poção, comprada com ouro na aba Inventário e tomada no mapa antes de começar o estágio. Hábito ruim e diária esquecida tiram vida; se zerar, perde e recomeça o estágio. Tudo fica salvo neste celular.';
+  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 30 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede 2 níveis a mais que o anterior, 3 a partir do 11 (o nível aparece no mapa): sem esse nível o estágio não abre, então sem fazer as tarefas você não passa. Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. O herói luta sozinho (Auto) ou com você no controle (Manual). Os monstros dão ouro pra loja. Vida: não volta sozinha (nem ao vencer). Cada tarefa cumprida cura um pouco (mais nas difíceis); fora isso, só poção, comprada com ouro na aba Inventário e tomada no mapa antes de começar o estágio. Hábito ruim e diária esquecida tiram vida; se zerar, perde e recomeça o estágio. Fazendo todas as diárias do dia você abre o baú 🎁, e cada tarefa bate no chefe da semana 🐉. Tudo fica salvo neste celular.';
   s4.append(p);
   const z = el('button', null, 'Apagar tudo (inclusive as tarefas)'); z.style.marginTop = '8px'; z.onclick = () => { if (confirm('Apagar todo o progresso e as tarefas?')) { localStorage.removeItem(CHAVE); location.reload() } }; s4.append(z);
   listaEl.append(s4);
@@ -1666,6 +1794,8 @@ function corPct(p) { return p == null ? null : 'hsl(' + Math.round(p * 1.2) + ',
 function poeMeta(d) { editor('diar', d); const h = hoje(); ED.D.alvo = { ini: h, fim: somaDia(h, 60), p: 80 }; desenhaEd(); const m = edEl.querySelector('.metaed'); if (m) m.scrollIntoView({ block: 'start' }) }
 function progresso() { // tudo por hábito: a meta de cada um e o % de cada um
   const h = hoje(), sec = tit => { const s = el('div', 'sec'); s.append(el('h3', null, tit)); listaEl.append(s); return s };
+  secChefe(sec); secConquistas(sec);
+  if (S.diar.length) secGrafico(sec);
   if (!S.diar.length) { const s = sec('🎯 Metas por hábito'); s.append(el('p', 'dica', 'Crie os hábitos que quer acompanhar dia a dia na aba Diárias (ex.: dormir cedo, atividade física). Depois volte aqui pra pôr uma meta com data em cada um.')); return }
   // metas com data, uma por hábito
   { const s = sec('🎯 Metas por hábito'), com = S.diar.filter(d => prep(d).alvo), sem = S.diar.filter(d => !d.alvo);
@@ -1780,7 +1910,7 @@ let t0 = performance.now(), hudT = 0, tempo = 0;
 const camAlvo = new THREE.Vector3(P.x, 0, P.z);
 function passo(dt) {
   if (pausa > 0) pausa -= dt;
-  heroiPasso(dt); bichosPasso(dt); orbesPasso(dt); faiscasPasso(dt); aneisPasso(dt); fxPasso(dt); fx2Passo(dt); laminaPasso(dt);
+  heroiPasso(dt); enfeitesPasso(dt); bichosPasso(dt); orbesPasso(dt); faiscasPasso(dt); aneisPasso(dt); fxPasso(dt); fx2Passo(dt); laminaPasso(dt);
 }
 function quadro(t) {
   requestAnimationFrame(quadro); const dt = Math.min(0.05, (t - t0) / 1000); t0 = t; tempo += dt; VENTO.value = tempo;
@@ -1808,7 +1938,7 @@ function quadro(t) {
   numsPasso(dt); r.render(sc, cam);
 }
 new ResizeObserver(tam).observe(arena);
-comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); try { trocaAba(aba) } catch (e) { console.error(e) } try { hud() } catch (e) { console.error(e) } carregar(S.pers); requestAnimationFrame(quadro); abreMapa(null, S.lib); // o jogo abre no mapa; um erro na lista nunca pode travar o carregamento
+comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); try { trocaAba(aba) } catch (e) { console.error(e) } try { hud() } catch (e) { console.error(e) } carregar(S.pers); requestAnimationFrame(quadro); abreMapa(null, S.lib); try { abreHoje() } catch (e) { console.error(e) } // o jogo abre no mapa, com o resumo de hoje por cima; um erro na lista nunca pode travar o carregamento
 // ---------------- tela acesa: o celular não apaga enquanto joga; só depois de uns minutos sem tocar (Screen Wake Lock) ----------------
 const TELA = { trava: null, ult: Date.now() };
 function telaMin() { return S.tela == null ? 8 : S.tela } // (função, não const: a aba Herói usa antes desta linha rodar) minutos sem tocar até deixar o celular apagar (0 = o tempo normal do celular)
