@@ -69,7 +69,53 @@
   .hojeBot .jg{background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border-color:#fff3c4}
   .bau{width:100%;padding:12px;margin:8px 0;font-size:16px;font-weight:900;border-radius:12px;background:linear-gradient(#ffd86b,#d08a1a);color:#3a2000;border:2px solid #fff3c4;animation:pulsa 1.2s ease-in-out infinite}
   .bau.off{animation:none;background:#2a3350;color:var(--fg2);border-color:var(--line);font-weight:700;font-size:14px}
-  .hojeBar{background:var(--card);border-radius:12px;padding:8px 12px;margin:4px 0 8px;cursor:pointer} .hojeBar b{font-size:13.5px}
+  /* ---------- prêmio na frente de tudo (baú, chefe, conquistas, nível) ---------- */
+  #premio{position:fixed;inset:0;z-index:45;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 45%,rgba(70,45,10,.95),rgba(4,6,12,.98));padding:10px;overflow:hidden;cursor:pointer}
+  #premio.on{display:flex}
+  .pCx{display:flex;flex-direction:column;align-items:center;text-align:center;width:100%;max-width:440px;max-height:100%}
+  .pCx h2{position:relative;z-index:3;margin:0;font:900 24px system-ui,sans-serif;color:#ffe066;text-shadow:0 3px 0 #a5560f,0 0 14px #000a}
+  .pCx .pSub{position:relative;z-index:3;color:#f4e6c2;font-size:13px;font-weight:700;margin-top:2px}
+  .palco{position:relative;width:190px;height:142px;display:grid;place-items:end center;padding-bottom:8px;flex:none}
+  .raios{position:absolute;left:50%;top:50%;width:360px;height:360px;margin:-180px 0 0 -180px;border-radius:50%;pointer-events:none;
+    background:repeating-conic-gradient(rgba(255,220,110,.42) 0 9deg,transparent 9deg 22deg);-webkit-mask:radial-gradient(circle,#000 18%,transparent 66%);mask:radial-gradient(circle,#000 18%,transparent 66%);
+    opacity:0;transform:scale(.3);transition:opacity .5s,transform .7s cubic-bezier(.3,1.5,.5,1)}
+  .aberto .raios{opacity:1;transform:scale(1);animation:gira 9s linear infinite}
+  @keyframes gira{to{rotate:360deg}}
+  .bauG{position:relative;width:124px;height:100px}
+  .bauG .corpo{position:absolute;left:0;right:0;bottom:0;height:62px;border-radius:6px 6px 12px 12px;border:3px solid #ffd23a;box-shadow:0 10px 24px #000b;
+    background:linear-gradient(90deg,transparent 43%,#ffd23a 43% 57%,transparent 57%),repeating-linear-gradient(#a8622a 0 14px,#8f501f 14px 16px)}
+  .bauG .corpo::after{content:'';position:absolute;left:50%;top:6px;width:16px;height:18px;margin-left:-8px;border-radius:4px;background:#5a3510;border:2px solid #ffe28a}
+  .bauG .tampa{position:absolute;left:-5px;right:-5px;top:6px;height:38px;border-radius:44px 44px 6px 6px;border:3px solid #ffd23a;z-index:2;transform-origin:8% 100%;transition:transform .5s cubic-bezier(.3,1.7,.5,1);
+    background:linear-gradient(90deg,transparent 43%,#ffd23a 43% 57%,transparent 57%),linear-gradient(#c97c3c,#874a1c)}
+  .bauG::before{content:'';position:absolute;left:14px;right:14px;top:36px;height:14px;border-radius:50%;background:#fff6c8;box-shadow:0 0 34px 22px #ffd86b;opacity:0;transition:opacity .4s .12s;z-index:1}
+  .fechado .bauG{animation:treme 1s ease-in-out infinite}
+  @keyframes treme{0%,55%,100%{transform:rotate(0)}65%{transform:rotate(-8deg) scale(1.04)}75%{transform:rotate(8deg) scale(1.04)}85%{transform:rotate(-4deg)}}
+  .aberto .bauG{animation:pula .5s cubic-bezier(.3,1.6,.5,1)} .aberto .bauG .tampa{transform:translate(-6px,-8px) rotate(-32deg)} .aberto .bauG::before{opacity:1}
+  @keyframes pula{0%{transform:scale(.9)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+  .pIc{position:relative;align-self:center;font-size:86px;line-height:1;animation:salta .6s cubic-bezier(.3,1.6,.5,1) both;filter:drop-shadow(0 6px 10px #000a)}
+  @keyframes salta{from{transform:scale(.2) rotate(-20deg)}to{transform:none}}
+  .pDica{color:#fff;font-weight:800;font-size:15px;min-height:20px;margin:2px 0;animation:pdica .8s ease-in-out infinite alternate}
+  @keyframes pdica{from{opacity:.45}to{opacity:1}}
+  .pIts{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:4px 0 10px}
+  .pIt{display:flex;align-items:center;gap:8px;background:rgba(18,22,38,.92);border:1px solid #ffd86b99;border-radius:12px;padding:7px 12px;font-weight:800;font-size:14px;color:#fff;opacity:0}
+  .pIt b{font-size:26px;line-height:1}
+  .aberto .pIt{animation:entra .5s cubic-bezier(.3,1.6,.5,1) both}
+  @keyframes entra{from{opacity:0;transform:translateY(22px) scale(.5)}to{opacity:1;transform:none}}
+  .pOk{padding:11px 38px;font-weight:900;font-size:16px;border-radius:999px;background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border:2px solid #fff3c4;visibility:hidden}
+  .aberto .pOk{visibility:visible;animation:entra .4s .8s both}
+  @media (max-height:440px){ .palco{height:118px} .bauG{transform:scale(.85)} .pIc{font-size:70px} .pCx h2{font-size:21px} }
+  /* hoje: hábitos bons de um toque, missões e masmorra */
+  .hbs{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px} .hbs button{font-size:13px;padding:7px 10px;border-radius:999px;font-weight:700;background:#24402f;border-color:#3f7a52}
+  .hbs button b{color:#8dffb0;margin-right:3px}
+  .mis{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px} .mis span{flex:1} .mis small{color:var(--fg2);font-weight:700;white-space:nowrap}
+  .mis.ok span{text-decoration:line-through;color:var(--fg2)} .mis.ok small{color:#7ddc8a}
+  .tag.foco{background:#5a4610;color:#ffe066}
+  .tal{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)} .tal .nm{flex:1} .tal .nm b{display:block;font-size:14px} .tal .nm small{color:var(--fg2);font-size:12px}
+  .tal .v{font-weight:900;color:#ffe066;min-width:34px;text-align:center} .tal button{width:38px;height:38px;padding:0;font-size:20px;font-weight:900}
+  #mapa .masm{position:absolute;right:10px;top:10px;z-index:2;padding:8px 12px;border-radius:12px;font:800 13px system-ui,sans-serif;color:#fff;background:linear-gradient(#5b2a8a,#2e1450);border:2px solid #c99cff;box-shadow:0 3px 10px #000a}
+  #mapa .masm.off{opacity:.7;filter:saturate(.4)}
+  .hojeBar{background:var(--card);border-radius:12px;padding:8px 12px;margin:4px 0 8px;cursor:pointer}
+  .hojeBar small{display:block;color:var(--fg2);font-size:12px;margin-top:3px} .hojeBar b{font-size:13.5px}
   .conq{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px} .conq div{background:var(--card2);border-radius:10px;padding:7px 4px;text-align:center;font-size:11px;color:var(--fg2)}
   .conq div b{display:block;font-size:24px} .conq div.off{opacity:.35;filter:grayscale(1)} .conq div span{display:block;color:var(--fg);font-weight:700;font-size:11.5px}
   .graf{width:100%;max-width:480px;height:auto;display:block;margin:0 auto} .tend{display:flex;justify-content:space-between;font-size:13px;padding:4px 2px;border-bottom:1px solid var(--line)} .tend .up{color:#7ddc8a;font-weight:800} .tend .dn{color:#ff8a7a;font-weight:800}
@@ -273,7 +319,8 @@
 <div id="ed" role="dialog" aria-label="Configurar tarefa"></div>
 <div id="hojeTela" role="dialog" aria-label="Hoje"></div>
 <div id="calTela" role="dialog" aria-label="Calendário"></div>
-<div id="mapa"><div class="rolo"><div class="folha"><canvas aria-hidden="true"></canvas></div></div><div class="topo"><b>Mapa da Missão</b><small></small></div>
+<div id="premio" role="dialog" aria-label="Prêmio"></div>
+<div id="mapa"><div class="rolo"><div class="folha"><canvas aria-hidden="true"></canvas></div></div><div class="topo"><b>Mapa da Missão</b><small></small></div><button class="masm" hidden>🏰 Masmorra</button>
   <div class="info"><div></div><button class="pocao" aria-label="Tomar poção">🧪</button><button class="tarefas" aria-label="Ver as tarefas">📋</button><button class="repete" aria-pressed="false" aria-label="Repetir o mesmo estágio depois de vencer">🔁</button><button class="jogar">▶ Jogar</button></div></div>
 <script src="js/three.min.js"></script>
 <script src="js/GLTFLoader.js"></script>
@@ -293,7 +340,16 @@ const DIF = { f: { n: 'Fácil', xp: 10, ouro: 3, dor: 0.06, cura: 0.04 }, m: { n
 const dorDe = d => Math.round(hpMax() * DIF[d].dor), curaDe = d => Math.round(hpMax() * DIF[d].cura);
 const ITENS = { // inventário: o que a loja vende e dá pra usar fora da luta (antes de começar o estágio)
   pocao: { nome: 'Poção de vida', ic: '🧪', desc: 'recupera 40% da vida', preco: 15, cura: 0.4 },
-  pocaoG: { nome: 'Poção grande', ic: '⚗️', desc: 'enche a vida toda', preco: 40, cura: 1 } };
+  pocaoG: { nome: 'Poção grande', ic: '⚗️', desc: 'enche a vida toda', preco: 40, cura: 1 },
+  perg: { nome: 'Pergaminho de XP', ic: '📜', desc: 'XP dobrado nas tarefas até o fim do dia', preco: 50, xp2: true } };
+// ferreiro: com cristais (que os monstros deixam cair) e ouro, encanta a espada por alguns estágios
+const FORJA = { fogo: { ic: '🔥', nome: 'Lâmina de fogo', desc: '+20% de dano da espada, golpes em chamas', cor: 0xff4a10 },
+  gelo: { ic: '❄️', nome: 'Lâmina de gelo', desc: 'o monstro atingido fica lento e bate mais devagar', cor: 0x2a7aff } }, FORJA_C = 12, FORJA_O = 60, FORJA_N = 8;
+// talentos: do nível 20 em diante, 1 ponto por nível
+const TAL = { cura: ['💚', 'Cura', '+10% de vida curada por tarefa'], crit: ['🎯', 'Olho certeiro', '+2% de chance de crítico'], ouro: ['🪙', 'Ganância', '+6% de ouro (tarefas e monstros)'],
+  pele: ['🛡', 'Pele de ferro', '−4% do dano dos monstros'], ener: ['⚡', 'Fôlego', 'skills gastam 5% menos energia'] }, TAL_MAX = 5, TAL_NV = 20;
+const tal = k => (S.tal || {})[k] || 0;
+const talPts = () => Math.max(0, S.nv - TAL_NV + 1) - Object.values(S.tal || {}).reduce((a, b) => a + b, 0);
 const EQUIP = { // compras pra sempre (aparecem na heroína ou dão bônus)
   fada: { nome: 'Fada companheira', ic: '🧚', desc: 'voa do seu lado e dá +10% de XP nas tarefas', preco: 60, dias: 7 },
   amuleto: { nome: 'Amuleto da sorte', ic: '🍀', desc: '+25% de ouro dos monstros', preco: 70, dias: 7 },
@@ -345,9 +401,10 @@ const enRegen = () => 3 + 0.6 * A_('est');
 const xpProx = () => 40 + 20 * (S.nv - 1);
 const atkEsp = () => 8 + 2 * (S.nv - 1) + 3 * A_('for') + 4 * S.espada;
 const atkMag = () => 8 + 2 * (S.nv - 1) + 3.5 * A_('mag');
-const critChance = () => Math.min(0.5, 0.06 + 0.015 * A_('des'));
+const critChance = () => Math.min(0.5, 0.06 + 0.015 * A_('des') + 0.02 * tal('crit'));
 const velAtk = () => 1 + Math.min(0.6, 0.035 * A_('des'));
-const defesa = () => S.armadT > 0 ? 0.3 : 0; // fração do dano dos monstros que a armadura segura (só enquanto ela dura)
+const defesa = () => (emLuta() ? F.def : S.armadT > 0) ? 0.3 : 0; // fração do dano dos monstros que a armadura segura (só enquanto ela dura; vale o estágio inteiro em que foi gasta)
+function encAtivo(k) { return (emLuta() ? F.enc : S.enc && S.enc.n > 0 ? S.enc.k : null) === k } // encanto do ferreiro valendo agora
 // ---------------- estágios (a missão é passar dos 30; cada um mais difícil que o outro) ----------------
 const EST = [ // nome, tempo do dia
   ['Trilha do Vale', 0], ['Beira do Lago', 0], ['Bosque Dourado', 1], ['Colina das Pedras', 1], ['Campo das Flores', 2],
@@ -688,7 +745,7 @@ function poeEspada() { // espada na mão direita
   espada.userData.base = new THREE.Object3D(); espada.userData.base.position.y = 0.2; espada.userData.ponta = new THREE.Object3D(); espada.userData.ponta.position.y = 0.12 + L + 0.08; espada.add(espada.userData.base, espada.userData.ponta);
   espada.userData.aco = aco; corEspada();
 }
-function corEspada() { if (espada) espada.userData.aco.emissive.set(S.espada >= 9 ? 0xb01020 : S.espada >= 6 ? 0x5a2a9a : S.espada >= 3 ? 0x6a3a00 : S.espada >= 1 ? 0x3a4a6a : 0x223344) } // a lâmina muda de cor: azul, dourada, roxa, vermelha
+function corEspada() { const ek = encAtivo('fogo') ? 'fogo' : encAtivo('gelo') ? 'gelo' : null; if (espada) espada.userData.aco.emissive.set(ek ? FORJA[ek].cor : S.espada >= 9 ? 0xb01020 : S.espada >= 6 ? 0x5a2a9a : S.espada >= 3 ? 0x6a3a00 : S.espada >= 1 ? 0x3a4a6a : 0x223344) } // a lâmina muda de cor: azul, dourada, roxa, vermelha
 // movimento de raiz: os golpes do Mixamo avançam o corpo pela curva gravada no .glb (extras.root)
 function curva(n) { return R && R.root.userData.vrm.root && R.root.userData.vrm.root[n] }
 function naCurva(c, t) {
@@ -889,7 +946,7 @@ const SKILLS = {
 };
 const liberada = k => { const s = SKILLS[k]; return A_(s.lado === 'E' ? 'for' : 'mag') >= s.req && !!(R && R.act[s.a]) };
 const CD = {}; for (const k in SKILLS) CD[k] = 0;
-const danoEsp = m => Math.max(1, Math.round(atkEsp() * m * rnd(0.85, 1.15)));
+const danoEsp = m => Math.max(1, Math.round(atkEsp() * m * (encAtivo('fogo') ? 1.2 : 1) * rnd(0.85, 1.15)));
 const danoMag = m => Math.max(1, Math.round(atkMag() * m * rnd(0.85, 1.15)));
 const gvel = g => pausa > 0 ? 0 : (g.vel || 1) * velAtk();
 let comboN = 0, comboT = 9;
@@ -899,7 +956,7 @@ function atacar(tipo = 'combo') {
   if (P.atk) { if (tipo === 'combo' && P.atk.tipo === 'combo' && P.atk.t > P.atk.g.dur * 0.25) P.atkFila = true; return false }
   let g;
   if (tipo === 'combo') { const C = R.act.Esp1 ? COMBO : COMBO_Q; comboN = comboT < 0.6 ? (comboN + 1) % C.length : 0; g = C[comboN] }
-  else { g = SKILLS[tipo]; if (!liberada(tipo) || CD[tipo] > 0) return false; if (P.en < g.en) { semEnergia(); return false } P.en -= g.en; CD[tipo] = g.cd }
+  else { g = SKILLS[tipo]; if (!liberada(tipo) || CD[tipo] > 0) return false; const custo = Math.round(g.en * (1 - 0.05 * tal('ener'))); if (P.en < custo) { semEnergia(); return false } P.en -= custo; CD[tipo] = g.cd }
   if (!R.act[g.a]) return false;
   const mira = maisPerto(5); if (mira) P.face = Math.atan2(mira.x - P.x, mira.z - P.z);
   P.atk = { tipo, g, t: 0, feitos: new Set() }; cur = null; P.comem = 0;
@@ -908,6 +965,7 @@ function atacar(tipo = 'combo') {
 }
 function semEnergia() { const b = document.getElementById('enB'); if (b.animate) b.animate([{ borderColor: '#ffd23a', boxShadow: '0 0 8px #ffd23a' }, { borderColor: 'rgba(255,255,255,.35)', boxShadow: 'none' }], { duration: 500 }) }
 function acerta(alvo, v, crit, dx, dz, cor) {
+  if (P.atk && !ehMagia(P.atk.tipo)) { if (encAtivo('gelo')) alvo.frio = 2.5; if (!cor) cor = encAtivo('fogo') ? 0xff7a2a : encAtivo('gelo') ? 0x9ad8ff : cor }
   if (crit) v = Math.round(v * 1.8);
   som(crit ? 'critico' : 'acerto', crit ? 0.9 : 0.75, 0.85); pancada(crit ? 0.8 : 0.55, 0.8); if (crit) som('metal', 0.18, 0.6);
   pausa = crit ? 0.09 : 0.055; tremor = Math.max(tremor, crit ? 0.14 : 0.07);
@@ -950,8 +1008,8 @@ function carregaMonstros() { for (const n of TIPOS) { BUF[n] = fetch('monstros/'
 const barrasEl = document.getElementById('barras');
 function novoBicho(tipo, x, z, chefe) {
   const p = perigo(), k = K / 0.64 * (chefe ? 1.4 + 0.055 * (p - 1) : 1), b = { tipo, x, z, y: altura(x, z), face: Math.atan2(P.x - x, P.z - z), vivo: true, est: 'parado', t: 0, cd: 1 + Math.random(), nasce: 0, morto: 0, chefe,
-    max: Math.round(HPM * forcaM(p)[0] * (chefe ? 4.5 : 1)), dano: Math.round(DNM * forcaM(p)[1] * (chefe ? 1.6 : 1)), g: new THREE.Group(), mats: [], kx: 0, kz: 0,
-    r: 0.55 * k, alt: 1.75 * k, peso: chefe ? 4 : 2.2, ouro: Math.round((3 + p) * (chefe ? 6 : 1) * (temEq('amuleto') ? 1.25 : 1)) };
+    max: Math.round(HPM * forcaM(p)[0] * (chefe ? 4.5 : 1) * (F.masm ? 1.25 : 1)), dano: Math.round(DNM * forcaM(p)[1] * (chefe ? 1.6 : 1) * (F.masm ? 1.2 : 1)), g: new THREE.Group(), mats: [], kx: 0, kz: 0,
+    r: 0.55 * k, alt: 1.75 * k, peso: chefe ? 4 : 2.2, ouro: Math.round((3 + p) * (chefe ? 6 : 1) * (temEq('amuleto') ? 1.25 : 1) * (1 + 0.06 * tal('ouro')) * (F.masm ? 2 : 1)) };
   b.hp = b.max; b.g.position.set(x, b.y, z); b.g.scale.setScalar(0.001); sc.add(b.g);
   b.bar = document.createElement('div'); b.bar.innerHTML = '<i></i>'; if (chefe) b.bar.className = 'chefe'; barrasEl.appendChild(b.bar);
   BUF[tipo].then(buf => _gl.parse(buf, '', g => {
@@ -964,7 +1022,9 @@ function novoBicho(tipo, x, z, chefe) {
     a.setLoop(uma ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = uma; a.timeScale = nm === 'Punch' ? 1.4 : 1; a.play(); if (u) a.crossFadeFrom(u, 0.15, false); b.atual = nm };
   b.leva = (v, crit, dx, dz) => {
     if (!b.vivo) return; b.hp -= v; b.flash = 1; b.bravo = true; const l = Math.hypot(dx, dz) || 1, f = (crit ? 4 : 2) / b.peso * 2; b.kx = dx / l * f; b.kz = dz / l * f;
-    if (b.hp <= 0) { b.vivo = false; b.est = 'morre'; b.morto = 0; b.anima('Death'); som('queda', 0.6, 0.8); S.ouro += b.ouro; numero('+' + b.ouro + ' 🪙', b.x, b.y + b.alt + 0.6, b.z, 'ouro'); S.mortos = (S.mortos || 0) + 1; grupoMorto(b); hud(); salva() }
+    if (b.hp <= 0) { b.vivo = false; b.est = 'morre'; b.morto = 0; b.anima('Death'); som('queda', 0.6, 0.8); S.ouro += b.ouro; numero('+' + b.ouro + ' 🪙', b.x, b.y + b.alt + 0.6, b.z, 'ouro'); S.mortos = (S.mortos || 0) + 1;
+      const cr = (b.chefe ? 3 : Math.random() < 0.3 ? 1 : 0) * (F.masm ? 2 : 1); if (cr) { S.mat = (S.mat || 0) + cr; setTimeout(() => numero('+' + cr + ' 💠', b.x, b.y + b.alt + 0.25, b.z, 'xp'), 250) } // cristal pro ferreiro
+      grupoMorto(b); hud(); salva() }
     else if (b.est !== 'ataca') { b.est = 'leva'; b.t = 0; b.anima('HitReact') }
   };
   BICHOS.push(b); return b;
@@ -986,20 +1046,26 @@ function grupoMorto(b) {
   if (b.grupo == null || F.fim || BICHOS.some(o => o.vivo && o.grupo === b.grupo)) return;
   F.feitos++; hud(); if (F.feitos >= F.G) venceEstagio();
 }
-function comecaEstagio(n, quieto) { // quieto: só monta a fase e deixa ela parada (o mapa está aberto)
+function comecaEstagio(n, quieto, masm) { // quieto: só monta a fase e deixa ela parada (o mapa está aberto); masm: a masmorra do fim de semana
   n = Math.max(1, Math.min(n, S.lib, N_EST)); while (n > 1 && !podeJogar(n)) n--; S.est = n; salva();
   for (const b of [...BICHOS]) some(b);
   montaMapa(n); const ini = 4, L = (NT - 3 - ini) * TPASSO; // o chefe espera na clareira do fim
-  Object.assign(F, { n, ini, L, G: 4 + Math.ceil(n / 3), prox: 0, feitos: 0, prog: 0, fim: false, perdeu: false, t: 0 });
+  masm = !!masm && !quieto; Object.assign(F, { n, ini, L, G: 4 + Math.ceil(n / 3) + (masm ? 2 : 0), prox: 0, feitos: 0, prog: 0, fim: false, perdeu: false, t: 0, masm });
   F.pos = []; for (let g = 0; g < F.G; g++) F.pos.push(14 + (L - 14) * (g / (F.G - 1)));
   P.x = TP[F.ini][0]; P.z = TP[F.ini][1]; P.y = altura(P.x, P.z); P.si = ultimoSi = F.ini; P.atk = null;
   const j = F.ini + 20; P.face = Math.atan2(TP[j][0] - P.x, TP[j][1] - P.z); yaw = P.face + Math.PI; camAlvo.set(P.x, P.y, P.z);
-  ambiente(EST[n - 1][1]); if (quieto) { F.fim = true; hud(); return }
-  if (S.armadT > 0) { S.armadT--; salva() } // cada estágio jogado gasta 1 da armadura
-  faixa('Estágio ' + n, EST[n - 1][0] + (n === N_EST ? ' · chefe final' : '') + (S.armadT > 0 || defesa() ? ' · 🛡' : ''), 2.2); hud();
+  ambiente(masm ? 4 : EST[n - 1][1]); if (quieto) { F.fim = true; corEspada(); hud(); return }
+  F.def = S.armadT > 0; if (F.def) { S.armadT--; salva() } // cada estágio jogado gasta 1 da armadura
+  F.enc = S.enc && S.enc.n > 0 ? S.enc.k : null; if (F.enc) { S.enc.n--; salva() } corEspada(); // e 1 do encanto do ferreiro
+  faixa(masm ? '🏰 Masmorra' : 'Estágio ' + n, (masm ? 'do fim de semana · monstros mais fortes' : EST[n - 1][0] + (n === N_EST ? ' · chefe final' : '')) + (F.def ? ' · 🛡' : '') + (F.enc ? ' · ' + FORJA[F.enc].ic : ''), 2.2); hud();
 }
 function venceEstagio() {
-  F.fim = true; const n = F.n, primeira = !S.ok[n], bonus = primeira ? 25 * n : 5 * n;
+  F.fim = true; S.venc = (S.venc || 0) + 1;
+  if (F.masm) { const o = 100 + 40 * F.n; S.ouro += o; S.mat = (S.mat || 0) + 6; S.inv.perg = (S.inv.perg || 0) + 1; S.masmV = fdsDe(hoje()); S.masmT = (S.masmT || 0) + 1; P.en = enMax();
+    som('vitoria', 0.8); brilho(0xc99cff); comemora(); salva(); hud();
+    mostraPremio({ ic: '🏰', tit: 'Masmorra vencida!', sub: 'Volta no próximo fim de semana', itens: [['🪙', '+' + o + ' de ouro'], ['💠', '+6 cristais'], ['📜', 'Pergaminho de XP']], cor: 0xc99cff });
+    setTimeout(() => { if (F.fim && F.masm) abreMapa(null, S.lib) }, 3000); return }
+  const n = F.n, primeira = !S.ok[n], bonus = primeira ? 25 * n : 5 * n;
   S.ok[n] = true; if (n < N_EST) S.lib = Math.max(S.lib, n + 1); S.ouro += bonus; P.en = enMax(); // a vida não enche: cura com as tarefas ou com poção
   som('vitoria', 0.8); brilho(0xffe066); comemora();
   faixa(n === N_EST ? 'Missão cumprida!' : 'Estágio ' + n + ' concluído!', '+' + bonus + ' 🪙' + (primeira && n < N_EST ? ' · estágio ' + (n + 1) + ' liberado' : ''), 3);
@@ -1009,6 +1075,7 @@ function bichosPasso(dt) {
   for (let i = BICHOS.length - 1; i >= 0; i--) {
     const b = BICHOS[i]; b.t += dt; b.cd -= dt; if (b.mix) b.mix.update(pausa > 0 ? dt * 0.2 : dt);
     if (b.flash > 0) { b.flash = Math.max(0, b.flash - dt * 5); for (const m of b.mats) m.emissive.setRGB(b.flash * 0.8, b.flash * 0.25, b.flash * 0.2) }
+    else if (b.frio > 0) { b.frio = Math.max(0, b.frio - dt); const f = Math.min(1, b.frio); for (const m of b.mats) m.emissive.setRGB(0.04 * f, 0.16 * f, 0.38 * f) }
     const dx = P.x - b.x, dz = P.z - b.z, d = Math.hypot(dx, dz);
     if (b.est === 'morre') { b.morto += dt; const k = Math.max(0, 1 - Math.max(0, b.morto - 1.4) / 0.3); b.g.scale.setScalar(k); if (b.morto > 1.8) some(b); continue }
     b.nasce = Math.min(1, b.nasce + dt * 2); b.g.scale.setScalar(b.nasce);
@@ -1020,6 +1087,7 @@ function bichosPasso(dt) {
     } else if (P.desm || (!b.bravo && d > 7.5)) { b.anima('Idle'); b.est = 'parado'; if (P.desm) b.bravo = false }
     else if (d > perto) { if (!b.avisou) { b.avisou = true; if (b.chefe) faixa('Chefe!', NOME_CHEFE[b.tipo] + (F.n === N_EST ? ' · o chefe final' : ''), 2) } b.est = 'anda'; mv = b.chefe ? 1.3 : 1.7; b.face = Math.atan2(dx, dz); b.anima('Walk'); b.bravo = true }
     else { b.face = Math.atan2(dx, dz); b.bravo = true; if (b.cd <= 0) { b.est = 'ataca'; b.t = 0; b.bateu = false; b.anima('Punch') } else b.anima('Idle') }
+    if (b.frio > 0) { mv *= 0.5; b.cd += dt * 0.45 } // gelo: anda e bate mais devagar
     if (pausa > 0) mv = 0;
     b.x += (Math.sin(b.face) * mv + b.kx) * dt; b.z += (Math.cos(b.face) * mv + b.kz) * dt; b.kx *= Math.pow(0.02, dt); b.kz *= Math.pow(0.02, dt);
     for (const o of BICHOS) if (o !== b && o.vivo) { const ex = b.x - o.x, ez = b.z - o.z, e = Math.hypot(ex, ez), m = b.r + o.r; if (e < m && e > 1e-4) { b.x += ex / e * (m - e) * 0.5; b.z += ez / e * (m - e) * 0.5 } }
@@ -1027,7 +1095,7 @@ function bichosPasso(dt) {
   }
 }
 function levaDano(v, b) {
-  const real = Math.max(1, Math.round(v * (1 - defesa()) * rnd(0.85, 1.15)));
+  const real = Math.max(1, Math.round(v * (1 - defesa()) * (1 - 0.04 * tal('pele')) * rnd(0.85, 1.15)));
   S.hp = Math.max(0, S.hp - real); numero('-' + real, P.x, P.y + ALT + 0.2, P.z, 'dor'); som('dor', 0.5); doi(); hud();
   if (S.hp <= 0) desmaia(); else if (!P.atk && b) { P.hit = 0.3; tocar('Hit_A', 1.3, 0.08) }
 }
@@ -1072,6 +1140,7 @@ function botoesSkill() {
 const emLuta = () => !F.fim && !F.perdeu;
 function usaItem(k) { // poção só fora da luta: no mapa, antes de começar o estágio
   const it = ITENS[k]; if (!(S.inv[k] > 0)) return;
+  if (it.xp2) { if (S.xp2 === hoje()) { aviso('📜 O XP já está dobrado hoje.'); return } S.inv[k]--; S.xp2 = hoje(); brilho(0xffe066); plim(4); aviso('📜 XP dobrado nas tarefas até o fim do dia!', 3); salva(); hud(); if (aba === 'inv') lista(); return }
   if (emLuta()) { aviso('Poção só antes de começar o estágio (no mapa).'); return }
   if (S.hp >= hpMax()) { aviso('A vida já está cheia.'); return }
   S.inv[k]--; const c = Math.min(hpMax() - S.hp, Math.round(hpMax() * it.cura)); S.hp += c; numero('+' + c, P.x, P.y + ALT + 0.2, P.z, 'cura'); brilho(0x8dffb0); plim(4); aviso(it.ic + ' +' + c + ' de vida');
@@ -1155,14 +1224,18 @@ function aviso(txt, t = 2.6) { avisoEl.textContent = txt; avisoEl.classList.add(
 
 // ---------------- recompensas das tarefas (a única fonte de XP) ----------------
 function ganha(xp, ouro, cura) {
-  chefeDano(xp); if (temEq('fada')) xp = Math.round(xp * 1.1); S.xp += xp; S.ouro += ouro; if (cura) { const v = Math.min(hpMax() - S.hp, cura); if (v > 0) { S.hp += v; numero('+' + Math.round(v), P.x, P.y + ALT + 0.2, P.z, 'cura') } }
+  chefeDano(xp); [xp, ouro, cura] = bonusTarefa(xp, ouro, cura); S.xp += xp; S.ouro += ouro;
+  const h = hoje(); if (!S.xpd || S.xpd.d !== h) S.xpd = { d: h, v: 0, c: 0 }; S.xpd.v += xp; if (new Date().getHours() < 12) S.xpd.c++; // pras missões do dia if (cura) { const v = Math.min(hpMax() - S.hp, cura); if (v > 0) { S.hp += v; numero('+' + Math.round(v), P.x, P.y + ALT + 0.2, P.z, 'cura') } }
   numero('+' + xp + ' XP', P.x, P.y + ALT + 0.35, P.z, 'xp'); if (ouro) setTimeout(() => numero('+' + ouro + ' 🪙', P.x, P.y + ALT + 0.1, P.z, 'ouro'), 180);
   brilho(0xffe066); plim(0); comemora();
   let subiu = 0; while (S.xp >= xpProx()) { S.xp -= xpProx(); S.nv++; subiu++ }
-  if (subiu) { S.pontos += PTS_NIVEL * subiu; P.en = enMax(); som('vitoria', 0.8); faixa('Nível ' + S.nv + '!', '+' + PTS_NIVEL * subiu + ' pontos pra distribuir (aba Herói)', 2.4); setTimeout(() => brilho(0xffffff), 250) }
+  if (subiu) { S.pontos += PTS_NIVEL * subiu; P.en = enMax(); const its = [['✨', '+' + PTS_NIVEL * subiu + ' pontos de atributo']];
+    if (S.nv >= TAL_NV) its.push(['🌳', 'ponto de talento']); for (let n = 1; n <= N_EST; n++) { const v = nvSugerido(n); if (v > S.nv - subiu && v <= S.nv) its.push(['🗺', 'nível do estágio ' + n]) }
+    mostraPremio({ ic: '⭐', tit: 'Nível ' + S.nv + '!', sub: 'Distribua os pontos na aba Herói', itens: its, cor: 0xffffff }) }
   salva(); hud(); if (aba === 'her') lista();
 }
-function perde(xp, ouro, hp) { chefeDano(-xp); if (temEq('fada')) xp = Math.round(xp * 1.1); S.xp = Math.max(0, S.xp - xp); S.ouro = Math.max(0, S.ouro - ouro); if (hp) S.hp = Math.max(1, S.hp - hp); salva(); hud() } // desmarcou: devolve (não desce de nível)
+function bonusTarefa(xp, ouro, cura) { if (temEq('fada')) xp = Math.round(xp * 1.1); if (S.xp2 === hoje()) xp *= 2; return [xp, Math.round(ouro * (1 + 0.06 * tal('ouro'))), cura ? Math.round(cura * (1 + 0.1 * tal('cura'))) : 0] } // fada, pergaminho e talentos
+function perde(xp, ouro, hp) { chefeDano(-xp); [xp, ouro, hp] = bonusTarefa(xp, ouro, hp); if (S.xpd && S.xpd.d === hoje()) S.xpd.v = Math.max(0, S.xpd.v - xp); S.xp = Math.max(0, S.xp - xp); S.ouro = Math.max(0, S.ouro - ouro); if (hp) S.hp = Math.max(1, S.hp - hp); salva(); hud() } // desmarcou: devolve (não desce de nível)
 
 function machuca(v, motivo) {
   S.hp = Math.max(0, S.hp - v); numero('-' + v, P.x, P.y + ALT + 0.2, P.z, 'dor'); doi(); som('dor', 0.6); if (motivo) aviso(motivo);
@@ -1199,7 +1272,7 @@ function confere(d) { // depois de mexer numa diária: dá ou devolve a recompen
   const f = !ehMax(d) && feito(d); // a de "no máximo" só paga quando o dia vira
   if (f && !d.pago) {
     const sem = d.freq.t === 'vezes', r = rachaVista(d) + 1, m = sem ? 0 : MARCOS[r] || 0;
-    const xp = Math.round(DIF[d.d].xp * (1 + bonusRacha(d.racha))), ouro = DIF[d.d].ouro + m;
+    const xp = Math.round(DIF[d.d].xp * (1 + bonusRacha(d.racha)) * (ehFoco(d) ? 2 : 1)), ouro = DIF[d.d].ouro + m;
     const hp = curaDe(d.d); d.pago = 1; d.dado = { xp, ouro, hp }; S.cont.t++; ganha(xp, ouro, hp);
     if (m) setTimeout(() => faixa('🔥 ' + r + ' dias seguidos!', d.t + ' · +' + m + ' 🪙', 2.6), 700);
   } else if (!f && d.pago) { d.pago = 0; S.cont.t = Math.max(0, S.cont.t - 1); if (d.dado) perde(d.dado.xp, d.dado.ouro, d.dado.hp); d.dado = null }
@@ -1410,7 +1483,7 @@ function abreMapa(motivo, sel) { // motivo: 'venceu' ou 'perdeu' (aí no Auto el
     rot.className = 'rot'; rot.style.left = x + 'px'; rot.style.top = y + (n === N_EST ? 6 : 0) + 'px'; rot.textContent = EST[i][0];
     rot.append(Object.assign(document.createElement('small'), S.ok[n] ? { textContent: '✓ vencido', className: 'ok' } : { textContent: lib ? 'nível ' + nvSugerido(n) + '+' : 'trancado' }));
     folhaEl.append(b, rot) });
-  mapaEl.querySelector('.topo small').textContent = Object.keys(S.ok).length + ' de ' + N_EST + ' estágios vencidos · nível ' + S.nv;
+  botaoMasm(); mapaEl.querySelector('.topo small').textContent = Object.keys(S.ok).length + ' de ' + N_EST + ' estágios vencidos · nível ' + S.nv;
   const [, sy] = NOS[selN - 1]; roloEl.scrollTop = sy * k - roloEl.clientHeight * 0.5; infoMapa();
 }
 function infoMapa() {
@@ -1423,7 +1496,7 @@ function infoMapa() {
 }
 function joga() { clearInterval(contaT); contaN = 0; if (!podeJogar(selN)) { aviso('Precisa nível ' + nvSugerido(selN) + ' pra entrar (você: ' + S.nv + '). Faça as tarefas pra subir.'); return } fechaMapa(); comecaEstagio(selN) }
 function fechaMapa() { clearInterval(contaT); contaN = 0; mapaEl.classList.remove('on') }
-mapaEl.querySelector('.jogar').onclick = joga;
+mapaEl.querySelector('.jogar').onclick = joga; mapaEl.querySelector('.masm').onclick = entraMasm;
 mapaEl.querySelector('.repete').onclick = () => { S.repete = !S.repete; salva(); infoMapa(); aviso(S.repete ? 'Repetir ligado: depois de vencer, joga este mesmo estágio de novo (bom pra juntar ouro).' : 'Repetir desligado: depois de vencer, vai pro próximo estágio.') };
 mapaEl.querySelector('.tarefas').onclick = fechaMapa;
 mapaEl.querySelector('.pocao').onclick = () => { clearInterval(contaT); contaN = 0; usaItem(S.inv.pocao > 0 && S.hp + hpMax() * ITENS.pocao.cura < hpMax() * 1.05 ? 'pocao' : S.inv.pocaoG > 0 ? 'pocaoG' : 'pocao'); infoMapa() };
@@ -1431,19 +1504,19 @@ document.getElementById('bEst').addEventListener('click', () => mapaEl.classList
 
 // ---------------- HUD ----------------
 function hud() {
-  checaConquistas();
+  checaConquistas(); try { checaMissoes(); checaFoco() } catch (e) { console.error(e) }
   document.getElementById('hNome').firstChild.textContent = PERS[S.pers][1];
   document.getElementById('hNv').textContent = 'Nível ' + S.nv;
   const hp = document.getElementById('hPts'); hp.hidden = !S.pontos; hp.textContent = '+' + S.pontos + ' pontos';
   const m = hpMax(); S.hp = Math.min(S.hp, m);
   document.querySelector('#hpB i').style.transform = 'scaleX(' + S.hp / m + ')'; document.querySelector('#hpB span').textContent = 'Vida ' + Math.ceil(S.hp) + '/' + m;
   document.querySelector('#xpB i').style.transform = 'scaleX(' + S.xp / xpProx() + ')'; document.querySelector('#xpB span').textContent = 'XP ' + S.xp + '/' + xpProx();
-  document.getElementById('hOuro').textContent = '🪙 ' + S.ouro; const be = document.getElementById('bEst'); be.textContent = F.fim || F.perdeu ? '🗺 Mapa' : '⚔ Estágio ' + F.n; if (!F.fim && !F.perdeu) be.append(Object.assign(document.createElement('small'), { textContent: F.feitos + '/' + F.G }));
+  document.getElementById('hOuro').textContent = '🪙 ' + S.ouro; const be = document.getElementById('bEst'); be.textContent = F.fim || F.perdeu ? '🗺 Mapa' : F.masm ? '🏰 Masmorra' : '⚔ Estágio ' + F.n; if (!F.fim && !F.perdeu) be.append(Object.assign(document.createElement('small'), { textContent: F.feitos + '/' + F.G }));
   const bm = document.getElementById('bModo'); bm.textContent = S.auto ? '▶ Auto' : '🕹 Manual'; bm.classList.toggle('manual', !S.auto); document.body.classList.toggle('manual', !S.auto);
   document.getElementById('bPocao').hidden = true;
   const pend = S.diar.filter(pendente).length; document.querySelector('[data-aba="diar"]').innerHTML = 'Diárias' + (pend ? '<b>' + pend + '</b>' : '');
   if (typeof textoPuxa === 'function') textoPuxa();
-  document.querySelector('[data-aba="her"]').innerHTML = 'Herói' + (S.pontos ? '<b>' + S.pontos + '</b>' : '');
+  const ph = S.pontos + Math.max(0, talPts()); document.querySelector('[data-aba="her"]').innerHTML = 'Herói' + (ph ? '<b>' + ph + '</b>' : '');
 }
 document.getElementById('hPts').addEventListener('pointerdown', e => { e.stopPropagation(); trocaAba('her') });
 // puxador do painel: toque ou arraste pra baixo esconde as tarefas (o jogo fica na tela toda); pra cima mostra de novo
@@ -1465,8 +1538,9 @@ const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) 
 function trocaAba(a) { if (a === 'cal' && document.readyState === 'complete' && !calEl.classList.contains('on')) setTimeout(abreCal, 0); const igual = aba === a; aba = a; S.aba = a; salva(); for (const b of document.querySelectorAll('#abas button')) { b.classList.toggle('on', b.dataset.aba === a); if (b.dataset.aba === a && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' }) } if (!igual) listaEl.scrollTop = 0; lista() }
 for (const b of document.querySelectorAll('#abas button')) b.onclick = () => trocaAba(b.dataset.aba);
 const mini = (txt, cls) => el('span', 'mini' + (cls ? ' ' + cls : ''), txt);
+function fazHabito(t) { t.c = (t.c || 0) + 1; t.tot = (t.tot || 0) + 1; S.cont.h++; ganha(DIF[t.d].xp * (ehFoco(t) ? 2 : 1), DIF[t.d].ouro, curaDe(t.d)); lista() }
 function texto(t, kind, extra) { const d = el('div', 'txt'); if (t.cat) d.append(el('span', 'cat', catDe(t)[1])); d.append(t.t);
-  const s = el('small'); s.append(el('span', 'tag ' + t.d, DIF[t.d].n)); for (const x of extra || []) if (x) s.append(x); d.append(s);
+  const s = el('small'); s.append(el('span', 'tag ' + t.d, DIF[t.d].n)); if (ehFoco(t)) s.append(el('span', 'tag foco', '⭐ 2× XP')); for (const x of extra || []) if (x) s.append(x); d.append(s);
   d.onclick = () => editor(kind, t); return d }
 function freqTxt(d) { const f = d.freq; if (f.t === 'semana') return (f.dias || []).length === 7 ? '' : (f.dias || []).map(i => SEM_N[i].slice(0, 3)).join(' ');
   if (f.t === 'vezes') return (d.sem + (d.pago ? 1 : 0)) + '/' + (f.n || 3) + ' na semana'; if (f.t === 'cada') return 'a cada ' + (f.n || 2) + ' dias'; return '' }
@@ -1511,7 +1585,7 @@ function lista() {
       const it = el('div', 'item');
       if (t.neg) { const b = el('button', 'chk menos', '−'); b.setAttribute('aria-label', 'Fiz o hábito ruim'); b.onclick = () => { t.cn = (t.cn || 0) + 1; t.totn = (t.totn || 0) + 1; machuca(dorDe(t.d), null); lista() }; it.append(b) }
       it.append(texto(t, 'hab', [t.c || t.cn ? mini((t.c ? '+' + t.c : '') + (t.cn ? ' −' + t.cn : '') + ' hoje') : null, t.tot || t.totn ? mini('total ' + (t.tot ? '+' + t.tot : '') + (t.totn ? ' −' + t.totn : '')) : null]));
-      if (t.pos) { const b = el('button', 'chk mais', '+'); b.setAttribute('aria-label', 'Fiz o hábito bom'); b.onclick = () => { t.c = (t.c || 0) + 1; t.tot = (t.tot || 0) + 1; S.cont.h++; ganha(DIF[t.d].xp, DIF[t.d].ouro, curaDe(t.d)); lista() }; it.append(b) }
+      if (t.pos) { const b = el('button', 'chk mais', '+'); b.setAttribute('aria-label', 'Fiz o hábito bom'); b.onclick = () => fazHabito(t); it.append(b) }
       listaEl.append(it);
     }
   } else if (aba === 'diar') {
@@ -1608,15 +1682,22 @@ function desenhaCal() {
 function statusHoje() { const h = hoje(), L = S.diar.map(prep).filter(d => agendada(d, h) && (d.freq.t !== 'vezes' || feito(d) || semFeita(d)));
   return { ok: L.filter(d => feito(d) || semFeita(d)).length, tot: L.length, L } }
 const bauPronto = () => { const r = statusHoje(); return r.tot > 0 && r.ok === r.tot && S.bauDia !== hoje() };
-function abreBau() {
-  if (!bauPronto()) return; S.bauDia = hoje(); S.baus = (S.baus || 0) + 1;
-  const ouro = 15 + 2 * S.nv + ((Math.random() * 16) | 0), x = Math.random(), it = x < 0.1 ? 'pocaoG' : x < 0.45 ? 'pocao' : null;
-  S.ouro += ouro; if (it) S.inv[it] = (S.inv[it] || 0) + 1;
-  som('vitoria', 0.7); brilho(0xffd86b); plim(6); faixa('🎁 Baú do dia!', '+' + ouro + ' 🪙' + (it ? ' · ' + ITENS[it].ic + ' ' + ITENS[it].nome : ''), 2.8);
+function abreBau() { // sempre responde: abre o baú na frente de tudo ou diz o que falta
+  const r = statusHoje();
+  if (S.bauDia === hoje()) { aviso('🎁 O baú de hoje já foi aberto. Amanhã tem outro!'); return }
+  if (!r.tot) { aviso('Crie uma diária (aba Diárias) pra ganhar o baú do dia.'); return }
+  if (r.ok < r.tot) { const f = r.L.filter(d => !(feito(d) || semFeita(d))).map(d => d.t); aviso('🎁 ' + (f.length > 1 ? 'Faltam ' + f.length + ' diárias' : 'Falta 1 diária') + ' pra abrir: ' + f.slice(0, 3).join(', ') + (f.length > 3 ? '…' : ''), 3.5); return }
+  S.bauDia = hoje(); S.baus = (S.baus || 0) + 1;
+  const ouro = 15 + 2 * S.nv + ((Math.random() * 16) | 0), x = Math.random(), it = x < 0.1 ? 'pocaoG' : x < 0.4 ? 'pocao' : x < 0.55 ? 'perg' : null, cr = Math.random() < 0.5 ? 1 + ((Math.random() * 3) | 0) : 0;
+  S.ouro += ouro; if (it) S.inv[it] = (S.inv[it] || 0) + 1; if (cr) S.mat = (S.mat || 0) + cr;
+  const itens = [['🪙', '+' + ouro + ' de ouro']]; if (it) itens.push([ITENS[it].ic, ITENS[it].nome]); if (cr) itens.push(['💠', '+' + cr + (cr > 1 ? ' cristais' : ' cristal')]);
   salva(); hud(); lista(); if (hojeEl.classList.contains('on')) desenhaHoje();
+  mostraPremio({ bau: true, tit: 'Baú do dia!', sub: 'Você fez todas as diárias de hoje', itens });
 }
 function barraHoje() { const r = statusHoje(), c = el('div', 'hojeBar'), pb = el('div', 'pbar'), i = el('i'); i.style.width = (r.tot ? r.ok / r.tot * 100 : 0) + '%'; pb.append(i);
-  c.append(el('b', null, '☀ Hoje: ' + r.ok + ' de ' + r.tot + ' diárias' + (S.bauDia === hoje() ? ' · 🎁 baú aberto' : r.ok === r.tot && r.tot ? ' · 🎁 baú liberado!' : ' · faça todas pra abrir o baú 🎁')), pb); c.onclick = abreHoje; return c }
+  c.append(el('b', null, '☀ Hoje: ' + r.ok + ' de ' + r.tot + ' diárias' + (S.bauDia === hoje() ? ' · 🎁 baú aberto' : r.ok === r.tot && r.tot ? ' · 🎁 baú liberado!' : ' · faça todas pra abrir o baú 🎁')), pb);
+  const M = missoes(); if (M.L.length) c.append(el('small', null, '🎯 Missões do dia: ' + M.L.filter(m => m.ok).length + ' de ' + M.L.length + ' · toque pra ver'));
+  c.onclick = () => bauPronto() ? abreBau() : abreHoje(); return c }
 const hojeEl = document.getElementById('hojeTela');
 function abreHoje() { viraDia(); chefeSemana(); hojeEl.classList.add('on'); desenhaHoje() }
 function fechaHoje() { hojeEl.classList.remove('on'); hojeEl.innerHTML = '' }
@@ -1628,7 +1709,15 @@ function desenhaHoje() {
   const falta = r.L.filter(d => !(feito(d) || semFeita(d)));
   for (const d of falta) { const it = el('div', 'item'), b = el('button', 'chk' + (d.nao ? ' mal' : ''), d.nao ? '✗' : ''), tx = el('div', 'txt'); tx.append(el('span', null, d.t), el('small', null, d.tipo === 'sn' ? 'toque quando fizer' : 'marque na aba Diárias'));
     b.onclick = () => { if (d.tipo !== 'sn') { fechaHoje(); fechaMapa(); trocaAba('diar'); return } d.ok = true; d.nao = false; confere(d); salva(); hud(); lista(); desenhaHoje() }; it.append(b, tx); cx.append(it) }
-  const bb = el('button', 'bau' + (bauPronto() ? '' : ' off'), S.bauDia === h ? '🎁 Baú de hoje já aberto' : bauPronto() ? '🎁 Abrir o baú do dia!' : '🎁 Faça todas as diárias pra abrir o baú'); bb.onclick = abreBau; cx.append(bb);
+  const bb = el('button', 'bau' + (bauPronto() ? '' : ' off'), S.bauDia === h ? '🎁 Baú de hoje já aberto' : bauPronto() ? '🎁 Abrir o baú do dia!' : '🎁 Faltam ' + falta.length + (falta.length === 1 ? ' diária' : ' diárias') + ' pro baú'); bb.onclick = abreBau; cx.append(bb);
+  const hb = S.hab.filter(t => t.pos); if (hb.length) { cx.append(el('b', null, '💪 Hábitos bons · toque quando fizer')); const g = el('div', 'hbs');
+    for (const t of hb) { const b = el('button'); b.append(el('b', null, '+'), t.t + (t.c ? ' ×' + t.c : '')); b.onclick = () => { fazHabito(t); desenhaHoje() }; g.append(b) } cx.append(g) }
+  { const M = missoes(); if (M.L.length) { cx.append(el('b', null, '🎯 Missões do dia (' + M.L.filter(m => m.ok).length + ' de ' + M.L.length + ')'));
+    for (const m of M.L) { const d = el('div', 'mis' + (m.ok ? ' ok' : '')); d.append(el('span', null, MIS[m.k].t(m.n)), el('small', null, m.ok ? '✓' : misFeito(m) + '/' + m.n)); cx.append(d) }
+    cx.append(el('div', 'hsub', M.fim ? 'Todas feitas hoje! Amanhã tem outras.' : 'Cada uma dá ouro; as ' + M.L.length + ' juntas dão uma poção.')) } }
+  if (S.xp2 === h) cx.append(el('div', 'hsub', '📜 XP dobrado hoje (pergaminho).'));
+  { const t = S.hm && S.hm.mes === mesDe(h) && focoDe(S.hm); if (t) cx.append(el('div', 'hsub', '⭐ Hábito do mês: ' + t.t + ' · ' + pctFoco(S.hm).p + '% (precisa 80%)')) }
+  { const fd = fdsDe(h); if (fd) { const pc = semanaPct(); cx.append(el('div', 'hsub', '🏰 Masmorra do fim de semana: ' + (S.masmV === fd ? 'vencida ✓' : pc >= 80 ? 'liberada! (' + pc + '% das diárias da semana) Entre pelo mapa.' : 'pede 80% das diárias nos últimos 7 dias (você: ' + pc + '%).'))) } }
   const c = S.cs; if (c) { const pc = el('div', 'pbar chefe'), ic = el('i'); ic.style.width = (c.venceu ? 0 : c.hp / c.max * 100) + '%'; pc.append(ic);
     cx.append(el('b', null, '🐉 ' + c.nome + (c.venceu ? ' · derrotado! ✓' : ' · ' + Math.ceil(c.hp) + '/' + c.max + ' de vida')), pc, el('div', 'hsub', c.venceu ? 'Volta mais forte no domingo.' : 'Cada tarefa feita bate nele (o XP vira dano). Derrote até sábado pra ganhar o prêmio.')) }
   if (!S.backup || difDias(S.backup, h) > 7) { const bk = el('div', 'hsub', '💾 Faz tempo que você não salva um backup (aba Herói).'); cx.append(bk) }
@@ -1647,7 +1736,7 @@ function chefeSemana() {
 function chefeDano(v) {
   const c = chefeSemana(); if (c.venceu) return; c.hp = Math.min(c.max, Math.max(0, c.hp - v));
   if (c.hp <= 0) { c.venceu = true; S.chefesV = (S.chefesV || 0) + 1; const ouro = 60 + 5 * S.nv; S.ouro += ouro; S.inv.pocaoG = (S.inv.pocaoG || 0) + 1;
-    setTimeout(() => { som('vitoria', 0.8); faixa('🐉 ' + c.nome + ' derrotado!', '+' + ouro + ' 🪙 · ⚗️ Poção grande', 3) }, 1200) }
+    setTimeout(() => mostraPremio({ ic: '🐉', tit: c.nome + ' derrotado!', sub: 'Chefe da semana', itens: [['🪙', '+' + ouro + ' de ouro'], ['⚗️', 'Poção grande']], cor: 0xff6a5a }), 1200) }
 }
 function secChefe(sec) { const c = chefeSemana(), s = sec('🐉 Chefe da semana'), pc = el('div', 'pbar chefe'), ic = el('i'); ic.style.width = (c.venceu ? 0 : c.hp / c.max * 100) + '%'; pc.append(ic);
   s.append(el('b', null, c.nome + (c.venceu ? ' · derrotado! ✓' : ' · ' + Math.ceil(c.hp) + '/' + c.max)), pc, el('p', 'dica', 'Toda tarefa feita bate nele com o XP que ela dá. Derrotando até sábado: ouro e uma poção grande. Todo domingo vem outro.')) }
@@ -1660,14 +1749,91 @@ const CONQ = [ // id, ícone, nome, como ganha, teste, ouro
   ['cs1', '🐉', 'Caçador', '1º chefe da semana', () => (S.chefesV || 0) >= 1, 30], ['cs10', '🐲', 'Domador', '10 chefes da semana', () => (S.chefesV || 0) >= 10, 200],
   ['nv10', '⭐', 'Aventureira', 'nível 10', () => S.nv >= 10, 40], ['nv30', '🌟', 'Heroína', 'nível 30', () => S.nv >= 30, 150], ['nv60', '💫', 'Lendária', 'nível 60', () => S.nv >= 60, 400],
   ['e10', '⚔️', 'Pé do Vulcão', '10 estágios', () => Object.keys(S.ok).length >= 10, 80], ['e20', '🏰', 'Castelo', '20 estágios', () => Object.keys(S.ok).length >= 20, 200], ['e30', '👹', 'Missão cumprida', '30 estágios', () => Object.keys(S.ok).length >= 30, 500],
-  ['m100', '💀', 'Exterminadora', '100 monstros', () => (S.mortos || 0) >= 100, 40], ['m1000', '☠️', 'Pesadelo', '1000 monstros', () => (S.mortos || 0) >= 1000, 200]];
+  ['m100', '💀', 'Exterminadora', '100 monstros', () => (S.mortos || 0) >= 100, 40], ['m1000', '☠️', 'Pesadelo', '1000 monstros', () => (S.mortos || 0) >= 1000, 200],
+  ['mi10', '🎯', 'Missionária', '10 dias de missões completas', () => (S.misT || 0) >= 10, 60], ['hm1', '🏅', 'Foco total', '1ª medalha do mês', () => (S.medalhas || []).length >= 1, 100], ['ms1', '🏰', 'Masmorreira', '1ª masmorra vencida', () => (S.masmT || 0) >= 1, 80]];
 function checaConquistas() {
   S.conq = S.conq || {}; const novas = CONQ.filter(c => !S.conq[c[0]] && c[4]()); if (!novas.length) return;
   let ouro = 0; for (const c of novas) { S.conq[c[0]] = hoje(); ouro += c[5] } S.ouro += ouro; salva();
-  setTimeout(() => faixa('🏆 ' + (novas.length === 1 ? novas[0][1] + ' ' + novas[0][2] : novas.length + ' conquistas!'), (novas.length === 1 ? novas[0][3] + ' · ' : '') + '+' + ouro + ' 🪙', 2.8), 1600);
+  setTimeout(() => mostraPremio({ ic: '🏆', tit: novas.length === 1 ? 'Conquista!' : novas.length + ' conquistas!', itens: [...novas.map(c => [c[1], c[2] + ' · ' + c[3]]), ['🪙', '+' + ouro + ' de ouro']] }), 1600);
 }
 function secConquistas(sec) { const s = sec('🏆 Conquistas (' + Object.keys(S.conq || {}).length + ' de ' + CONQ.length + ')'), g = el('div', 'conq');
   for (const [id, ic, nome, como, , ouro] of CONQ) { const d = el('div', S.conq && S.conq[id] ? '' : 'off'); d.append(el('b', null, ic), el('span', null, nome), como + ' · ' + ouro + ' 🪙'); g.append(d) } s.append(g) }
+// ---------------- prêmios: aparecem na frente de tudo (baú, chefe, conquistas, nível, missões) ----------------
+const premioEl = document.getElementById('premio'), filaP = []; let premioOn = false;
+function mostraPremio(p) { filaP.push(p); if (!premioOn) proxPremio() }
+function proxPremio() {
+  const p = filaP.shift(); premioEl.innerHTML = ''; premioEl.onclick = null;
+  if (!p) { premioOn = false; premioEl.className = ''; return }
+  premioOn = true; premioEl.className = 'on ' + (p.bau ? 'fechado' : 'aberto');
+  const cx = el('div', 'pCx'), palco = el('div', 'palco'), its = el('div', 'pIts'), dica = el('div', 'pDica', p.bau ? 'Toque no baú pra abrir!' : ''), ok = el('button', 'pOk', 'Pegar!');
+  palco.append(el('div', 'raios'));
+  if (p.bau) { const b = el('div', 'bauG'); b.append(el('div', 'tampa'), el('div', 'corpo')); palco.append(b) } else palco.append(el('div', 'pIc', p.ic));
+  p.itens.forEach(([ic, t], i) => { const d = el('div', 'pIt'); d.style.animationDelay = (p.bau ? 0.35 : 0.25) + i * 0.22 + 's'; d.append(el('b', null, ic), el('span', null, t)); its.append(d) });
+  cx.append(el('h2', null, p.tit)); if (p.sub) cx.append(el('div', 'pSub', p.sub)); cx.append(palco, dica, its, ok); premioEl.append(cx);
+  let tAb = p.bau ? Infinity : performance.now();
+  const festa = () => { som('vitoria', 0.75); plim(6); brilho(p.cor || 0xffd86b); try { if (navigator.vibrate) navigator.vibrate(p.bau ? [40, 60, 90] : 40) } catch (e) {} };
+  if (!p.bau) festa();
+  premioEl.onclick = e => { if (premioEl.classList.contains('fechado')) { premioEl.classList.replace('fechado', 'aberto'); dica.textContent = ''; tAb = performance.now(); festa(); return }
+    if (e.target === ok || performance.now() - tAb > 900) proxPremio() };
+}
+// ---------------- missões do dia: 3 sorteadas por dia; cada uma dá ouro e as 3 juntas dão uma poção ----------------
+const MIS = { // t: texto, v: quanto já fez (desde o sorteio se rel), n: sorteia o alvo, ok: dá pra sortear?
+  hb: { t: n => 'Faça ' + n + ' hábitos bons', v: () => S.hab.reduce((a, t) => a + (t.pos ? t.c || 0 : 0), 0), n: () => 2 + ((Math.random() * 3) | 0), ok: () => S.hab.some(t => t.pos) },
+  cedo: { t: n => 'Faça ' + n + ' tarefas antes do meio-dia', v: () => S.xpd && S.xpd.d === hoje() ? S.xpd.c : 0, n: () => 2 + ((Math.random() * 2) | 0), ok: () => new Date().getHours() < 10 },
+  af: { t: n => n === 1 ? 'Conclua 1 afazer' : 'Conclua ' + n + ' afazeres', v: () => (S.hafz || {})[hoje()] || 0, n: () => S.afz.length > 2 && Math.random() < 0.4 ? 2 : 1, ok: () => S.afz.length > 0 },
+  xp: { t: n => 'Ganhe ' + n + ' XP com as tarefas', v: () => S.xpd && S.xpd.d === hoje() ? S.xpd.v : 0, ok: () => S.diar.length > 0,
+    n: () => Math.max(30, Math.round(statusHoje().L.reduce((a, d) => a + DIF[d.d].xp, 0) * 0.6 / 5) * 5) },
+  mo: { t: n => 'Derrote ' + n + ' monstros', v: () => S.mortos || 0, n: () => 10 + 5 * ((Math.random() * 3) | 0), ok: () => true, rel: 1 },
+  es: { t: () => 'Vença 1 estágio', v: () => S.venc || 0, n: () => 1, ok: () => true, rel: 1 } };
+function missoes() { const h = hoje(); if (S.mis && S.mis.dia === h) return S.mis;
+  const ks = Object.keys(MIS).filter(k => MIS[k].ok()).sort(() => Math.random() - 0.5).slice(0, 3);
+  S.mis = { dia: h, L: ks.map(k => ({ k, n: MIS[k].n(), b: MIS[k].rel ? MIS[k].v() : 0, ok: 0 })), fim: 0 }; salva(); return S.mis }
+const misFeito = m => Math.max(0, Math.min(m.n, MIS[m.k].v() - m.b));
+function checaMissoes() { const M = missoes(); let novo = 0;
+  for (const m of M.L) if (!m.ok && misFeito(m) >= m.n) { m.ok = 1; novo++; const o = 10 + 2 * S.nv; S.ouro += o; aviso('🎯 Missão cumprida: ' + MIS[m.k].t(m.n) + ' · +' + o + ' 🪙', 3); plim(4) }
+  if (novo && !M.fim && M.L.every(m => m.ok)) { M.fim = 1; S.misT = (S.misT || 0) + 1; const o = 20 + 3 * S.nv; S.ouro += o; S.inv.pocao = (S.inv.pocao || 0) + 1;
+    setTimeout(() => mostraPremio({ ic: '🎯', tit: 'Missões do dia completas!', itens: [['🧪', 'Poção de vida'], ['🪙', '+' + o + ' de ouro']] }), 700) }
+  if (novo) { salva(); if (hojeEl.classList.contains('on')) setTimeout(desenhaHoje, 0) } }
+// ---------------- hábito do mês: 1 tarefa em foco dá o dobro de XP; com 80% dos dias até o fim do mês, medalha ----------------
+const mesDe = dt => dt.slice(0, 7), nomeMes = m => MESES[+m.slice(5, 7) - 1] + ' de ' + m.slice(0, 4);
+const fimMes = m => isoDe(new Date(+m.slice(0, 4), +m.slice(5, 7), 0));
+function ehFoco(t) { return !!(S.hm && t && S.hm.id === t.id && S.hm.mes === mesDe(hoje())) }
+function focoDe(hm) { return S.diar.find(d => d.id === hm.id) || S.hab.find(t => t.id === hm.id) }
+function pctFoco(hm) { // % dos dias feitos desde que escolheu (hoje só conta depois de feito)
+  const t = focoDe(hm), h = hoje(); let ok = 0, tot = 0; if (!t) return { ok, tot, p: 0 };
+  const dia = S.diar.includes(t), fim = fimMes(hm.mes) < h ? fimMes(hm.mes) : h; if (dia) prep(t);
+  for (let dt = hm.ini; dt <= fim; dt = somaDia(dt, 1)) {
+    if (dia) { if (dt === h) { if (agendada(t, dt) && (feito(t) || semFeita(t))) { ok++; tot++ } continue }
+      const v = t.hist[dt]; if (v != null) { tot++; ok += v } else if (t.freq.t !== 'vezes' && agendada(t, dt)) tot++ }
+    else { const c = dt === h ? t.c || 0 : ((t.hist || {})[dt] || [0])[0]; if (dt === h && !c) continue; tot++; if (c > 0) ok++ } }
+  return { ok, tot, p: tot ? Math.round(ok / tot * 100) : 0 } }
+function checaFoco() { // o mês virou: fecha o hábito do mês e dá a medalha se chegou a 80%
+  const hm = S.hm; if (!hm || hm.mes >= mesDe(hoje())) return; const r = pctFoco(hm), t = focoDe(hm), nome = t ? t.t : 'hábito'; S.hm = null;
+  if (r.tot && r.p >= 80) { S.medalhas = (S.medalhas || []).concat([{ mes: hm.mes, t: nome, p: r.p }]); S.ouro += 150;
+    setTimeout(() => mostraPremio({ ic: '🏅', tit: 'Medalha do mês!', sub: nome + ' em ' + r.p + '% dos dias', itens: [['🏅', 'Medalha de ' + nomeMes(hm.mes)], ['🪙', '+150 de ouro']] }), 900) }
+  else setTimeout(() => aviso('⭐ O hábito do mês fechou com ' + r.p + '% (precisava 80%). Escolha o deste mês na aba Progresso.', 4.5), 2500);
+  salva() }
+function secFoco(sec) {
+  const s = sec('⭐ Hábito do mês'), h = hoje(), hm = S.hm && S.hm.mes === mesDe(h) ? S.hm : null, t = hm && focoDe(hm);
+  if (t) { const r = pctFoco(hm), pb = el('div', 'pbar'), i = el('i'); i.style.width = r.p + '%'; pb.append(i);
+    s.append(el('b', null, t.t + ' · ' + r.p + '%' + (r.tot ? ' (' + r.ok + ' de ' + r.tot + (r.tot === 1 ? ' dia)' : ' dias)') : '')), pb,
+      el('p', 'dica', 'Dá o dobro de XP o mês todo. Fechando ' + nomeMes(hm.mes) + ' com 80% ou mais: 🏅 medalha e 150 de ouro. ' + (difDias(h, fimMes(hm.mes)) ? (difDias(h, fimMes(hm.mes)) + 1) + ' dias pro fim do mês.' : 'Hoje é o último dia do mês!')));
+    const tr = el('button', null, 'Trocar'); tr.style.marginTop = '6px'; tr.onclick = () => { if (confirm('Trocar o hábito do mês? A contagem recomeça hoje.')) { S.hm = null; salva(); lista() } }; s.append(tr) }
+  else { s.append(el('p', 'dica', 'Escolha 1 hábito pra focar este mês: ele dá o dobro de XP, e se você fizer em 80% dos dias até o fim do mês ganha uma medalha 🏅 e 150 de ouro.'));
+    const g = el('div', 'poe'); for (const x of [...S.diar, ...S.hab.filter(t => t.pos)]) { const b = el('button', null, x.t);
+      b.onclick = () => { if (!x.id) x.id = uid(); S.hm = { id: x.id, mes: mesDe(h), ini: h }; salva(); lista(); aviso('⭐ ' + x.t + ': XP dobrado até o fim do mês!', 3) }; g.append(b) } s.append(g) }
+  if (S.medalhas && S.medalhas.length) s.append(el('p', 'dica', 'Medalhas: ' + S.medalhas.map(m => '🏅 ' + nomeMes(m.mes) + ' (' + m.t + ')').join(' · ')));
+}
+// ---------------- masmorra do fim de semana: sábado e domingo, com 80% das diárias nos últimos 7 dias ----------------
+function fdsDe(dt) { const w = dData(dt).getDay(); return w === 6 ? dt : w === 0 ? somaDia(dt, -1) : null } // o sábado do fim de semana (ou nada)
+function semanaPct() { const h = hoje(); let ok = 0, tot = 0; for (let i = 1; i <= 7; i++) { const r = resumoDia(somaDia(h, -i)); ok += r.ok; tot += r.tot } return tot ? Math.round(ok / tot * 100) : 0 }
+function botaoMasm() { const mb = mapaEl.querySelector('.masm'), fd = fdsDe(hoje()); mb.hidden = !fd; if (!fd) return; const pc = semanaPct(), feita = S.masmV === fd;
+  mb.classList.toggle('off', pc < 80 || feita); mb.textContent = '🏰 Masmorra' + (feita ? ' ✓' : pc < 80 ? ' 🔒' : '!') }
+function entraMasm() { clearInterval(contaT); contaN = 0; const fd = fdsDe(hoje()); if (!fd) return; const pc = semanaPct();
+  if (S.masmV === fd) { aviso('Você já venceu a masmorra deste fim de semana. Volta no sábado que vem!', 3); return }
+  if (pc < 80) { aviso('🏰 A masmorra pede 80% das diárias nos últimos 7 dias. Você fez ' + pc + '%.', 3.5); return }
+  if (!podeJogar(1)) return; if (!confirm('Entrar na 🏰 Masmorra do fim de semana? Monstros mais fortes e prêmio grande: ouro, 6 cristais e um pergaminho de XP.')) return;
+  fechaMapa(); comecaEstagio(S.lib, false, true) }
 // ---------------- gráfico: semana a semana ----------------
 function secGrafico(sec) {
   const h = hoje(), s = sec('📈 Semana a semana'), ini0 = somaDia(h, -dData(h).getDay()), W = 320, H = 120, N = 8, sem = [];
@@ -1708,11 +1874,22 @@ function inventario() {
   const so = el('div', 'sec'); so.append(el('h3', null, 'Ouro'), el('div', 'ouroG', '🪙 ' + S.ouro), el('p', 'dica', 'Ganha ouro com as tarefas e matando monstros. A vida não volta sozinha: cura fazendo as tarefas ou com poção.')); listaEl.append(so);
   const si = el('div', 'sec'); si.append(el('h3', null, 'Itens')); const li = el('div', 'loja'); let tem = false;
   for (const k in ITENS) { const n = S.inv[k] || 0; if (!n) continue; tem = true; const it = ITENS[k], b = el('button'), e = el('div');
-    e.append(it.ic + ' ' + it.nome + ' ×' + n, el('small', null, it.desc + (emLuta() ? ' · só antes de começar o estágio' : ''))); b.append(e, el('span', 'preco', emLuta() ? '🔒' : 'Tomar')); b.disabled = emLuta() || S.hp >= hpMax(); b.onclick = () => usaItem(k); li.append(b) }
+    e.append(it.ic + ' ' + it.nome + ' ×' + n, el('small', null, it.desc + (!it.xp2 && emLuta() ? ' · só antes de começar o estágio' : ''))); b.append(e, el('span', 'preco', it.xp2 ? (S.xp2 === hoje() ? 'ativo' : 'Ler') : emLuta() ? '🔒' : 'Tomar')); b.disabled = it.xp2 ? S.xp2 === hoje() : emLuta() || S.hp >= hpMax(); b.onclick = () => usaItem(k); li.append(b) }
   const ativos = []; if (S.armadT > 0) ativos.push('🛡 Armadura: ' + S.armadT + (S.armadT === 1 ? ' estágio' : ' estágios')); for (const k in EQUIP) if (EQUIP[k].dias && temEq(k)) ativos.push(EQUIP[k].ic + ' ' + EQUIP[k].nome + ' até ' + ddmm(S.equip[k]));
+  if (S.xp2 === hoje()) ativos.push('📜 XP dobrado hoje'); if (S.enc && S.enc.n > 0) ativos.push(FORJA[S.enc.k].ic + ' ' + FORJA[S.enc.k].nome + ': ' + S.enc.n + (S.enc.n === 1 ? ' estágio' : ' estágios'));
   if (ativos.length) si.append(el('p', 'dica', 'Ativos: ' + ativos.join(' · ')));
   if (!tem) li.append(el('p', 'dica', 'Nenhum item. Compre na loja aqui embaixo.'));
   si.append(li); listaEl.append(si);
+  // ferreiro
+  { const sf = el('div', 'sec'), lf = el('div', 'loja'), at = S.enc && S.enc.n > 0 ? S.enc : null;
+    sf.append(el('h3', null, '⚒ Ferreiro'), el('p', 'dica', 'Os monstros às vezes deixam cair 💠 cristal (o chefe sempre deixa 3). Com ' + FORJA_C + ' cristais e ' + FORJA_O + ' de ouro o ferreiro encanta a espada por ' + FORJA_N + ' estágios. Você tem 💠 ' + (S.mat || 0) + '.'));
+    for (const k in FORJA) { const f = FORJA[k], b = el('button'), e = el('div'), mesmo = !!at && at.k === k;
+      e.append(f.ic + ' ' + f.nome, el('small', null, f.desc + (mesmo ? ' · soma mais ' + FORJA_N + ' estágios' : at ? ' · troca o encanto atual' : ''))); b.append(e, el('span', 'preco', '💠' + FORJA_C + ' 🪙' + FORJA_O));
+      b.disabled = (S.mat || 0) < FORJA_C || S.ouro < FORJA_O || emLuta();
+      b.onclick = () => { if ((S.mat || 0) < FORJA_C || S.ouro < FORJA_O || emLuta()) return; S.mat -= FORJA_C; S.ouro -= FORJA_O; S.enc = { k, n: (mesmo ? at.n : 0) + FORJA_N }; corEspada(); salva(); hud(); lista();
+        mostraPremio({ ic: f.ic, tit: f.nome + '!', sub: 'O ferreiro encantou a sua espada', itens: [['⚔️', f.desc], ['🗺', 'vale ' + S.enc.n + ' estágios']], cor: f.cor }) }; lf.append(b) }
+    if (emLuta()) sf.append(el('p', 'dica', 'O ferreiro só trabalha fora da luta (no mapa).'));
+    sf.append(lf); listaEl.append(sf) }
   // loja
   const s2 = el('div', 'sec'); s2.append(el('h3', null, 'Loja')); const lj = el('div', 'loja');
   const item = (nome, desc, preco, ok, f) => { const b = el('button'); const e = el('div'); e.append(nome, el('small', null, desc)); b.append(e, el('span', 'preco', '🪙 ' + preco)); b.disabled = S.ouro < preco || !ok;
@@ -1720,7 +1897,7 @@ function inventario() {
   for (const k in EQUIP) { const it = EQUIP[k], at = temEq(k);
     if (it.dias) item(it.ic + ' ' + it.nome + ' (' + it.dias + ' dias)', it.desc + (at ? ' · ativo até ' + ddmm(S.equip[k]) + ', comprar soma mais ' + it.dias : ''), it.preco, true, () => { S.equip = S.equip || {}; S.equip[k] = somaDia(at ? S.equip[k] : hoje(), it.dias - (at ? 0 : 1)); aviso(it.ic + ' ' + it.nome + ' até ' + ddmm(S.equip[k])) });
     else item(it.ic + ' ' + it.nome + (at ? ' ✓' : ''), at ? 'já é seu' : it.desc, it.preco, !at, () => { S.equip = S.equip || {}; S.equip[k] = 1; aviso(it.ic + ' ' + it.nome + ' é sua!') }) }
-  for (const k in ITENS) { const it = ITENS[k]; item(it.ic + ' ' + it.nome, it.desc + ' · tome antes de começar o estágio', it.preco, true, () => { S.inv[k] = (S.inv[k] || 0) + 1 }) }
+  for (const k in ITENS) { const it = ITENS[k]; item(it.ic + ' ' + it.nome, it.desc + (it.cura ? ' · tome antes de começar o estágio' : ''), it.preco, true, () => { S.inv[k] = (S.inv[k] || 0) + 1 }) }
   const pe = 40 + 35 * S.espada; item('Espada melhor (' + (S.espada + 1) + ')', '+4 de dano de espada' + ([1, 3, 6, 9].includes(S.espada + 1) ? ' · a lâmina muda de cor' : ''), pe, S.espada < 10, () => { S.espada++; corEspada(); aviso('Espada melhorada!') });
   const pa = 30 + 3 * S.nv; item('🛡 Armadura (5 estágios)', 'segura 30% do dano dos monstros nos próximos 5 estágios' + (S.armadT > 0 ? ' · faltam ' + S.armadT : ''), pa, true, () => { S.armadT = (S.armadT || 0) + 5; aviso('🛡 Armadura: ' + S.armadT + ' estágios') });
   s2.append(lj); listaEl.append(s2);
@@ -1743,6 +1920,13 @@ function heroina() {
   const p0 = el('p', 'dica'); p0.style.marginTop = '6px'; p0.textContent = 'Ganha ' + PTS_NIVEL + ' pontos a cada nível. Sem classe: Força libera as skills de espada e Magia as de magia; dá pra focar num lado ou fazer híbrido.';
   const rz = el('button', null, 'Refazer pontos'); rz.style.marginTop = '8px'; rz.onclick = () => { if (!confirm('Devolver todos os pontos pra distribuir de novo?')) return; let t = 0; for (const k in S.attr) { t += S.attr[k]; S.attr[k] = 0 } S.pontos += t; S.hp = Math.min(S.hp, hpMax()); salva(); hud(); botoesSkill(); lista() };
   s0.append(p0, rz); listaEl.append(s0);
+  { const st = el('div', 'sec'), h3 = el('h3', null, '🌳 Talentos'), pts = talPts(); if (pts > 0) h3.append(el('span', 'pts', pts + ' pra usar')); st.append(h3);
+    st.append(el('p', 'dica', S.nv < TAL_NV ? 'Libera no nível ' + TAL_NV + ' (você: ' + S.nv + '). Daí em diante cada nível dá 1 ponto de talento, até ' + TAL_MAX + ' em cada um.' : 'Cada nível dá 1 ponto de talento, até ' + TAL_MAX + ' em cada um.'));
+    for (const k in TAL) { const [ic, nome, desc] = TAL[k], d = el('div', 'tal'), nm = el('div', 'nm'), b = el('button', null, '+'); nm.append(el('b', null, ic + ' ' + nome), el('small', null, desc + ' por ponto'));
+      b.disabled = pts <= 0 || tal(k) >= TAL_MAX; b.setAttribute('aria-label', 'Pôr um ponto em ' + nome);
+      b.onclick = () => { if (talPts() <= 0 || tal(k) >= TAL_MAX) return; S.tal = S.tal || {}; S.tal[k] = tal(k) + 1; salva(); hud(); lista(); plim(3, 0.15) };
+      d.append(nm, el('div', 'v', tal(k) + '/' + TAL_MAX), b); st.append(d) }
+    listaEl.append(st) }
   // skills
   const sk = el('div', 'sec'); sk.append(el('h3', null, 'Skills')); const L = el('div', 'skills');
   for (const k in SKILLS) { const s = SKILLS[k], ok = A_(s.lado === 'E' ? 'for' : 'mag') >= s.req, d = el('div', 'sk1 ' + s.lado + (ok ? '' : ' off')), tx = el('div');
@@ -1806,7 +1990,7 @@ function corPct(p) { return p == null ? null : 'hsl(' + Math.round(p * 1.2) + ',
 function poeMeta(d) { editor('diar', d); const h = hoje(); ED.D.alvo = { ini: h, fim: somaDia(h, 60), p: 80 }; desenhaEd(); const m = edEl.querySelector('.metaed'); if (m) m.scrollIntoView({ block: 'start' }) }
 function progresso() { // tudo por hábito: a meta de cada um e o % de cada um
   const h = hoje(), sec = tit => { const s = el('div', 'sec'); s.append(el('h3', null, tit)); listaEl.append(s); return s };
-  secChefe(sec); secConquistas(sec);
+  secChefe(sec); secFoco(sec); secConquistas(sec);
   if (S.diar.length) secGrafico(sec);
   if (!S.diar.length) { const s = sec('🎯 Metas por hábito'); s.append(el('p', 'dica', 'Crie os hábitos que quer acompanhar dia a dia na aba Diárias (ex.: dormir cedo, atividade física). Depois volte aqui pra pôr uma meta com data em cada um.')); return }
   // metas com data, uma por hábito
