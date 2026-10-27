@@ -170,6 +170,7 @@
   #mapa .repete{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#3a2a1a;color:#ffe9b8;border:2px solid #6a4a24;opacity:.7}
   #mapa .repete.on{opacity:1;background:#2f6a3a;border-color:#8fe0a0}
   #mapa .pocao{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#4a2030;color:#ffe9b8;border:2px solid #9a4a64}
+  #mapa .sair{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#3a2a2a;color:#ffd0c8;border:2px solid #8a4a44}
   #mapa .tarefas{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#5a3a1e;color:#ffe9b8;border:2px solid #8a5a24}
   @keyframes pulsa{0%,100%{box-shadow:0 3px 0 #0006,0 0 0 3px #ffe06655}50%{box-shadow:0 3px 0 #0006,0 0 0 9px #ffe06633,0 0 18px #ffe066}}
   #carga{position:absolute;inset:0;display:grid;place-content:center;gap:10px;justify-items:center;background:rgba(10,14,24,.6);font-weight:700;text-shadow:0 1px 3px #000;pointer-events:none;z-index:5}
@@ -360,7 +361,7 @@
 <div id="calTela" role="dialog" aria-label="Calendário"></div>
 <div id="premio" role="dialog" aria-label="Prêmio"></div>
 <div id="mapa"><div class="rolo"><div class="folha"><canvas aria-hidden="true"></canvas></div></div><div class="topo"><b>Mapa da Missão</b><small></small></div><button class="masm" hidden>🏰 Masmorra</button>
-  <div class="info"><div class="txt"></div><div class="bts"><button class="pocao">🧪 Poção</button><button class="repete" aria-pressed="false">🔁 Repetir</button><button class="tarefas">📋 Tarefas</button><button class="jogar">⚔ Começar</button></div></div></div>
+  <div class="info"><div class="txt"></div><div class="bts"><button class="pocao">🧪 Poção</button><button class="repete" aria-pressed="false">🔁 Repetir</button><button class="tarefas">📋 Tarefas</button><button class="sair" hidden>🏳 Sair da luta</button><button class="jogar">⚔ Começar</button></div></div></div>
 <script src="js/three.min.js"></script>
 <script src="js/GLTFLoader.js"></script>
 <script src="js/vrm_char.js"></script>
@@ -1201,10 +1202,11 @@ function botoesSkill() {
     toque(b, () => atacar(k)); ctl.append(b) });
 }
 const emLuta = () => !F.fim && !F.perdeu;
+function saiLuta() { if (!emLuta()) return; comecaEstagio(F.n, true); if (mapaEl.classList.contains('on')) infoMapa(); if (aba === 'inv') lista(); aviso('Você saiu da luta. Toque em ⚔ Começar quando quiser voltar.', 3) } // larga o estágio e fica parada na trilha
 function usaItem(k) { // poção só fora da luta: no mapa, antes de começar o estágio
   const it = ITENS[k]; if (!(S.inv[k] > 0)) return;
   if (it.xp2) { if (S.xp2 === hoje()) { aviso('📜 O XP já está dobrado hoje.'); return } S.inv[k]--; S.xp2 = hoje(); brilho(0xffe066); plim(4); aviso('📜 XP dobrado nas tarefas até o fim do dia!', 3); salva(); hud(); if (aba === 'inv') lista(); return }
-  if (emLuta()) { aviso('Poção só antes de começar o estágio (no mapa).'); return }
+  if (emLuta()) { if (!confirm('Poção só fora da luta. Sair da luta agora pra tomar? (depois é só começar o estágio de novo)')) return; saiLuta() }
   if (S.hp >= hpMax()) { aviso('A vida já está cheia.'); return }
   S.inv[k]--; const c = Math.min(hpMax() - S.hp, Math.round(hpMax() * it.cura)); S.hp += c; numero('+' + c, P.x, P.y + ALT + 0.2, P.z, 'cura'); brilho(0x8dffb0); plim(4); aviso(it.ic + ' +' + c + ' de vida');
   salva(); hud(); if (aba === 'inv') lista(); if (mapaEl.classList.contains('on')) infoMapa();
@@ -1556,7 +1558,7 @@ function infoMapa() { // a barra de baixo do mapa: qual estágio, se dá pra ent
     : (S.ok[n] ? '✓ Já vencido (dá pra repetir pra juntar ouro)' : 'Nível ' + nvSugerido(n) + ' ✓') + ' · ' + (4 + Math.ceil(n / 3)) + ' grupos e um chefe · vida ' + Math.ceil(S.hp) + '/' + hpMax() }));
   const rb = mapaEl.querySelector('.repete'); rb.classList.toggle('on', !!S.repete); rb.setAttribute('aria-pressed', !!S.repete); rb.textContent = S.repete ? '🔁 Repetindo' : '🔁 Repetir';
   const jb = mapaEl.querySelector('.jogar'); jb.disabled = !pode && !volta; jb.textContent = volta ? '▶ Voltar pra luta' : pode ? '⚔ Começar' + (contaN ? ' (' + contaN + ')' : '') : '🔒 Nível ' + nvSugerido(n);
-  const pb = mapaEl.querySelector('.pocao'); pb.textContent = '🧪 Poção' + (np ? ' ' + np : ''); pb.hidden = !np; pb.disabled = emLuta() || S.hp >= hpMax();
+  const pb = mapaEl.querySelector('.pocao'); pb.textContent = '🧪 Poção' + (np ? ' ' + np : ''); pb.hidden = !np; pb.disabled = S.hp >= hpMax(); mapaEl.querySelector('.sair').hidden = !emLuta();
 }
 function joga() { clearInterval(contaT); contaN = 0;
   if (emLuta() && selN === F.n && !F.masm) { fechaMapa(); return } // só estava olhando o mapa: volta pra mesma luta
@@ -1569,7 +1571,7 @@ document.getElementById('bComeca').addEventListener('click', e => { selN = +e.cu
 function fechaMapa() { clearInterval(contaT); contaN = 0; mapaEl.classList.remove('on') }
 mapaEl.querySelector('.jogar').onclick = joga; mapaEl.querySelector('.masm').onclick = entraMasm;
 mapaEl.querySelector('.repete').onclick = () => { S.repete = !S.repete; salva(); infoMapa(); aviso(S.repete ? 'Repetir ligado: depois de vencer, joga este mesmo estágio de novo (bom pra juntar ouro).' : 'Repetir desligado: depois de vencer, vai pro próximo estágio.') };
-mapaEl.querySelector('.tarefas').onclick = fechaMapa;
+mapaEl.querySelector('.tarefas').onclick = fechaMapa; mapaEl.querySelector('.sair').onclick = saiLuta;
 mapaEl.querySelector('.pocao').onclick = () => { clearInterval(contaT); contaN = 0; usaItem(S.inv.pocao > 0 && S.hp + hpMax() * ITENS.pocao.cura < hpMax() * 1.05 ? 'pocao' : S.inv.pocaoG > 0 ? 'pocaoG' : 'pocao'); infoMapa() };
 document.getElementById('bEst').addEventListener('click', () => mapaEl.classList.contains('on') ? (F.fim || F.perdeu || fechaMapa()) : abreMapa());
 
@@ -1796,7 +1798,7 @@ function desenhaHoje() {
   const bt = el('div', 'hojeBot'), t = el('button', null, '📋 Tarefas'), j = el('button', 'jg', '⚔ Jogar');
   j.textContent = '⚔ Jogar estágio ' + melhorEst();
   t.onclick = () => { fechaHoje(); fechaMapa(); trocaAba('diar') }; j.onclick = () => { fechaHoje(); selN = melhorEst(); joga() }; bt.append(t, j); cx.append(bt);
-  { const np = (S.inv.pocao || 0) + (S.inv.pocaoG || 0); if (np && S.hp < hpMax() && !emLuta()) { const pc = el('button', null, '🧪 Tomar poção antes (' + Math.ceil(S.hp) + '/' + hpMax() + ' de vida)'); pc.style.cssText = 'width:100%;margin-top:8px'; pc.onclick = () => { usaItem(S.inv.pocao > 0 && S.hp + hpMax() * ITENS.pocao.cura < hpMax() * 1.05 ? 'pocao' : S.inv.pocaoG > 0 ? 'pocaoG' : 'pocao'); desenhaHoje() }; cx.append(pc) } }
+  { const np = (S.inv.pocao || 0) + (S.inv.pocaoG || 0); if (np && S.hp < hpMax()) { const pc = el('button', null, '🧪 Tomar poção antes (' + Math.ceil(S.hp) + '/' + hpMax() + ' de vida)'); pc.style.cssText = 'width:100%;margin-top:8px'; pc.onclick = () => { usaItem(S.inv.pocao > 0 && S.hp + hpMax() * ITENS.pocao.cura < hpMax() * 1.05 ? 'pocao' : S.inv.pocaoG > 0 ? 'pocaoG' : 'pocao'); desenhaHoje() }; cx.append(pc) } }
 }
 hojeEl.addEventListener('click', e => { if (e.target === hojeEl) fechaHoje() });
 // ---------------- chefe da semana: perde vida com o XP das tarefas ----------------
@@ -2034,8 +2036,8 @@ function inventario() { // aba Itens: 🎒 mochila (o que você tem), 🏪 loja 
   const bs = el('div', 'bolsa'), sl = el('div', 'slots'); bs.append(el('h3', null, '🎒 Sua mochila'), el('p', 'dica', 'Toque em Usar. Poção só fora da luta (no mapa ou antes de jogar).'));
   let n = 0;
   for (const k in ITENS) { const q = S.inv[k] || 0; if (!q) continue; n++; const it = ITENS[k], d = el('div', 'slot'), b = el('button');
-    const ativo = it.xp2 && S.xp2 === hoje(), luta = !it.xp2 && emLuta(), cheia = !it.xp2 && S.hp >= hpMax();
-    b.textContent = ativo ? '✓ Ativo hoje' : luta ? '🔒 Na luta' : cheia ? 'Vida cheia' : it.xp2 ? '📖 Ler' : '🧪 Usar'; b.disabled = ativo || luta || cheia; b.onclick = () => usaItem(k);
+    const ativo = it.xp2 && S.xp2 === hoje(), cheia = !it.xp2 && S.hp >= hpMax();
+    b.textContent = ativo ? '✓ Ativo hoje' : cheia ? 'Vida cheia' : it.xp2 ? '📖 Ler' : '🧪 Usar'; b.disabled = ativo || cheia; b.onclick = () => usaItem(k);
     d.append(el('span', 'qt', '×' + q), el('span', 'ic', it.ic), el('span', 'nm', it.nome), b); sl.append(d) }
   if (S.mat) { n++; const d = el('div', 'slot'), b = el('button', null, '⚒️ Ferreiro'); b.onclick = () => { invAba = 'forja'; lista() }; d.append(el('span', 'qt', '×' + S.mat), el('span', 'ic', '💠'), el('span', 'nm', 'Cristal'), b); sl.append(d) }
   for (let k = n; k < Math.max(8, Math.ceil(n / 4) * 4); k++) { const d = el('div', 'slot vazio'); sl.append(d) }
@@ -2068,10 +2070,10 @@ function ferreiro() { // ⚒ ferreiro: cristais + ouro encantam a espada por alg
   for (const k in FORJA) { const f = FORJA[k], mesmo = !!at && at.k === k, c = el('div', 'card' + (mesmo ? ' dono' : '')), b = el('button', 'comprar', '💠' + FORJA_C + ' + 🪙' + FORJA_O);
     if (mesmo) c.append(el('span', 'fita', 'faltam ' + at.n));
     c.append(el('span', 'ic', f.ic), el('span', 'nm', f.nome), el('span', 'ds', k === 'fogo' ? '+20% de dano, golpes em chamas' : 'O monstro fica lento'));
-    const pode = (S.mat || 0) >= FORJA_C && S.ouro >= FORJA_O && !emLuta(); b.disabled = !pode;
+    const pode = (S.mat || 0) >= FORJA_C && S.ouro >= FORJA_O; b.disabled = !pode;
     b.onclick = () => { if (!pode) return; S.mat -= FORJA_C; S.ouro -= FORJA_O; S.enc = { k, n: (mesmo ? at.n : 0) + FORJA_N }; corEspada(); salva(); hud(); lista();
-      mostraPremio({ ic: f.ic, tit: f.nome + '!', sub: 'O ferreiro encantou a sua espada', itens: [['⚔️', f.desc], ['🗺', 'vale ' + S.enc.n + ' estágios']], cor: f.cor }) };
-    c.append(b); if (!pode) c.append(el('span', 'falta', emLuta() ? 'só fora da luta' : (S.mat || 0) < FORJA_C ? 'faltam ' + (FORJA_C - (S.mat || 0)) + ' 💠' : 'faltam ' + (FORJA_O - S.ouro) + ' 🪙')); v.append(c) }
+      mostraPremio({ ic: f.ic, tit: f.nome + '!', sub: 'O ferreiro encantou a sua espada', itens: [['⚔️', f.desc], ['🗺', 'vale ' + S.enc.n + ' estágios' + (emLuta() ? ', a partir do próximo' : '')]], cor: f.cor }) };
+    c.append(b); if (!pode) c.append(el('span', 'falta', (S.mat || 0) < FORJA_C ? 'faltam ' + (FORJA_C - (S.mat || 0)) + ' 💠' : 'faltam ' + (FORJA_O - S.ouro) + ' 🪙')); v.append(c) }
   listaEl.append(s);
 }
 function heroina() {
