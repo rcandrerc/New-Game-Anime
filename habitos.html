@@ -743,9 +743,12 @@ function poeEspada() { // espada na mão direita
   let mao = null; R.root.traverse(o => { if (o.name === 'handslotr' || o.name === 'handslot.r') mao = o }); if (!mao) R.root.traverse(o => { if (!mao && /^handr$|^hand\.?r$/.test(o.name)) mao = o });
   if (mao) { const ws = new THREE.Vector3(); mao.parent.updateWorldMatrix(true, false); mao.getWorldScale(ws); espada.scale.setScalar(1 / ws.x); mao.add(espada) }
   espada.userData.base = new THREE.Object3D(); espada.userData.base.position.y = 0.2; espada.userData.ponta = new THREE.Object3D(); espada.userData.ponta.position.y = 0.12 + L + 0.08; espada.add(espada.userData.base, espada.userData.ponta);
-  espada.userData.aco = aco; corEspada();
+  espada.userData.aco = aco;
+  const glow = new THREE.Mesh(new THREE.BoxGeometry(0.15, L + 0.1, 0.07), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); glow.position.y = 0.12 + L / 2; glow.renderOrder = 4; espada.add(glow); espada.userData.glow = glow;
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: texBola, color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); halo.position.y = 0.12 + L * 0.6; halo.renderOrder = 4; espada.add(halo); espada.userData.halo = halo;
+  corEspada();
 }
-function corEspada() { const ek = encAtivo('fogo') ? 'fogo' : encAtivo('gelo') ? 'gelo' : null; if (espada) espada.userData.aco.emissive.set(ek ? FORJA[ek].cor : S.espada >= 9 ? 0xb01020 : S.espada >= 6 ? 0x5a2a9a : S.espada >= 3 ? 0x6a3a00 : S.espada >= 1 ? 0x3a4a6a : 0x223344) } // a lâmina muda de cor: azul, dourada, roxa, vermelha
+function corEspada() { const ek = encAtivo('fogo') ? 'fogo' : encAtivo('gelo') ? 'gelo' : null; if (espada) espada.userData.aco.emissive.set(ek ? FORJA[ek].cor : S.espada >= 9 ? 0xc01828 : S.espada >= 6 ? 0x7a3ad0 : S.espada >= 3 ? 0xb07000 : S.espada >= 1 ? 0x3a68b0 : 0x223344) } // a lâmina muda de cor: azul, dourada, roxa, vermelha
 // movimento de raiz: os golpes do Mixamo avançam o corpo pela curva gravada no .glb (extras.root)
 function curva(n) { return R && R.root.userData.vrm.root && R.root.userData.vrm.root[n] }
 function naCurva(c, t) {
@@ -915,7 +918,7 @@ lamGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(LN * 
 { const ix = []; for (let i = 0; i < LN - 1; i++) { const k = i * 2; ix.push(k, k + 1, k + 2, k + 1, k + 3, k + 2) } lamGeo.setIndex(ix) }
 const lamina = new THREE.Mesh(lamGeo, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
   vertexShader: 'attribute float a; varying float va; void main(){ va = a; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-  fragmentShader: 'varying float va; void main(){ gl_FragColor = vec4(0.75, 0.92, 1.0, va); }' }));
+  uniforms: { cor: { value: new THREE.Color(0xbfeaff) } }, fragmentShader: 'uniform vec3 cor; varying float va; void main(){ gl_FragColor = vec4(mix(cor, vec3(1.0), 0.35), va); }' }));
 lamina.frustumCulled = false; lamina.visible = false; sc.add(lamina);
 const _b = new THREE.Vector3(), _t = new THREE.Vector3();
 function laminaPasso(dt) {
@@ -925,7 +928,7 @@ function laminaPasso(dt) {
   lamina.visible = lamPts.length > 1; if (!lamina.visible) return;
   const pos = lamGeo.attributes.position.array, al = lamGeo.attributes.a.array;
   for (let i = 0; i < LN; i++) { const q = lamPts[Math.min(i, lamPts.length - 1)], f = i < lamPts.length ? Math.max(0, 1 - q.v / 0.14) * (1 - i / LN) : 0;
-    pos.set([q.b.x, q.b.y, q.b.z, q.t.x, q.t.y, q.t.z], i * 6); al[i * 2] = f * 0.15; al[i * 2 + 1] = f * 0.6 }
+    pos.set([q.b.x, q.b.y, q.b.z, q.t.x, q.t.y, q.t.z], i * 6); al[i * 2] = f * 0.2; al[i * 2 + 1] = f * (S.espada || S.enc ? 0.85 : 0.6) }
   lamGeo.attributes.position.needsUpdate = lamGeo.attributes.a.needsUpdate = true;
 }
 
@@ -965,7 +968,7 @@ function atacar(tipo = 'combo') {
 }
 function semEnergia() { const b = document.getElementById('enB'); if (b.animate) b.animate([{ borderColor: '#ffd23a', boxShadow: '0 0 8px #ffd23a' }, { borderColor: 'rgba(255,255,255,.35)', boxShadow: 'none' }], { duration: 500 }) }
 function acerta(alvo, v, crit, dx, dz, cor) {
-  if (P.atk && !ehMagia(P.atk.tipo)) { if (encAtivo('gelo')) alvo.frio = 2.5; if (!cor) cor = encAtivo('fogo') ? 0xff7a2a : encAtivo('gelo') ? 0x9ad8ff : cor }
+  if (P.atk && !ehMagia(P.atk.tipo)) { if (encAtivo('gelo')) alvo.frio = 2.5; brilhoGolpe(alvo.x, alvo.y + alvo.alt * 0.55, alvo.z); if (!cor) cor = encAtivo('fogo') ? 0xff7a2a : encAtivo('gelo') ? 0x9ad8ff : cor }
   if (crit) v = Math.round(v * 1.8);
   som(crit ? 'critico' : 'acerto', crit ? 0.9 : 0.75, 0.85); pancada(crit ? 0.8 : 0.55, 0.8); if (crit) som('metal', 0.18, 0.6);
   pausa = crit ? 0.09 : 0.055; tremor = Math.max(tremor, crit ? 0.14 : 0.07);
@@ -1096,6 +1099,7 @@ function bichosPasso(dt) {
 }
 function levaDano(v, b) {
   const real = Math.max(1, Math.round(v * (1 - defesa()) * (1 - 0.04 * tal('pele')) * rnd(0.85, 1.15)));
+  if (defesa()) ESCUDO.t = 0.35; // a armadura segurou parte do golpe
   S.hp = Math.max(0, S.hp - real); numero('-' + real, P.x, P.y + ALT + 0.2, P.z, 'dor'); som('dor', 0.5); doi(); hud();
   if (S.hp <= 0) desmaia(); else if (!P.atk && b) { P.hit = 0.3; tocar('Hit_A', 1.3, 0.08) }
 }
@@ -1859,17 +1863,82 @@ function importaBackup() { const i = document.createElement('input'); i.type = '
 let instalaEv = null; addEventListener('beforeinstallprompt', e => { e.preventDefault(); instalaEv = e; if (aba === 'her') lista() });
 function instalaApp() { if (!instalaEv) return; instalaEv.prompt(); instalaEv.userChoice.finally(() => { instalaEv = null; lista() }) }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw-habitos.js').catch(() => {});
-// ---------------- enfeites da heroína: fada e aura ----------------
-let FADA = null, AURA = null;
-function enfeitesPasso(dt) {
-  if (temEq('fada') && !FADA) { FADA = new THREE.Group(); const m = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 8), new THREE.MeshBasicMaterial({ color: 0xc8fff0 })), g = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 8), new THREE.MeshBasicMaterial({ color: 0x7dffd8, transparent: true, opacity: 0.3, depthWrite: false }));
-    FADA.add(m, g, new THREE.PointLight(0x9dffe0, 0.8, 3, 2)); sc.add(FADA) }
-  if (temEq('aura') && !AURA) { AURA = new THREE.Mesh(new THREE.RingGeometry(0.45, 0.62, 40), new THREE.MeshBasicMaterial({ color: 0xffd86b, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide })); AURA.rotation.x = -Math.PI / 2; sc.add(AURA) }
-  if (FADA && !temEq('fada')) { sc.remove(FADA); FADA = null }
-  if (AURA && !temEq('aura')) { sc.remove(AURA); AURA = null }
-  if (FADA) { const a = tempo * 1.6, k = K / 0.64; FADA.position.set(P.x + Math.cos(a) * 0.75 * k, P.y + (1.5 + Math.sin(tempo * 3) * 0.12) * k, P.z + Math.sin(a) * 0.75 * k) }
-  if (AURA) { AURA.position.set(P.x, P.y + 0.04, P.z); AURA.scale.setScalar((1 + Math.sin(tempo * 2.5) * 0.06) * K / 0.64); AURA.material.opacity = 0.4 + Math.sin(tempo * 2.5) * 0.15 }
+// ---------------- enfeites e brilhos dos itens da loja: espada, fada, aura, amuleto e armadura ----------------
+// faíscas de luz (somam cor, piscam e somem); cada item solta as suas
+const BRI = (() => { const N = 500, pos = new Float32Array(N * 3), cor = new Float32Array(N * 3), tam = new Float32Array(N), alf = new Float32Array(N), V = [];
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('cor', new THREE.BufferAttribute(cor, 3)); geo.setAttribute('tam', new THREE.BufferAttribute(tam, 1)); geo.setAttribute('alf', new THREE.BufferAttribute(alf, 1));
+  const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { mapa: { value: texBola }, esc: { value: 400 } },
+    vertexShader: 'attribute vec3 cor; attribute float tam; attribute float alf; uniform float esc; varying vec3 vc; varying float va; void main(){ vc = cor; va = alf; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = tam * esc / max(0.1, -mv.z); gl_Position = projectionMatrix * mv; }',
+    fragmentShader: 'uniform sampler2D mapa; varying vec3 vc; varying float va; void main(){ vec4 t = texture2D(mapa, gl_PointCoord); gl_FragColor = vec4(vc * t.a * va + vec3(t.a * t.a * va * 0.6), 1.0); }' });
+  const pts = new THREE.Points(geo, mat); pts.frustumCulled = false; pts.renderOrder = 5; sc.add(pts); const c = new THREE.Color();
+  return { // solta uma faísca: posição, velocidade, vida, tamanho, cor, gravidade (negativa sobe), pisca
+    solta(x, y, z, vx, vy, vz, vida, t, cr, g = 0, pisca = 0) { if (V.length >= N) V.shift(); c.set(cr); V.push({ x, y, z, vx, vy, vz, t: 0, vida, tm: t, r: c.r, g: c.g, b: c.b, gr: g, pi: pisca, f: Math.random() * 6 }) },
+    passo(dt) { mat.uniforms.esc.value = r.domElement.height * 0.5;
+      for (let i = V.length - 1; i >= 0; i--) { const q = V[i]; q.t += dt; if (q.t >= q.vida) { V.splice(i, 1); continue } q.vy -= q.gr * dt; const a = Math.pow(0.35, dt); q.vx *= a; q.vz *= a; q.x += q.vx * dt; q.y += q.vy * dt; q.z += q.vz * dt }
+      V.forEach((q, i) => { const u = q.t / q.vida; pos[i * 3] = q.x; pos[i * 3 + 1] = q.y; pos[i * 3 + 2] = q.z; cor[i * 3] = q.r; cor[i * 3 + 1] = q.g; cor[i * 3 + 2] = q.b;
+        tam[i] = q.tm * 1.9 * (1 - u * 0.6); alf[i] = Math.min(1, q.t * 12) * (1 - u) * (q.pi ? 0.55 + 0.45 * Math.sin(q.t * q.pi + q.f) : 1) });
+      geo.setDrawRange(0, V.length); for (const k of ['position', 'cor', 'tam', 'alf']) geo.attributes[k].needsUpdate = true } };
+})();
+const rr = (a, b) => a + Math.random() * (b - a), mistura = (a, b) => new THREE.Color(a).lerp(new THREE.Color(b), Math.random()).getHex();
+// espada: brilho na lâmina, luz e faíscas conforme a melhoria (azul, dourada, roxa, vermelha) ou o encanto do ferreiro (fogo, gelo)
+const COR_ESP = n => n >= 9 ? 0xff3040 : n >= 6 ? 0xb070ff : n >= 3 ? 0xffc23a : n >= 1 ? 0x6aa8ff : 0;
+const luzEsp = new THREE.PointLight(0xffffff, 0, 2.2, 2); sc.add(luzEsp);
+const _e0 = new THREE.Vector3(), _e1 = new THREE.Vector3(); let emEsp = 0;
+function espadaPasso(dt) {
+  if (!espada || !espada.userData.glow) { luzEsp.intensity = 0; return }
+  const ek = encAtivo('fogo') ? 'fogo' : encAtivo('gelo') ? 'gelo' : null, cor = ek ? FORJA[ek].cor : COR_ESP(S.espada), g = espada.userData.glow, vis = espada.visible !== false && !!cor;
+  g.visible = espada.userData.halo.visible = vis; luzEsp.intensity = 0; lamina.material.uniforms.cor.value.set(cor || 0xbfeaff); if (!vis) return;
+  const pul = 0.75 + 0.25 * Math.sin(tempo * (ek ? 9 : 4)) + (ek === 'fogo' ? Math.random() * 0.2 : 0);
+  g.material.color.set(cor); g.material.opacity = (ek ? 0.9 : 0.45 + 0.05 * S.espada) * pul; g.scale.set(1.2 + 0.3 * pul, 1.04, 1.2 + 0.3 * pul);
+  const hl = espada.userData.halo, ws = espada.scale.x || 1; hl.material.color.set(cor); hl.material.opacity = (ek ? 0.75 : 0.3 + 0.04 * S.espada) * pul; hl.scale.set(0.9 * ws * K / 0.64 / ws, 1.6 * K / 0.64, 1);
+  espada.userData.base.getWorldPosition(_e0); espada.userData.ponta.getWorldPosition(_e1);
+  luzEsp.position.lerpVectors(_e0, _e1, 0.6); luzEsp.color.set(cor); luzEsp.intensity = (ek ? 1.6 : 0.5 + 0.08 * S.espada) * pul;
+  emEsp += dt * (ek ? 70 : 8 + 4 * S.espada) * (P.atk ? 2 : 1);
+  while (emEsp >= 1) { emEsp--; const u = Math.random(), x = _e0.x + (_e1.x - _e0.x) * u, y = _e0.y + (_e1.y - _e0.y) * u, z = _e0.z + (_e1.z - _e0.z) * u;
+    if (ek === 'fogo') BRI.solta(x, y, z, rr(-0.2, 0.2), rr(0.4, 1), rr(-0.2, 0.2), rr(0.3, 0.55), rr(0.1, 0.2) * K / 0.64, mistura(0xffe080, 0xff3a08), -1.5);
+    else if (ek === 'gelo') BRI.solta(x, y, z, rr(-0.25, 0.25), rr(-0.2, 0.15), rr(-0.25, 0.25), rr(0.6, 1), rr(0.05, 0.1) * K / 0.64, mistura(0xffffff, 0x7fd0ff), 0.3, 25);
+    else BRI.solta(x, y, z, rr(-0.15, 0.15), rr(0, 0.35), rr(-0.15, 0.15), rr(0.35, 0.6), rr(0.05, 0.09) * K / 0.64, mistura(0xffffff, cor), 0, 30) }
 }
+function brilhoGolpe(x, y, z) { // golpe com a espada encantada: explosão de fogo ou de gelo no monstro
+  const ek = encAtivo('fogo') ? 'fogo' : encAtivo('gelo') ? 'gelo' : null; if (!ek) return;
+  for (let i = 0; i < 22; i++) { const a = Math.random() * 6.28, v = rr(0.8, 2.4);
+    if (ek === 'fogo') BRI.solta(x, y, z, Math.cos(a) * v, rr(0.5, 2.5), Math.sin(a) * v, rr(0.3, 0.6), rr(0.15, 0.3) * K / 0.64, mistura(0xfff0a0, 0xff3a08), -2);
+    else BRI.solta(x, y, z, Math.cos(a) * v, rr(-0.5, 1.5), Math.sin(a) * v, rr(0.5, 0.9), rr(0.07, 0.14) * K / 0.64, mistura(0xffffff, 0x6fc8ff), 2, 30) }
+}
+// fada: uma bolinha de energia com asas de luz, que muda de cor, deixa um rastro cintilante e passeia em volta da heroína
+let FADA = null, AURA = null, AMU = null; const luzFada = new THREE.PointLight(0x9dffe0, 0, 3.2, 2); sc.add(luzFada);
+const spr = (cor, a = 1) => new THREE.Sprite(new THREE.SpriteMaterial({ map: texBola, color: cor, transparent: true, opacity: a, depthWrite: false, blending: THREE.AdditiveBlending }));
+const _cf = new THREE.Color(); let emFada = 0, emAura = 0, emAmu = 0;
+function poeFada() { FADA = new THREE.Group(); const halo = spr(0x7dffd8, 0.9), nucleo = spr(0xffffff, 0.9), asaE = spr(0xbff6ff, 0.9), asaD = spr(0xbff6ff, 0.9);
+  halo.scale.setScalar(0.9); nucleo.scale.setScalar(0.25); FADA.add(halo, asaE, asaD, nucleo); FADA.userData = { halo, nucleo, asaE, asaD }; sc.add(FADA) }
+function poeAura() { AURA = new THREE.Group();
+  const anel = (r0, r1, a) => { const m = new THREE.Mesh(new THREE.RingGeometry(r0, r1, 56), new THREE.MeshBasicMaterial({ color: 0xffd86b, transparent: true, opacity: a, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); m.rotation.x = -Math.PI / 2; AURA.add(m); return m };
+  const chao = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.9), new THREE.MeshBasicMaterial({ map: texBola, color: 0xffc23a, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending })); chao.rotation.x = -Math.PI / 2; AURA.add(chao);
+  AURA.userData = { a1: anel(0.6, 0.66, 0.9), a2: anel(0.42, 0.45, 0.6), chao }; sc.add(AURA) }
+function poeAmu() { AMU = spr(0x6dff8a, 1); AMU.scale.setScalar(0.16); const h = spr(0x2ad46a, 0.6); h.scale.setScalar(3); AMU.add(h); sc.add(AMU) }
+function enfeitesPasso(dt) {
+  const k = K / 0.64; espadaPasso(dt);
+  if (temEq('fada') && !FADA) poeFada(); if (FADA && !temEq('fada')) { sc.remove(FADA); FADA = null; luzFada.intensity = 0 }
+  if (temEq('aura') && !AURA) poeAura(); if (AURA && !temEq('aura')) { sc.remove(AURA); AURA = null }
+  if (temEq('amuleto') && !AMU) poeAmu(); if (AMU && !temEq('amuleto')) { sc.remove(AMU); AMU = null }
+  if (FADA) { const a = tempo * 1.3, f = FADA.userData, rd = (0.75 + 0.18 * Math.sin(tempo * 0.7)) * k;
+    FADA.position.set(P.x + Math.cos(a) * rd, P.y + (1.45 + Math.sin(tempo * 2.6) * 0.18 + Math.sin(tempo * 7) * 0.03) * k, P.z + Math.sin(a * 1.0) * rd * 0.85);
+    _cf.setHSL((0.5 + 0.35 * Math.sin(tempo * 0.45) + 1) % 1, 1, 0.55); f.nucleo.material.color.copy(_cf).lerp(new THREE.Color(0xffffff), 0.55); f.halo.material.color.copy(_cf); f.halo.scale.setScalar((1.1 + 0.25 * Math.sin(tempo * 6)) * k);
+    f.nucleo.scale.setScalar((0.2 + 0.05 * Math.sin(tempo * 11)) * k); const bat = Math.abs(Math.sin(tempo * 18));
+    for (const [w, sx] of [[f.asaE, -1], [f.asaD, 1]]) { w.material.color.copy(_cf).lerp(new THREE.Color(0xffffff), 0.5); w.scale.set((0.18 + 0.32 * bat) * k, 0.5 * k, 1); w.position.set(sx * (0.13 + 0.15 * bat) * k, 0.07 * k, 0) }
+    luzFada.position.copy(FADA.position); luzFada.color.copy(_cf); luzFada.intensity = 1.6 + 0.4 * Math.sin(tempo * 6);
+    emFada += dt * 55; while (emFada >= 1) { emFada--; const p = FADA.position; BRI.solta(p.x + rr(-0.04, 0.04), p.y + rr(-0.04, 0.04), p.z + rr(-0.04, 0.04), rr(-0.15, 0.15), rr(-0.35, 0.05), rr(-0.15, 0.15), rr(0.6, 1.1), rr(0.07, 0.15) * k, mistura(_cf.getHex(), 0xffffff), 0.4, 22) } }
+  if (AURA) { const u = AURA.userData; AURA.position.set(P.x, P.y + 0.05, P.z); AURA.scale.setScalar(k * (1 + Math.sin(tempo * 2.5) * 0.05));
+    u.a1.rotation.z = tempo * 0.6; u.a2.rotation.z = -tempo; u.a1.material.opacity = 0.65 + 0.3 * Math.sin(tempo * 2.5); u.a2.material.opacity = 0.45 + 0.3 * Math.sin(tempo * 3.3 + 1); u.chao.material.opacity = 0.35 + 0.15 * Math.sin(tempo * 2.5);
+    emAura += dt * 34; while (emAura >= 1) { emAura--; const a = Math.random() * 6.28, rd = rr(0.45, 0.66) * k; BRI.solta(P.x + Math.cos(a) * rd, P.y + 0.08, P.z + Math.sin(a) * rd, 0, rr(0.8, 1.8) * k, 0, rr(0.9, 1.6), rr(0.06, 0.11) * k, mistura(0xfff2b0, 0xffb820), -0.2, 14) } }
+  if (AMU) { const a = -tempo * 2.2; AMU.position.set(P.x + Math.cos(a) * 0.42 * k, P.y + (0.95 + 0.06 * Math.sin(tempo * 4)) * k, P.z + Math.sin(a) * 0.42 * k); AMU.scale.setScalar((0.15 + 0.03 * Math.sin(tempo * 9)) * k);
+    emAmu += dt * 12; while (emAmu >= 1) { emAmu--; const p = AMU.position; BRI.solta(p.x, p.y, p.z, rr(-0.1, 0.1), rr(-0.1, 0.25), rr(-0.1, 0.1), rr(0.5, 0.8), rr(0.04, 0.08) * k, mistura(0x9dffb0, 0x2ad46a), 0, 26) } }
+  if (ESCUDO.t > 0) { ESCUDO.t = Math.max(0, ESCUDO.t - dt); ESCUDO.m.visible = ESCUDO.t > 0; ESCUDO.m.position.set(P.x, P.y + ALT * 0.5, P.z); ESCUDO.m.scale.setScalar(ALT * 0.62 * (1.15 - 0.15 * ESCUDO.t / 0.35)); ESCUDO.m.material.opacity = ESCUDO.t / 0.35 * 0.7; ESCUDO.m.rotation.y += dt * 3 }
+  BRI.passo(dt);
+}
+// armadura: um escudo de luz azul pisca em volta dela quando segura o golpe
+const ESCUDO = { t: 0, m: new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0x7fc8ff, wireframe: true, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })) };
+ESCUDO.m.visible = false; sc.add(ESCUDO.m);
 function inventario() {
   const so = el('div', 'sec'); so.append(el('h3', null, 'Ouro'), el('div', 'ouroG', '🪙 ' + S.ouro), el('p', 'dica', 'Ganha ouro com as tarefas e matando monstros. A vida não volta sozinha: cura fazendo as tarefas ou com poção.')); listaEl.append(so);
   const si = el('div', 'sec'); si.append(el('h3', null, 'Itens')); const li = el('div', 'loja'); let tem = false;
