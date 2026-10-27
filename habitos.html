@@ -29,6 +29,7 @@
   .bar span{position:absolute;inset:0;font:700 10px/14px system-ui,sans-serif;padding-left:7px;text-shadow:0 1px 1px #000;white-space:nowrap}
   #hud .dir{display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:auto}
   #hud .chip{background:var(--glass);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-weight:700;font-size:12.5px;backdrop-filter:blur(4px);white-space:nowrap}
+  #bCheia{width:38px;height:38px;padding:0;border-radius:50%;display:grid;place-items:center;background:var(--glass);backdrop-filter:blur(4px)} #bCheia svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
   #bModo{font-weight:800;font-size:13px;padding:6px 12px;border-radius:999px;background:var(--glass);backdrop-filter:blur(4px)}
   #bModo.manual{background:#8a3cc8;border-color:#b87af0}
   #bPocao{font-size:13px;padding:5px 10px;border-radius:999px;background:var(--glass)}
@@ -329,6 +330,7 @@
     <div class="dir">
       <button id="bModo" aria-label="Trocar entre automático e manual">▶ Auto</button>
       <div class="chip" id="hOuro">🪙 0</div>
+      <button id="bCheia" aria-label="Tela cheia" hidden></button>
       <button id="bEst" aria-label="Abrir o mapa de estágios">⚔ Estágio 1<small>0/5</small></button>
       <button id="bPocao" hidden>🧪 0</button>
     </div>
@@ -1931,6 +1933,19 @@ function importaBackup() { const i = document.createElement('input'); i.type = '
 let instalaEv = null; addEventListener('beforeinstallprompt', e => { e.preventDefault(); instalaEv = e; if (aba === 'her') lista() });
 function instalaApp() { if (!instalaEv) return; instalaEv.prompt(); instalaEv.userChoice.finally(() => { instalaEv = null; lista() }) }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw-habitos.js').catch(() => {});
+// tela cheia: some a barra de endereço do navegador (o navegador só deixa depois de um toque; no iPhone só instalando como app)
+const telaCheiaOk = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+const comoApp = () => !emCheia() && (matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches); // instalado como app: já abre sem barra
+const emCheia = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+function entraCheia() { if (!telaCheiaOk || emCheia() || comoApp()) return; const d = document.documentElement;
+  try { const p = (d.requestFullscreen || d.webkitRequestFullscreen).call(d, { navigationUI: 'hide' }); if (p && p.catch) p.catch(() => {}) } catch (e) {} }
+function saiCheia() { try { const p = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if (p && p.catch) p.catch(() => {}) } catch (e) {} }
+const bCheia = document.getElementById('bCheia');
+function botaoCheia() { bCheia.hidden = !telaCheiaOk || comoApp(); const on = emCheia(); bCheia.setAttribute('aria-label', on ? 'Sair da tela cheia' : 'Tela cheia');
+  bCheia.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + (on ? 'M9 3v6H3M15 3v6h6M9 21v-6H3M15 21v-6h6' : 'M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6') + '"/></svg>' }
+bCheia.addEventListener('click', e => { e.stopPropagation(); if (emCheia()) { S.semCheia = true; saiCheia() } else { S.semCheia = false; entraCheia() } salva() });
+document.addEventListener('fullscreenchange', botaoCheia); document.addEventListener('webkitfullscreenchange', botaoCheia); botaoCheia();
+if (matchMedia('(pointer: coarse)').matches) for (const ev of ['pointerup', 'click']) addEventListener(ev, () => { if (!S.semCheia) entraCheia() }, { capture: true }); // no celular, o 1º toque já esconde a barra
 // ---------------- enfeites e brilhos dos itens da loja: espada, fada, aura, amuleto e armadura ----------------
 // faíscas de luz (somam cor, piscam e somem); cada item solta as suas
 const BRI = (() => { const N = 500, pos = new Float32Array(N * 3), cor = new Float32Array(N * 3), tam = new Float32Array(N), alf = new Float32Array(N), V = [];
