@@ -39,9 +39,17 @@
   #stick{position:absolute;left:16px;bottom:16px;width:104px;height:104px;border-radius:50%;background:var(--glass);border:1px solid var(--line)}
   #knob{position:absolute;left:31px;top:31px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.8)}
   #ctl button{position:absolute;pointer-events:auto;border-radius:50%;padding:0;display:grid;place-items:center;font-weight:800;line-height:1.05;text-align:center;backdrop-filter:blur(4px)}
-  #bAtk{right:14px;bottom:14px;width:72px;height:72px;font-size:13px;background:rgba(150,40,40,.72)}
-  #ctl .sk{width:48px;height:48px;font-size:9.5px;background:rgba(110,45,25,.75)}
-  #ctl .sk.M{background:rgba(40,50,150,.75)}
+  #bAtk{right:14px;bottom:14px;width:72px;height:72px;background:radial-gradient(circle at 50% 35%,#e0523c,#7a1a14 75%);border:2px solid rgba(255,220,200,.75);box-shadow:0 3px 10px #0008,inset 0 2px 6px #fff4}
+  #ctl .sk{width:48px;height:48px;background:radial-gradient(circle at 50% 35%,#d0742e,#5e2a0c 75%);border:2px solid rgba(255,225,190,.7);box-shadow:0 2px 8px #0008,inset 0 2px 5px #fff3}
+  #ctl .sk.M{background:radial-gradient(circle at 50% 35%,#5a74e8,#1a2370 75%);border-color:rgba(200,215,255,.75)}
+  #ctl .sk.R{background:radial-gradient(circle at 50% 35%,#36c49a,#0c5040 75%);border-color:rgba(190,255,230,.75)}
+  #ctl button svg{width:60%;height:60%;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 1px #000c);pointer-events:none}
+  #bAtk svg{width:56%;height:56%}
+  .ico{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,#d0742e,#5e2a0c 75%);border:1.5px solid rgba(255,225,190,.6)}
+  .ico.M{background:radial-gradient(circle at 50% 35%,#5a74e8,#1a2370 75%);border-color:rgba(200,215,255,.6)} .ico.R{background:radial-gradient(circle at 50% 35%,#36c49a,#0c5040 75%);border-color:rgba(190,255,230,.6)}
+  .ico svg{width:62%;height:62%;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+  #bComeca{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);z-index:6;padding:13px 26px;border-radius:999px;font:900 17px system-ui,sans-serif;white-space:nowrap;background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border:2px solid #fff3c4;box-shadow:0 4px 0 #7a4a00,0 6px 18px #000a;animation:pulsa 1.4s ease-in-out infinite}
+  #bComeca small{display:block;font-size:11.5px;font-weight:700;opacity:.8}
   #ctl .sk.sem{opacity:.45}
   #ctl .sk[data-cd]::after{content:attr(data-cd);position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;font-size:15px}
   #faixa{position:absolute;left:0;right:0;top:26%;text-align:center;font:900 28px system-ui,sans-serif;color:#ffe066;text-shadow:0 3px 0 #a5560f,0 0 14px #000a;pointer-events:none;opacity:0;transition:opacity .4s,transform .4s;transform:scale(.8)}
@@ -155,12 +163,13 @@
   #mapa .rot small.ok{color:#8a1a10}
   #mapa .info{position:absolute;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:544px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 12px;border-radius:12px;
     background:linear-gradient(#3a2414f2,#24160cf2);border:2px solid #8a5a24;box-shadow:0 4px 14px #000a}
-  #mapa .info div{flex:1;min-width:0;font:700 14.5px/1.2 Georgia,serif;color:#ffe9b8}
+  #mapa .info{max-width:720px !important;flex-wrap:wrap} #mapa .info .txt{flex:1 1 230px;min-width:0;font:700 15px/1.2 Georgia,serif;color:#ffe9b8} #mapa .info .bts{display:flex;gap:6px;flex:1 1 auto;justify-content:flex-end}
   #mapa .info small{display:block;font:600 11.5px/1.25 system-ui,sans-serif;color:#e6d2a8}
-  #mapa .jogar{flex:none;padding:10px 15px;border-radius:10px;font:900 15px system-ui,sans-serif;background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border:2px solid #fff3c4;box-shadow:0 3px 0 #7a4a00}
-  #mapa .repete{flex:none;padding:10px 10px;border-radius:10px;font:800 15px system-ui,sans-serif;background:#3a2a1a;color:#ffe9b8;border:2px solid #6a4a24;opacity:.7}
+  #mapa .bts button{white-space:nowrap} #mapa .jogar{flex:none;padding:10px 18px;min-width:130px;border-radius:10px;font:900 15px system-ui,sans-serif;background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border:2px solid #fff3c4;box-shadow:0 3px 0 #7a4a00}
+  #mapa .repete{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#3a2a1a;color:#ffe9b8;border:2px solid #6a4a24;opacity:.7}
   #mapa .repete.on{opacity:1;background:#2f6a3a;border-color:#8fe0a0}
-  #mapa .tarefas{flex:none;padding:10px 10px;font-size:15px !important;border-radius:10px;font:800 13px system-ui,sans-serif;background:#5a3a1e;color:#ffe9b8;border:2px solid #8a5a24}
+  #mapa .pocao{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#4a2030;color:#ffe9b8;border:2px solid #9a4a64}
+  #mapa .tarefas{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#5a3a1e;color:#ffe9b8;border:2px solid #8a5a24}
   @keyframes pulsa{0%,100%{box-shadow:0 3px 0 #0006,0 0 0 3px #ffe06655}50%{box-shadow:0 3px 0 #0006,0 0 0 9px #ffe06633,0 0 18px #ffe066}}
   #carga{position:absolute;inset:0;display:grid;place-content:center;gap:10px;justify-items:center;background:rgba(10,14,24,.6);font-weight:700;text-shadow:0 1px 3px #000;pointer-events:none;z-index:5}
   #carga.fora{display:none} #carga .bar{width:200px} #carga .bar i{background:var(--accent);transform:scaleX(0)}
@@ -211,7 +220,7 @@
   .skills{display:flex;flex-direction:column;gap:6px}
   .sk1{display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:10px;background:#2a3350;border-left:4px solid var(--esp)}
   .sk1.M{border-left-color:var(--mag)} .sk1.off{opacity:.5}
-  .sk1 div{flex:1;min-width:0} .sk1 b{font-size:13.5px} .sk1 small{display:block;color:var(--fg2);font-size:11.5px}
+  .sk1.R{border-left-color:#36c49a} .sk1 div{flex:1;min-width:0} .sk1 b{font-size:13.5px} .sk1 small{display:block;color:var(--fg2);font-size:11.5px}
   .sk1 .req{font-size:11px;font-weight:700;white-space:nowrap;color:var(--fg2)}
   .sk1 .req.ok{color:var(--bom)}
   .loja{display:flex;flex-direction:column;gap:6px}
@@ -297,9 +306,10 @@
       <button id="bPocao" hidden>🧪 0</button>
     </div>
   </div>
-  <div id="ctl"><div id="stick"><div id="knob"></div></div><button id="bAtk">Atacar</button></div>
+  <div id="ctl"><div id="stick"><div id="knob"></div></div><button id="bAtk" aria-label="Atacar"></button></div>
   <div id="barras"></div><div id="nums"></div><div id="dor"></div>
   <div id="faixa"></div>
+  <button id="bComeca" hidden></button>
   <div id="carga"><b>Carregando…</b><div class="bar"><i></i></div></div>
 </div>
 <div id="painel">
@@ -321,7 +331,7 @@
 <div id="calTela" role="dialog" aria-label="Calendário"></div>
 <div id="premio" role="dialog" aria-label="Prêmio"></div>
 <div id="mapa"><div class="rolo"><div class="folha"><canvas aria-hidden="true"></canvas></div></div><div class="topo"><b>Mapa da Missão</b><small></small></div><button class="masm" hidden>🏰 Masmorra</button>
-  <div class="info"><div></div><button class="pocao" aria-label="Tomar poção">🧪</button><button class="tarefas" aria-label="Ver as tarefas">📋</button><button class="repete" aria-pressed="false" aria-label="Repetir o mesmo estágio depois de vencer">🔁</button><button class="jogar">▶ Jogar</button></div></div>
+  <div class="info"><div class="txt"></div><div class="bts"><button class="pocao">🧪 Poção</button><button class="repete" aria-pressed="false">🔁 Repetir</button><button class="tarefas">📋 Tarefas</button><button class="jogar">⚔ Começar</button></div></div></div>
 <script src="js/three.min.js"></script>
 <script src="js/GLTFLoader.js"></script>
 <script src="js/vrm_char.js"></script>
@@ -938,6 +948,7 @@ const COMBO = [{ a: 'Esp1', dur: 0.89, hits: [0.5], alc: 1.7, mult: 1, raiz: 1, 
   { a: 'Esp3', dur: 0.93, hits: [0.58], alc: 1.8, mult: 1.2, raiz: 1, vel: 1.45 }, { a: 'Esp4', dur: 0.85, hits: [0.41], alc: 2.0, mult: 1.7, crit: true, raiz: 1, vel: 1.35 }];
 const COMBO_Q = [{ a: 'Sword_A', dur: 0.43, hits: [0.45], alc: 1.5, mult: 1 }, { a: 'Sword_B', dur: 0.53, hits: [0.5], alc: 1.6, mult: 1.1 }, { a: 'Sword_C', dur: 1.0, hits: [0.3, 0.55], alc: 1.8, mult: 0.9, ate: 0.5 }];
 const SKILLS = {
+  rola: { nome: 'Rolamento', lado: 'R', req: 0, en: 8, desc: 'rola pra escapar: nenhum golpe pega enquanto rola', a: 'Roll_Quick', dur: 0.8, cd: 2.5, vel: 1.3, anda: [0.02, 0.9, 11, 1], rola: true },
   investida: { nome: 'Investida', lado: 'E', req: 1, en: 12, desc: 'avança cortando 3 vezes', a: 'Sword_Dash_Full', dur: 1.57, hits: [0.25, 0.4, 0.55], alc: 1.5, mult: 1.1, cd: 4, vel: 1.3, anda: [0.13, 0.42, 16, 1] },
   espgiro: { nome: 'Golpe giratório', lado: 'E', req: 2, en: 18, desc: 'salta girando e corta em volta', a: 'EspGiro', dur: 2.43, hits: [0.42, 0.6], alc: 2.2, roda: true, mult: 1.7, cd: 5, crit: true, raiz: 1, vel: 1.6 },
   espsalto: { nome: 'Salto fatal', lado: 'E', req: 4, en: 24, desc: 'crava a espada no chão e explode em volta', a: 'EspSalto', dur: 2.33, area: { at: 0.58, r: 2.6, mult: 3, cor: 0xffd27a }, cd: 6, raiz: 1, vel: 1.5 },
@@ -947,7 +958,8 @@ const SKILLS = {
   magchao: { nome: 'Explosão', lado: 'M', req: 4, en: 28, desc: 'explosão de fogo no chão em volta', a: 'MagChao', dur: 2.97, area: { at: 0.6, r: 3.6, mult: 3.2, cor: 0xff8a3d }, cd: 7, raiz: 1, vel: 1.6 },
   magonda: { nome: 'Onda arcana', lado: 'M', req: 6, en: 26, desc: 'onda de gelo que empurra tudo', a: 'MagOnda', dur: 3.53, area: { at: 0.5, r: 4.2, mult: 2.3, cor: 0x6fc8ff, empurra: 1 }, cd: 6, vel: 1.8, ate: 0.4 },
 };
-const liberada = k => { const s = SKILLS[k]; return A_(s.lado === 'E' ? 'for' : 'mag') >= s.req && !!(R && R.act[s.a]) };
+const reqOk = s => s.lado === 'R' || A_(s.lado === 'E' ? 'for' : 'mag') >= s.req;
+const liberada = k => { const s = SKILLS[k]; return reqOk(s) && !!(R && R.act[s.a]) };
 const CD = {}; for (const k in SKILLS) CD[k] = 0;
 const danoEsp = m => Math.max(1, Math.round(atkEsp() * m * (encAtivo('fogo') ? 1.2 : 1) * rnd(0.85, 1.15)));
 const danoMag = m => Math.max(1, Math.round(atkMag() * m * rnd(0.85, 1.15)));
@@ -961,7 +973,10 @@ function atacar(tipo = 'combo') {
   if (tipo === 'combo') { const C = R.act.Esp1 ? COMBO : COMBO_Q; comboN = comboT < 0.6 ? (comboN + 1) % C.length : 0; g = C[comboN] }
   else { g = SKILLS[tipo]; if (!liberada(tipo) || CD[tipo] > 0) return false; const custo = Math.round(g.en * (1 - 0.05 * tal('ener'))); if (P.en < custo) { semEnergia(); return false } P.en -= custo; CD[tipo] = g.cd }
   if (!R.act[g.a]) return false;
-  const mira = maisPerto(5); if (mira) P.face = Math.atan2(mira.x - P.x, mira.z - P.z);
+  if (g.rola) { const l = Math.hypot(stick.dx, stick.dy), m = maisPerto(6); // rola pra onde o joystick aponta; sem joystick, pra longe do monstro
+    if (l > 0.2) { const fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw); P.face = Math.atan2(rx * stick.dx - fx * stick.dy, rz * stick.dx - fz * stick.dy) }
+    else if (m) P.face = Math.atan2(P.x - m.x, P.z - m.z) }
+  else { const mira = maisPerto(5); if (mira) P.face = Math.atan2(mira.x - P.x, mira.z - P.z) }
   P.atk = { tipo, g, t: 0, feitos: new Set() }; cur = null; P.comem = 0;
   if (comFx(tipo)) fxConjura(tipo);
   return true;
@@ -1057,7 +1072,7 @@ function comecaEstagio(n, quieto, masm) { // quieto: só monta a fase e deixa el
   F.pos = []; for (let g = 0; g < F.G; g++) F.pos.push(14 + (L - 14) * (g / (F.G - 1)));
   P.x = TP[F.ini][0]; P.z = TP[F.ini][1]; P.y = altura(P.x, P.z); P.si = ultimoSi = F.ini; P.atk = null;
   const j = F.ini + 20; P.face = Math.atan2(TP[j][0] - P.x, TP[j][1] - P.z); yaw = P.face + Math.PI; camAlvo.set(P.x, P.y, P.z);
-  ambiente(masm ? 4 : EST[n - 1][1]); if (quieto) { F.fim = true; corEspada(); hud(); return }
+  ambiente(masm ? 4 : EST[n - 1][1]); F.parado = !!quieto; if (quieto) { F.fim = true; corEspada(); hud(); return }
   F.def = S.armadT > 0; if (F.def) { S.armadT--; salva() } // cada estágio jogado gasta 1 da armadura
   F.enc = S.enc && S.enc.n > 0 ? S.enc.k : null; if (F.enc) { S.enc.n--; salva() } corEspada(); // e 1 do encanto do ferreiro
   faixa(masm ? '🏰 Masmorra' : 'Estágio ' + n, (masm ? 'do fim de semana · monstros mais fortes' : EST[n - 1][0] + (n === N_EST ? ' · chefe final' : '')) + (F.def ? ' · 🛡' : '') + (F.enc ? ' · ' + FORJA[F.enc].ic : ''), 2.2); hud();
@@ -1098,6 +1113,7 @@ function bichosPasso(dt) {
   }
 }
 function levaDano(v, b) {
+  if (P.atk && P.atk.g.rola) { numero('esquivou!', P.x, P.y + ALT + 0.2, P.z, 'xp'); return } // rolando: o golpe passa direto
   const real = Math.max(1, Math.round(v * (1 - defesa()) * (1 - 0.04 * tal('pele')) * rnd(0.85, 1.15)));
   if (defesa()) ESCUDO.t = 0.35; // a armadura segurou parte do golpe
   S.hp = Math.max(0, S.hp - real); numero('-' + real, P.x, P.y + ALT + 0.2, P.z, 'dor'); som('dor', 0.5); doi(); hud();
@@ -1132,11 +1148,25 @@ const tecla = new Set(); addEventListener('keydown', e => { if (e.target.tagName
 const toque = (b, f) => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); somLiga(); f() });
 toque(document.getElementById('bAtk'), () => atacar('combo'));
 toque(document.getElementById('bModo'), () => { S.auto = !S.auto; salva(); hud(); aviso(S.auto ? 'Automático: o herói segue a trilha e luta sozinho.' : 'Manual: joystick à esquerda, Atacar e as skills à direita.') });
+// ícones das skills (desenhados em SVG): o mesmo símbolo no botão e na lista da aba Herói
+const ICO = {
+  atk: '<path d="M20 4L9.5 14.5M20 4h-4.5M20 4v4.5"/><path d="M6.5 11.5l6 6M9.5 14.5L4 20"/>',
+  rola: '<path d="M18.5 12.5a6.5 6.5 0 1 1-1.9-5.1"/><path d="M17.5 3.5v4h-4"/><path d="M3 21h6M2 17.5h3"/>',
+  investida: '<path d="M21 5l-8.5 8.5M21 5h-3.5M21 5v3.5M10 11l3.5 3.5M11.8 12.8L8 16.6"/><path d="M2 9h6M3 13h4M2 17h3.5"/>',
+  espgiro: '<path d="M19.5 13a7.5 7.5 0 1 1-2.6-7.3"/><path d="M17 2.5V6h3.5"/><path d="M12 12l5-5M10 10l4 4"/>',
+  espsalto: '<path d="M12 2v12M9 5.5h6M12 14l-1.5 3h3z"/><path d="M3 21h18M6 18.5l-2.5-2M18 18.5l2.5-2M12 20v-1"/>',
+  espraio: '<path d="M13.5 2L5 13.5h6L9.5 22 19 9.5h-6.2L13.5 2z" fill="#fff" fill-opacity=".25"/>',
+  giro: '<path d="M4 4l10.5 10.5M4 4h3.5M4 4v3.5M12.5 17.5l5-5M15 15l4 4"/><path d="M20 4L9.5 14.5M20 4h-3.5M20 4v3.5M11.5 17.5l-5-5M9 15l-4 4"/>',
+  magbola: '<circle cx="15" cy="9" r="4.5" fill="#fff" fill-opacity=".25"/><path d="M11.5 12.5L4 20M10 9.5l-6.5 4M14.5 13.5L11 20"/>',
+  magchao: '<path d="M12 2.5l1.9 5.2 5.1-2.3-2.3 5.1 5.2 1.9-5.2 1.9 2.3 5.1-5.1-2.3-1.9 5.2-1.9-5.2-5.1 2.3 2.3-5.1L2.5 12.4l5.2-1.9-2.3-5.1 5.1 2.3z" fill="#fff" fill-opacity=".2"/>',
+  magonda: '<path d="M2 7.5c2.5-3.5 5-3.5 7.5 0s5 3.5 7.5 0 3.5-2 5-2"/><path d="M2 12.5c2.5-3.5 5-3.5 7.5 0s5 3.5 7.5 0 3.5-2 5-2"/><path d="M2 17.5c2.5-3.5 5-3.5 7.5 0s5 3.5 7.5 0 3.5-2 5-2"/>' };
+const icone = k => '<svg viewBox="0 0 24 24" aria-hidden="true">' + (ICO[k] || ICO.atk) + '</svg>';
+document.getElementById('bAtk').innerHTML = icone('atk');
 // botões das skills liberadas, em dois arcos em volta do Atacar (até 4 no de dentro, o resto no de fora)
 function botoesSkill() {
   const ctl = document.getElementById('ctl'); ctl.querySelectorAll('.sk').forEach(b => b.remove());
   const ks = Object.keys(SKILLS).filter(liberada);
-  ks.forEach((k, i) => { const s = SKILLS[k], b = document.createElement('button'); b.className = 'sk ' + s.lado; b.dataset.k = k; b.textContent = s.nome;
+  ks.forEach((k, i) => { const s = SKILLS[k], b = document.createElement('button'); b.className = 'sk ' + s.lado; b.dataset.k = k; b.innerHTML = icone(k); b.setAttribute('aria-label', s.nome);
     const fora = i >= 4, n = fora ? ks.length - 4 : Math.min(4, ks.length), j = fora ? i - 4 : i, rr = fora ? 140 : 86, a = n === 1 ? Math.PI / 4 : j / (n - 1) * Math.PI / 2;
     b.style.right = (50 + Math.cos(a) * rr - 24) + 'px'; b.style.bottom = (50 + Math.sin(a) * rr - 24) + 'px';
     toque(b, () => atacar(k)); ctl.append(b) });
@@ -1490,15 +1520,23 @@ function abreMapa(motivo, sel) { // motivo: 'venceu' ou 'perdeu' (aí no Auto el
   botaoMasm(); mapaEl.querySelector('.topo small').textContent = Object.keys(S.ok).length + ' de ' + N_EST + ' estágios vencidos · nível ' + S.nv;
   const [, sy] = NOS[selN - 1]; roloEl.scrollTop = sy * k - roloEl.clientHeight * 0.5; infoMapa();
 }
-function infoMapa() {
-  const n = selN, i = mapaEl.querySelector('.info div'); i.textContent = 'Estágio ' + n + ' · ' + EST[n - 1][0];
-  const jb = mapaEl.querySelector('.jogar');
-  i.append(Object.assign(document.createElement('small'), { textContent: S.repete ? '🔁 Repetindo este estágio pra juntar ouro' : S.ok[n] ? 'Vencido · repita pra juntar ouro' : 'Precisa nível ' + nvSugerido(n) + ' (você: ' + S.nv + ') · chefe no fim' }));
-  const rb = mapaEl.querySelector('.repete'); rb.classList.toggle('on', !!S.repete); rb.setAttribute('aria-pressed', !!S.repete);
-  jb.textContent = podeJogar(n) ? '▶ Jogar' + (contaN ? ' (' + contaN + ')' : '') : '🔒 Nível ' + nvSugerido(n);
-  const pb = mapaEl.querySelector('.pocao'), np = (S.inv.pocao || 0) + (S.inv.pocaoG || 0); pb.textContent = '🧪' + (np ? ' ' + np : ''); pb.disabled = !np || emLuta();
+function infoMapa() { // a barra de baixo do mapa: qual estágio, se dá pra entrar e um botão grande pra começar
+  const n = selN, i = mapaEl.querySelector('.info .txt'), pode = podeJogar(n), volta = emLuta() && n === F.n && !F.masm, np = (S.inv.pocao || 0) + (S.inv.pocaoG || 0);
+  i.textContent = 'Estágio ' + n + ' · ' + EST[n - 1][0];
+  i.append(Object.assign(document.createElement('small'), { textContent: volta ? 'Você está no meio deste estágio.' : !pode ? '🔒 Precisa nível ' + nvSugerido(n) + ' (você: ' + S.nv + '). Faça as tarefas pra subir.'
+    : (S.ok[n] ? '✓ Já vencido (dá pra repetir pra juntar ouro)' : 'Nível ' + nvSugerido(n) + ' ✓') + ' · ' + (4 + Math.ceil(n / 3)) + ' grupos e um chefe · vida ' + Math.ceil(S.hp) + '/' + hpMax() }));
+  const rb = mapaEl.querySelector('.repete'); rb.classList.toggle('on', !!S.repete); rb.setAttribute('aria-pressed', !!S.repete); rb.textContent = S.repete ? '🔁 Repetindo' : '🔁 Repetir';
+  const jb = mapaEl.querySelector('.jogar'); jb.disabled = !pode && !volta; jb.textContent = volta ? '▶ Voltar pra luta' : pode ? '⚔ Começar' + (contaN ? ' (' + contaN + ')' : '') : '🔒 Nível ' + nvSugerido(n);
+  const pb = mapaEl.querySelector('.pocao'); pb.textContent = '🧪 Poção' + (np ? ' ' + np : ''); pb.hidden = !np; pb.disabled = emLuta() || S.hp >= hpMax();
 }
-function joga() { clearInterval(contaT); contaN = 0; if (!podeJogar(selN)) { aviso('Precisa nível ' + nvSugerido(selN) + ' pra entrar (você: ' + S.nv + '). Faça as tarefas pra subir.'); return } fechaMapa(); comecaEstagio(selN) }
+function joga() { clearInterval(contaT); contaN = 0;
+  if (emLuta() && selN === F.n && !F.masm) { fechaMapa(); return } // só estava olhando o mapa: volta pra mesma luta
+  if (!podeJogar(selN)) { aviso('Precisa nível ' + nvSugerido(selN) + ' pra entrar (você: ' + S.nv + '). Faça as tarefas pra subir.'); return } fechaMapa(); comecaEstagio(selN) }
+const melhorEst = () => { let n = Math.min(S.lib, N_EST); while (n > 1 && !podeJogar(n)) n--; return n }; // o estágio mais alto que dá pra jogar
+function botaoComeca() { // parado na trilha, sem mapa nem tela por cima: um botão grande pra começar
+  const b = document.getElementById('bComeca'), on = !!F.parado && !mapaEl.classList.contains('on') && !hojeEl.classList.contains('on') && !premioOn;
+  const n = podeJogar(selN) ? selN : melhorEst(); if (b.hidden === !on && b.dataset.n == n) return; b.hidden = !on; b.dataset.n = n; b.innerHTML = ''; b.append('⚔ Começar estágio ' + n, Object.assign(document.createElement('small'), { textContent: EST[n - 1][0] })) }
+document.getElementById('bComeca').addEventListener('click', e => { selN = +e.currentTarget.dataset.n || melhorEst(); joga() });
 function fechaMapa() { clearInterval(contaT); contaN = 0; mapaEl.classList.remove('on') }
 mapaEl.querySelector('.jogar').onclick = joga; mapaEl.querySelector('.masm').onclick = entraMasm;
 mapaEl.querySelector('.repete').onclick = () => { S.repete = !S.repete; salva(); infoMapa(); aviso(S.repete ? 'Repetir ligado: depois de vencer, joga este mesmo estágio de novo (bom pra juntar ouro).' : 'Repetir desligado: depois de vencer, vai pro próximo estágio.') };
@@ -1531,6 +1569,7 @@ puxa.addEventListener('pointerdown', e => { puxaY = e.clientY; puxa.setPointerCa
 puxa.addEventListener('pointerup', e => { if (puxaY == null) return; const d = e.clientY - puxaY; puxaY = null; if (d > 30) painelCheio(true); else if (d < -30) painelCheio(false); else painelCheio(!S.cheio) });
 puxa.addEventListener('pointercancel', () => { puxaY = null });
 function hudRapido() { // energia e recarga das skills (mudam o tempo todo)
+  botaoComeca();
   const em = enMax(); document.querySelector('#enB i').style.transform = 'scaleX(' + P.en / em + ')'; document.querySelector('#enB span').textContent = 'Energia ' + Math.floor(P.en) + '/' + em;
   document.querySelectorAll('#ctl .sk').forEach(b => { const k = b.dataset.k; if (CD[k] > 0) b.dataset.cd = Math.ceil(CD[k]); else delete b.dataset.cd; b.classList.toggle('sem', P.en < SKILLS[k].en) });
 }
@@ -1726,7 +1765,9 @@ function desenhaHoje() {
     cx.append(el('b', null, '🐉 ' + c.nome + (c.venceu ? ' · derrotado! ✓' : ' · ' + Math.ceil(c.hp) + '/' + c.max + ' de vida')), pc, el('div', 'hsub', c.venceu ? 'Volta mais forte no domingo.' : 'Cada tarefa feita bate nele (o XP vira dano). Derrote até sábado pra ganhar o prêmio.')) }
   if (!S.backup || difDias(S.backup, h) > 7) { const bk = el('div', 'hsub', '💾 Faz tempo que você não salva um backup (aba Herói).'); cx.append(bk) }
   const bt = el('div', 'hojeBot'), t = el('button', null, '📋 Tarefas'), j = el('button', 'jg', '⚔ Jogar');
-  t.onclick = () => { fechaHoje(); fechaMapa(); trocaAba('diar') }; j.onclick = () => { fechaHoje(); abreMapa(null, S.lib) }; bt.append(t, j); cx.append(bt);
+  j.textContent = '⚔ Jogar estágio ' + melhorEst();
+  t.onclick = () => { fechaHoje(); fechaMapa(); trocaAba('diar') }; j.onclick = () => { fechaHoje(); selN = melhorEst(); joga() }; bt.append(t, j); cx.append(bt);
+  { const np = (S.inv.pocao || 0) + (S.inv.pocaoG || 0); if (np && S.hp < hpMax() && !emLuta()) { const pc = el('button', null, '🧪 Tomar poção antes (' + Math.ceil(S.hp) + '/' + hpMax() + ' de vida)'); pc.style.cssText = 'width:100%;margin-top:8px'; pc.onclick = () => { usaItem(S.inv.pocao > 0 && S.hp + hpMax() * ITENS.pocao.cura < hpMax() * 1.05 ? 'pocao' : S.inv.pocaoG > 0 ? 'pocaoG' : 'pocao'); desenhaHoje() }; cx.append(pc) } }
 }
 hojeEl.addEventListener('click', e => { if (e.target === hojeEl) fechaHoje() });
 // ---------------- chefe da semana: perde vida com o XP das tarefas ----------------
@@ -1998,9 +2039,9 @@ function heroina() {
     listaEl.append(st) }
   // skills
   const sk = el('div', 'sec'); sk.append(el('h3', null, 'Skills')); const L = el('div', 'skills');
-  for (const k in SKILLS) { const s = SKILLS[k], ok = A_(s.lado === 'E' ? 'for' : 'mag') >= s.req, d = el('div', 'sk1 ' + s.lado + (ok ? '' : ' off')), tx = el('div');
+  for (const k in SKILLS) { const s = SKILLS[k], ok = reqOk(s), d = el('div', 'sk1 ' + s.lado + (ok ? '' : ' off')), tx = el('div'), ic = el('span', 'ico ' + s.lado); ic.innerHTML = icone(k);
     tx.append(el('b', null, s.nome), el('small', null, s.desc + ' · ' + s.en + ' de energia'));
-    d.append(tx, el('span', 'req' + (ok ? ' ok' : ''), ok ? '✓ liberada' : (s.lado === 'E' ? 'Força ' : 'Magia ') + s.req)); L.append(d) }
+    d.append(ic, tx, el('span', 'req' + (ok ? ' ok' : ''), s.lado === 'R' ? '✓ sempre' : ok ? '✓ liberada' : (s.lado === 'E' ? 'Força ' : 'Magia ') + s.req)); L.append(d) }
   sk.append(L); listaEl.append(sk);
   // status
   const s1 = el('div', 'sec'); s1.append(el('h3', null, PERS[S.pers][1] + ' · Nível ' + S.nv));
