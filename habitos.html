@@ -223,6 +223,33 @@
   .sk1.R{border-left-color:#36c49a} .sk1 div{flex:1;min-width:0} .sk1 b{font-size:13.5px} .sk1 small{display:block;color:var(--fg2);font-size:11.5px}
   .sk1 .req{font-size:11px;font-weight:700;white-space:nowrap;color:var(--fg2)}
   .sk1 .req.ok{color:var(--bom)}
+  /* ---------- aba Itens: mochila, loja e ferreiro (com cara de jogo) ---------- */
+  .subAbas{display:flex;gap:6px;margin-bottom:8px;align-items:stretch}
+  .subAbas button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 4px;font-weight:800;font-size:13px;border-radius:12px;background:var(--card)}
+  .subAbas button b{font-size:26px;line-height:1.1} .subAbas button.on{background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border-color:#fff3c4}
+  .bolsoOuro{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 8px;padding:6px;border-radius:12px;background:#0d111c;border:1px solid #6b5420;font:900 20px system-ui,sans-serif;color:#ffd86b}
+  .bolsoOuro small{font-size:12px;color:var(--fg2);font-weight:700}
+  .bolsa{background:linear-gradient(#6b4423,#4a2d15);border:3px solid #a8743a;border-radius:16px;padding:10px;box-shadow:inset 0 2px 0 #e0b57a55,0 4px 12px #0006;margin-bottom:8px}
+  .bolsa h3,.lojaSec h3{margin:0 0 8px;font-size:15px;color:#ffe7a8;text-shadow:0 1px 2px #000} .bolsa .dica{color:#f0d9b0;margin-bottom:8px}
+  .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+  .slot{position:relative;background:radial-gradient(circle at 50% 30%,#3e2c1c,#21160d);border:2px solid #8a5a2a;border-radius:12px;padding:8px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;min-height:116px}
+  .slot .ic{font-size:38px;line-height:1.1;filter:drop-shadow(0 3px 3px #0008)} .slot .nm{font-size:12px;font-weight:800;color:#ffe9b8;line-height:1.15}
+  .slot .qt{position:absolute;top:4px;right:5px;font-weight:900;font-size:13px;color:#fff;background:#000a;border-radius:8px;padding:0 6px}
+  .slot button{margin-top:auto;width:100%;padding:6px 2px;font-size:13px;font-weight:900;border-radius:9px;background:linear-gradient(#6fe09a,#2f8a52);color:#062312;border:1px solid #bff5d0}
+  .slot button:disabled{background:#3a332c;color:#b8aa98;border-color:#5a4a3a;font-size:11.5px}
+  .slot.vazio{opacity:.3;min-height:116px}
+  .ativos{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px} .ativos span{background:#24402f;border:1px solid #3f7a52;border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:700}
+  .lojaSec{background:linear-gradient(#2a2238,#1d1828);border:3px solid #7a5aa8;border-radius:16px;padding:10px;margin-bottom:8px;overflow:hidden}
+  .tenda{height:16px;margin:-10px -10px 10px;background:repeating-linear-gradient(90deg,#d0453a 0 22px,#f4ead8 22px 44px);border-radius:0 0 50% 50%/0 0 100% 100%;box-shadow:0 3px 6px #0006}
+  .lojaSec.forja{background:linear-gradient(#3a2418,#24150c);border-color:#c0602a} .lojaSec.forja .tenda{background:repeating-linear-gradient(90deg,#5a5a62 0 22px,#3a3a42 22px 44px)}
+  .vitrine{display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:8px}
+  .card{position:relative;background:linear-gradient(#323d5e,#222a44);border:2px solid #4a5680;border-radius:14px;padding:10px 6px 8px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px}
+  .card .ic{font-size:40px;line-height:1.1;filter:drop-shadow(0 3px 3px #0008)} .card .nm{font-weight:900;font-size:13.5px;line-height:1.15} .card .ds{font-size:11.5px;color:var(--fg2);line-height:1.25;min-height:29px}
+  .card .comprar{margin-top:auto;width:100%;padding:7px 4px;font-weight:900;font-size:14px;border-radius:10px;background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border:2px solid #fff3c4}
+  .card .comprar:disabled{background:#3a4058;color:#9aa3bb;border-color:#4a5270} .card .falta{font-size:11px;color:#ff9a8a;font-weight:700}
+  .card .fita{position:absolute;top:7px;left:-2px;background:#2f9a64;color:#fff;font-size:10.5px;font-weight:900;padding:1px 7px;border-radius:0 8px 8px 0}
+  .card.dono{border-color:#3f9a64}
+  @media (orientation:landscape) and (max-height:520px){ .subAbas button{flex-direction:row;justify-content:center;gap:6px;padding:6px 4px} .subAbas button b{font-size:21px} .bolsoOuro{font-size:17px;padding:3px} }
   .loja{display:flex;flex-direction:column;gap:6px}
   .loja button{display:flex;justify-content:space-between;align-items:center;text-align:left;gap:10px}
   .loja button small{display:block;color:var(--fg2);font-size:12px}
@@ -315,7 +342,7 @@
 <div id="painel">
   <button id="puxa" aria-label="Esconder ou mostrar as tarefas"></button>
   <div id="abas">
-    <button data-aba="hab">Hábitos</button><button data-aba="diar">Diárias</button><button data-aba="afz">Afazeres</button><button data-aba="cal">Agenda</button><button data-aba="her">Herói</button><button data-aba="inv">Itens</button><button data-aba="prog">Progresso</button>
+    <button data-aba="hab">💪 Hábitos</button><button data-aba="diar">✅ Diárias</button><button data-aba="afz">📝 Afazeres</button><button data-aba="cal">📅 Agenda</button><button data-aba="her">🦸 Herói</button><button data-aba="inv">🎒 Itens</button><button data-aba="prog">🏆 Progresso</button>
   </div>
   <div id="lista"></div>
   <div id="novo">
@@ -1556,9 +1583,9 @@ function hud() {
   document.getElementById('hOuro').textContent = '🪙 ' + S.ouro; const be = document.getElementById('bEst'); be.textContent = F.fim || F.perdeu ? '🗺 Mapa' : F.masm ? '🏰 Masmorra' : '⚔ Estágio ' + F.n; if (!F.fim && !F.perdeu) be.append(Object.assign(document.createElement('small'), { textContent: F.feitos + '/' + F.G }));
   const bm = document.getElementById('bModo'); bm.textContent = S.auto ? '▶ Auto' : '🕹 Manual'; bm.classList.toggle('manual', !S.auto); document.body.classList.toggle('manual', !S.auto);
   document.getElementById('bPocao').hidden = true;
-  const pend = S.diar.filter(pendente).length; document.querySelector('[data-aba="diar"]').innerHTML = 'Diárias' + (pend ? '<b>' + pend + '</b>' : '');
+  const pend = S.diar.filter(pendente).length; document.querySelector('[data-aba="diar"]').innerHTML = '✅ Diárias' + (pend ? '<b>' + pend + '</b>' : '');
   if (typeof textoPuxa === 'function') textoPuxa();
-  const ph = S.pontos + Math.max(0, talPts()); document.querySelector('[data-aba="her"]').innerHTML = 'Herói' + (ph ? '<b>' + ph + '</b>' : '');
+  const ph = S.pontos + Math.max(0, talPts()); document.querySelector('[data-aba="her"]').innerHTML = '🦸 Herói' + (ph ? '<b>' + ph + '</b>' : '');
 }
 document.getElementById('hPts').addEventListener('pointerdown', e => { e.stopPropagation(); trocaAba('her') });
 // puxador do painel: toque ou arraste pra baixo esconde as tarefas (o jogo fica na tela toda); pra cima mostra de novo
@@ -1980,37 +2007,57 @@ function enfeitesPasso(dt) {
 // armadura: um escudo de luz azul pisca em volta dela quando segura o golpe
 const ESCUDO = { t: 0, m: new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0x7fc8ff, wireframe: true, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })) };
 ESCUDO.m.visible = false; sc.add(ESCUDO.m);
-function inventario() {
-  const so = el('div', 'sec'); so.append(el('h3', null, 'Ouro'), el('div', 'ouroG', '🪙 ' + S.ouro), el('p', 'dica', 'Ganha ouro com as tarefas e matando monstros. A vida não volta sozinha: cura fazendo as tarefas ou com poção.')); listaEl.append(so);
-  const si = el('div', 'sec'); si.append(el('h3', null, 'Itens')); const li = el('div', 'loja'); let tem = false;
-  for (const k in ITENS) { const n = S.inv[k] || 0; if (!n) continue; tem = true; const it = ITENS[k], b = el('button'), e = el('div');
-    e.append(it.ic + ' ' + it.nome + ' ×' + n, el('small', null, it.desc + (!it.xp2 && emLuta() ? ' · só antes de começar o estágio' : ''))); b.append(e, el('span', 'preco', it.xp2 ? (S.xp2 === hoje() ? 'ativo' : 'Ler') : emLuta() ? '🔒' : 'Tomar')); b.disabled = it.xp2 ? S.xp2 === hoje() : emLuta() || S.hp >= hpMax(); b.onclick = () => usaItem(k); li.append(b) }
-  const ativos = []; if (S.armadT > 0) ativos.push('🛡 Armadura: ' + S.armadT + (S.armadT === 1 ? ' estágio' : ' estágios')); for (const k in EQUIP) if (EQUIP[k].dias && temEq(k)) ativos.push(EQUIP[k].ic + ' ' + EQUIP[k].nome + ' até ' + ddmm(S.equip[k]));
-  if (S.xp2 === hoje()) ativos.push('📜 XP dobrado hoje'); if (S.enc && S.enc.n > 0) ativos.push(FORJA[S.enc.k].ic + ' ' + FORJA[S.enc.k].nome + ': ' + S.enc.n + (S.enc.n === 1 ? ' estágio' : ' estágios'));
-  if (ativos.length) si.append(el('p', 'dica', 'Ativos: ' + ativos.join(' · ')));
-  if (!tem) li.append(el('p', 'dica', 'Nenhum item. Compre na loja aqui embaixo.'));
-  si.append(li); listaEl.append(si);
-  // ferreiro
-  { const sf = el('div', 'sec'), lf = el('div', 'loja'), at = S.enc && S.enc.n > 0 ? S.enc : null;
-    sf.append(el('h3', null, '⚒ Ferreiro'), el('p', 'dica', 'Os monstros às vezes deixam cair 💠 cristal (o chefe sempre deixa 3). Com ' + FORJA_C + ' cristais e ' + FORJA_O + ' de ouro o ferreiro encanta a espada por ' + FORJA_N + ' estágios. Você tem 💠 ' + (S.mat || 0) + '.'));
-    for (const k in FORJA) { const f = FORJA[k], b = el('button'), e = el('div'), mesmo = !!at && at.k === k;
-      e.append(f.ic + ' ' + f.nome, el('small', null, f.desc + (mesmo ? ' · soma mais ' + FORJA_N + ' estágios' : at ? ' · troca o encanto atual' : ''))); b.append(e, el('span', 'preco', '💠' + FORJA_C + ' 🪙' + FORJA_O));
-      b.disabled = (S.mat || 0) < FORJA_C || S.ouro < FORJA_O || emLuta();
-      b.onclick = () => { if ((S.mat || 0) < FORJA_C || S.ouro < FORJA_O || emLuta()) return; S.mat -= FORJA_C; S.ouro -= FORJA_O; S.enc = { k, n: (mesmo ? at.n : 0) + FORJA_N }; corEspada(); salva(); hud(); lista();
-        mostraPremio({ ic: f.ic, tit: f.nome + '!', sub: 'O ferreiro encantou a sua espada', itens: [['⚔️', f.desc], ['🗺', 'vale ' + S.enc.n + ' estágios']], cor: f.cor }) }; lf.append(b) }
-    if (emLuta()) sf.append(el('p', 'dica', 'O ferreiro só trabalha fora da luta (no mapa).'));
-    sf.append(lf); listaEl.append(sf) }
-  // loja
-  const s2 = el('div', 'sec'); s2.append(el('h3', null, 'Loja')); const lj = el('div', 'loja');
-  const item = (nome, desc, preco, ok, f) => { const b = el('button'); const e = el('div'); e.append(nome, el('small', null, desc)); b.append(e, el('span', 'preco', '🪙 ' + preco)); b.disabled = S.ouro < preco || !ok;
-    b.onclick = () => { if (S.ouro < preco) return; S.ouro -= preco; f(); salva(); hud(); lista(); plim(5) }; lj.append(b) };
+let invAba = 'mochila';
+const CURTO = { pocao: 'Cura 40% da vida', pocaoG: 'Cura a vida toda', perg: 'XP em dobro hoje', fada: '+10% de XP · 7 dias', amuleto: '+25% de ouro · 7 dias', aura: 'Brilho dourado · pra sempre' };
+function inventario() { // aba Itens: 🎒 mochila (o que você tem), 🏪 loja (o que dá pra comprar) e ⚒ ferreiro (encantar a espada)
+  const sa = el('div', 'subAbas'); for (const [k, ic, nome] of [['mochila', '🎒', 'Mochila'], ['loja', '🏪', 'Loja'], ['forja', '⚒️', 'Ferreiro']]) {
+    const b = el('button', invAba === k ? 'on' : null); b.append(el('b', null, ic), nome); b.onclick = () => { invAba = k; lista(); listaEl.scrollTop = 0 }; sa.append(b) }
+  const ob = el('div', 'bolsoOuro'); ob.append('🪙 ' + S.ouro, el('small', null, 'de ouro' + (S.mat ? ' · 💠 ' + S.mat + (S.mat === 1 ? ' cristal' : ' cristais') : '')));
+  listaEl.append(sa, ob);
+  if (invAba === 'loja') return lojaVitrine(); if (invAba === 'forja') return ferreiro();
+  // 🎒 mochila
+  const bs = el('div', 'bolsa'), sl = el('div', 'slots'); bs.append(el('h3', null, '🎒 Sua mochila'), el('p', 'dica', 'Toque em Usar. Poção só fora da luta (no mapa ou antes de jogar).'));
+  let n = 0;
+  for (const k in ITENS) { const q = S.inv[k] || 0; if (!q) continue; n++; const it = ITENS[k], d = el('div', 'slot'), b = el('button');
+    const ativo = it.xp2 && S.xp2 === hoje(), luta = !it.xp2 && emLuta(), cheia = !it.xp2 && S.hp >= hpMax();
+    b.textContent = ativo ? '✓ Ativo hoje' : luta ? '🔒 Na luta' : cheia ? 'Vida cheia' : it.xp2 ? '📖 Ler' : '🧪 Usar'; b.disabled = ativo || luta || cheia; b.onclick = () => usaItem(k);
+    d.append(el('span', 'qt', '×' + q), el('span', 'ic', it.ic), el('span', 'nm', it.nome), b); sl.append(d) }
+  if (S.mat) { n++; const d = el('div', 'slot'), b = el('button', null, '⚒️ Ferreiro'); b.onclick = () => { invAba = 'forja'; lista() }; d.append(el('span', 'qt', '×' + S.mat), el('span', 'ic', '💠'), el('span', 'nm', 'Cristal'), b); sl.append(d) }
+  for (let k = n; k < Math.max(8, Math.ceil(n / 4) * 4); k++) { const d = el('div', 'slot vazio'); sl.append(d) }
+  bs.append(sl); if (!n) bs.append(el('p', 'dica', 'Mochila vazia. Compre na 🏪 Loja ou abra o 🎁 baú do dia.'));
+  const at = []; if (S.armadT > 0) at.push('🛡 Armadura: ' + S.armadT + (S.armadT === 1 ? ' estágio' : ' estágios')); for (const k in EQUIP) if (EQUIP[k].dias && temEq(k)) at.push(EQUIP[k].ic + ' ' + EQUIP[k].nome.split(' ')[0] + ' até ' + ddmm(S.equip[k]));
+  if (temEq('aura')) at.push('✨ Aura'); if (S.xp2 === hoje()) at.push('📜 XP em dobro hoje'); if (S.enc && S.enc.n > 0) at.push(FORJA[S.enc.k].ic + ' Espada encantada: ' + S.enc.n + (S.enc.n === 1 ? ' estágio' : ' estágios')); if (S.espada) at.push('⚔️ Espada nível ' + S.espada);
+  if (at.length) { const a = el('div', 'ativos'); for (const t of at) a.append(el('span', null, t)); bs.append(el('h3', null, '✨ Valendo agora'), a); bs.lastChild.previousSibling.style.marginTop = '10px' }
+  listaEl.append(bs);
+}
+function compra(preco, f, msg) { if (S.ouro < preco) return; S.ouro -= preco; f(); salva(); hud(); lista(); plim(5); brilho(0xffd86b); if (msg) aviso(msg, 2.6) }
+function cartao(ic, nome, ds, preco, pode, f, msg, fita) { // um produto na vitrine da loja
+  const c = el('div', 'card' + (fita ? ' dono' : '')), b = el('button', 'comprar', pode === 'dono' ? '✓ É sua!' : '🪙 ' + preco); if (fita) c.append(el('span', 'fita', fita));
+  c.append(el('span', 'ic', ic), el('span', 'nm', nome), el('span', 'ds', ds)); b.disabled = pode !== true || S.ouro < preco; b.onclick = () => compra(preco, f, msg); c.append(b);
+  if (pode === true && S.ouro < preco) c.append(el('span', 'falta', 'faltam ' + (preco - S.ouro) + ' 🪙')); return c }
+function lojaVitrine() { // 🏪 loja: vitrine com preço e botão de comprar
+  const sec = (tit, cls) => { const s = el('div', 'lojaSec' + (cls ? ' ' + cls : '')), v = el('div', 'vitrine'); s.append(el('div', 'tenda'), el('h3', null, tit), v); listaEl.append(s); return v };
+  const v1 = sec('🧪 Poções e pergaminhos');
+  for (const k in ITENS) { const it = ITENS[k], q = S.inv[k] || 0; v1.append(cartao(it.ic, it.nome, CURTO[k], it.preco, true, () => { S.inv[k] = q + 1 }, it.ic + ' ' + it.nome + ' foi pra mochila 🎒', q ? 'tem ' + q : null)) }
+  const v2 = sec('🛡 Equipamentos');
   for (const k in EQUIP) { const it = EQUIP[k], at = temEq(k);
-    if (it.dias) item(it.ic + ' ' + it.nome + ' (' + it.dias + ' dias)', it.desc + (at ? ' · ativo até ' + ddmm(S.equip[k]) + ', comprar soma mais ' + it.dias : ''), it.preco, true, () => { S.equip = S.equip || {}; S.equip[k] = somaDia(at ? S.equip[k] : hoje(), it.dias - (at ? 0 : 1)); aviso(it.ic + ' ' + it.nome + ' até ' + ddmm(S.equip[k])) });
-    else item(it.ic + ' ' + it.nome + (at ? ' ✓' : ''), at ? 'já é seu' : it.desc, it.preco, !at, () => { S.equip = S.equip || {}; S.equip[k] = 1; aviso(it.ic + ' ' + it.nome + ' é sua!') }) }
-  for (const k in ITENS) { const it = ITENS[k]; item(it.ic + ' ' + it.nome, it.desc + (it.cura ? ' · tome antes de começar o estágio' : ''), it.preco, true, () => { S.inv[k] = (S.inv[k] || 0) + 1 }) }
-  const pe = 40 + 35 * S.espada; item('Espada melhor (' + (S.espada + 1) + ')', '+4 de dano de espada' + ([1, 3, 6, 9].includes(S.espada + 1) ? ' · a lâmina muda de cor' : ''), pe, S.espada < 10, () => { S.espada++; corEspada(); aviso('Espada melhorada!') });
-  const pa = 30 + 3 * S.nv; item('🛡 Armadura (5 estágios)', 'segura 30% do dano dos monstros nos próximos 5 estágios' + (S.armadT > 0 ? ' · faltam ' + S.armadT : ''), pa, true, () => { S.armadT = (S.armadT || 0) + 5; aviso('🛡 Armadura: ' + S.armadT + ' estágios') });
-  s2.append(lj); listaEl.append(s2);
+    if (it.dias) v2.append(cartao(it.ic, it.nome, CURTO[k], it.preco, true, () => { S.equip = S.equip || {}; S.equip[k] = somaDia(at ? S.equip[k] : hoje(), it.dias - (at ? 0 : 1)) }, it.ic + ' ' + it.nome + ' ativa!', at ? 'até ' + ddmm(S.equip[k]) : null));
+    else v2.append(cartao(it.ic, it.nome, CURTO[k], it.preco, at ? 'dono' : true, () => { S.equip = S.equip || {}; S.equip[k] = 1 }, it.ic + ' ' + it.nome + ' é sua!', at ? 'sua' : null)) }
+  v2.append(cartao('🛡️', 'Armadura', 'Toma 30% menos dano · 5 estágios', 30 + 3 * S.nv, true, () => { S.armadT = (S.armadT || 0) + 5 }, '🛡 Armadura por ' + ((S.armadT || 0) + 5) + ' estágios', S.armadT > 0 ? 'faltam ' + S.armadT : null));
+  v2.append(cartao('⚔️', 'Espada nível ' + (S.espada + 1), S.espada < 10 ? '+4 de dano' + ([1, 3, 6, 9].includes(S.espada + 1) ? ' e brilho novo' : '') : 'Já está no máximo', 40 + 35 * S.espada, S.espada < 10 ? true : 'dono', () => { S.espada++; corEspada() }, '⚔️ Espada melhorada!', S.espada ? 'nível ' + S.espada : null));
+}
+function ferreiro() { // ⚒ ferreiro: cristais + ouro encantam a espada por alguns estágios
+  const s = el('div', 'lojaSec forja'), v = el('div', 'vitrine'), at = S.enc && S.enc.n > 0 ? S.enc : null;
+  s.append(el('div', 'tenda'), el('h3', null, '⚒️ Ferreiro'), el('p', 'dica', 'Os monstros deixam cair 💠 cristais. Com ' + FORJA_C + ' cristais e ' + FORJA_O + ' de ouro, ele encanta a sua espada por ' + FORJA_N + ' estágios.'), v);
+  s.querySelector('.dica').style.marginBottom = '8px';
+  for (const k in FORJA) { const f = FORJA[k], mesmo = !!at && at.k === k, c = el('div', 'card' + (mesmo ? ' dono' : '')), b = el('button', 'comprar', '💠' + FORJA_C + ' + 🪙' + FORJA_O);
+    if (mesmo) c.append(el('span', 'fita', 'faltam ' + at.n));
+    c.append(el('span', 'ic', f.ic), el('span', 'nm', f.nome), el('span', 'ds', k === 'fogo' ? '+20% de dano, golpes em chamas' : 'O monstro fica lento'));
+    const pode = (S.mat || 0) >= FORJA_C && S.ouro >= FORJA_O && !emLuta(); b.disabled = !pode;
+    b.onclick = () => { if (!pode) return; S.mat -= FORJA_C; S.ouro -= FORJA_O; S.enc = { k, n: (mesmo ? at.n : 0) + FORJA_N }; corEspada(); salva(); hud(); lista();
+      mostraPremio({ ic: f.ic, tit: f.nome + '!', sub: 'O ferreiro encantou a sua espada', itens: [['⚔️', f.desc], ['🗺', 'vale ' + S.enc.n + ' estágios']], cor: f.cor }) };
+    c.append(b); if (!pode) c.append(el('span', 'falta', emLuta() ? 'só fora da luta' : (S.mat || 0) < FORJA_C ? 'faltam ' + (FORJA_C - (S.mat || 0)) + ' 💠' : 'faltam ' + (FORJA_O - S.ouro) + ' 🪙')); v.append(c) }
+  listaEl.append(s);
 }
 function heroina() {
   { const sr = el('div', 'sec'), b = el('button', 'reset', '🔄 Resetar jogo'); sr.append(el('h3', null, 'Reiniciar'));
