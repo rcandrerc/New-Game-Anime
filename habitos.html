@@ -30,6 +30,7 @@
   #hud .dir{display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:auto}
   #hud .chip{background:var(--glass);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-weight:700;font-size:12.5px;backdrop-filter:blur(4px);white-space:nowrap}
   #bCheia{width:38px;height:38px;padding:0;border-radius:50%;display:grid;place-items:center;background:var(--glass);backdrop-filter:blur(4px)} #bCheia svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  #bSair{font-weight:800;font-size:13px;padding:6px 12px;border-radius:999px;background:#5a2a24cc;color:#ffd0c8;border:1px solid #c0645a}
   #bModo{font-weight:800;font-size:13px;padding:6px 12px;border-radius:999px;background:var(--glass);backdrop-filter:blur(4px)}
   #bModo.manual{background:#8a3cc8;border-color:#b87af0}
   #bPocao{font-size:13px;padding:5px 10px;border-radius:999px;background:var(--glass)}
@@ -50,6 +51,7 @@
   .ico.M{background:radial-gradient(circle at 50% 35%,#5a74e8,#1a2370 75%);border-color:rgba(200,215,255,.6)} .ico.R{background:radial-gradient(circle at 50% 35%,#36c49a,#0c5040 75%);border-color:rgba(190,255,230,.6)}
   .ico svg{width:62%;height:62%;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
   #bComeca{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);z-index:6;padding:13px 26px;border-radius:999px;font:900 17px system-ui,sans-serif;white-space:nowrap;background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border:2px solid #fff3c4;box-shadow:0 4px 0 #7a4a00,0 6px 18px #000a;animation:pulsa 1.4s ease-in-out infinite}
+  #bComeca i{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);font:700 12px system-ui,sans-serif;font-style:normal;color:#fff;background:#0009;padding:4px 10px;border-radius:999px;white-space:nowrap}
   #bComeca small{display:block;font-size:11.5px;font-weight:700;opacity:.8}
   #ctl .sk.sem{opacity:.45}
   #ctl .sk[data-cd]::after{content:attr(data-cd);position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;font-size:15px}
@@ -170,6 +172,8 @@
   #mapa .repete{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#3a2a1a;color:#ffe9b8;border:2px solid #6a4a24;opacity:.7}
   #mapa .repete.on{opacity:1;background:#2f6a3a;border-color:#8fe0a0}
   #mapa .pocao{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#4a2030;color:#ffe9b8;border:2px solid #9a4a64}
+  .naLuta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px;padding:8px 10px;border-radius:10px;background:#3a2a2a;color:#ffd0c8;font-weight:700;font-size:13px}
+  .naLuta button{padding:7px 12px;border-radius:9px;font:800 13px system-ui,sans-serif;background:#ffd0c8;color:#3a1a14;border:0}
   #mapa .sair{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#3a2a2a;color:#ffd0c8;border:2px solid #8a4a44}
   #mapa .tarefas{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#5a3a1e;color:#ffe9b8;border:2px solid #8a5a24}
   @keyframes pulsa{0%,100%{box-shadow:0 3px 0 #0006,0 0 0 3px #ffe06655}50%{box-shadow:0 3px 0 #0006,0 0 0 9px #ffe06633,0 0 18px #ffe066}}
@@ -329,7 +333,7 @@
       <div class="bar" id="xpB"><i></i><span>XP 0/40</span></div>
     </div>
     <div class="dir">
-      <button id="bModo" aria-label="Trocar entre automático e manual">▶ Auto</button>
+      <button id="bSair" hidden>🏳 Sair</button><button id="bModo" aria-label="Trocar entre automático e manual">▶ Auto</button>
       <div class="chip" id="hOuro">🪙 0</div>
       <button id="bCheia" aria-label="Tela cheia" hidden></button>
       <button id="bEst" aria-label="Abrir o mapa de estágios">⚔ Estágio 1<small>0/5</small></button>
@@ -1534,10 +1538,10 @@ function desenhaPapel() {
     for (const [y0, y1] of [[0, 26], [VH, VH - 26]]) { const gr = g.createLinearGradient(0, y0, 0, y1); gr.addColorStop(0, 'rgba(90,50,15,.55)'); gr.addColorStop(1, 'rgba(90,50,15,0)'); g.fillStyle = gr; g.fillRect(0, Math.min(y0, y1), VW, 26) } }
 }
 let selN = 1, contaT = 0, contaN = 0;
-function abreMapa(motivo, sel) { // motivo: 'venceu' ou 'perdeu' (aí no Auto ele mesmo começa a próxima fase depois de uns segundos)
+function abreMapa(motivo, sel) { // motivo: 'venceu' ou 'perdeu'
   mapaEl.classList.add('on'); folhaEl.querySelectorAll('.no,.rot').forEach(e => e.remove());
-  selN = Math.min(sel || (F.fim ? S.lib : F.n), S.lib); clearInterval(contaT); contaN = motivo && S.auto && podeJogar(selN) ? 6 : 0;
-  if (contaN) contaT = setInterval(() => { if (--contaN <= 0) { clearInterval(contaT); joga() } else infoMapa() }, 1000);
+  selN = Math.min(sel || (F.fim ? S.lib : F.n), S.lib); clearInterval(contaT); contaN = 0;
+  if (motivo) comecaEstagio(selN, true); // acabou o estágio: volta pro acampamento, fora da luta, e só luta de novo quando tocar em Começar
   const W = folhaEl.clientWidth || 400, k = W / VW; folhaEl.style.height = VH * k + 'px'; desenhaPapel();
   NOS.forEach(([vx, vy], i) => {
     const n = i + 1, x = vx * k, y = vy * k, lib = n <= S.lib, b = document.createElement('button'), rot = document.createElement('div');
@@ -1558,7 +1562,7 @@ function infoMapa() { // a barra de baixo do mapa: qual estágio, se dá pra ent
     : (S.ok[n] ? '✓ Já vencido (dá pra repetir pra juntar ouro)' : 'Nível ' + nvSugerido(n) + ' ✓') + ' · ' + (4 + Math.ceil(n / 3)) + ' grupos e um chefe · vida ' + Math.ceil(S.hp) + '/' + hpMax() }));
   const rb = mapaEl.querySelector('.repete'); rb.classList.toggle('on', !!S.repete); rb.setAttribute('aria-pressed', !!S.repete); rb.textContent = S.repete ? '🔁 Repetindo' : '🔁 Repetir';
   const jb = mapaEl.querySelector('.jogar'); jb.disabled = !pode && !volta; jb.textContent = volta ? '▶ Voltar pra luta' : pode ? '⚔ Começar' + (contaN ? ' (' + contaN + ')' : '') : '🔒 Nível ' + nvSugerido(n);
-  const pb = mapaEl.querySelector('.pocao'); pb.textContent = '🧪 Poção' + (np ? ' ' + np : ''); pb.hidden = !np; pb.disabled = S.hp >= hpMax(); mapaEl.querySelector('.sair').hidden = !emLuta();
+  const pb = mapaEl.querySelector('.pocao'); pb.textContent = '🧪 Poção' + (np ? ' ' + np : ''); pb.hidden = !np; pb.disabled = S.hp >= hpMax(); mapaEl.querySelector('.sair').hidden = !emLuta() || !!F.masm;
 }
 function joga() { clearInterval(contaT); contaN = 0;
   if (emLuta() && selN === F.n && !F.masm) { fechaMapa(); return } // só estava olhando o mapa: volta pra mesma luta
@@ -1566,12 +1570,12 @@ function joga() { clearInterval(contaT); contaN = 0;
 const melhorEst = () => { let n = Math.min(S.lib, N_EST); while (n > 1 && !podeJogar(n)) n--; return n }; // o estágio mais alto que dá pra jogar
 function botaoComeca() { // parado na trilha, sem mapa nem tela por cima: um botão grande pra começar
   const b = document.getElementById('bComeca'), on = !!F.parado && !mapaEl.classList.contains('on') && !hojeEl.classList.contains('on') && !premioOn;
-  const n = podeJogar(selN) ? selN : melhorEst(); if (b.hidden === !on && b.dataset.n == n) return; b.hidden = !on; b.dataset.n = n; b.innerHTML = ''; b.append('⚔ Começar estágio ' + n, Object.assign(document.createElement('small'), { textContent: EST[n - 1][0] })) }
+  const n = podeJogar(selN) ? selN : melhorEst(); if (b.hidden === !on && b.dataset.n == n) return; b.hidden = !on; b.dataset.n = n; b.innerHTML = ''; b.append(Object.assign(document.createElement('i'), { textContent: '🏕 Fora da luta · menus livres' }), '⚔ Começar estágio ' + n, Object.assign(document.createElement('small'), { textContent: EST[n - 1][0] })) }
 document.getElementById('bComeca').addEventListener('click', e => { selN = +e.currentTarget.dataset.n || melhorEst(); joga() });
 function fechaMapa() { clearInterval(contaT); contaN = 0; mapaEl.classList.remove('on') }
 mapaEl.querySelector('.jogar').onclick = joga; mapaEl.querySelector('.masm').onclick = entraMasm;
-mapaEl.querySelector('.repete').onclick = () => { S.repete = !S.repete; salva(); infoMapa(); aviso(S.repete ? 'Repetir ligado: depois de vencer, joga este mesmo estágio de novo (bom pra juntar ouro).' : 'Repetir desligado: depois de vencer, vai pro próximo estágio.') };
-mapaEl.querySelector('.tarefas').onclick = fechaMapa; mapaEl.querySelector('.sair').onclick = saiLuta;
+mapaEl.querySelector('.repete').onclick = () => { S.repete = !S.repete; salva(); infoMapa(); aviso(S.repete ? 'Repetir ligado: depois de vencer, o mapa já marca este mesmo estágio (bom pra juntar ouro).' : 'Repetir desligado: depois de vencer, o mapa marca o próximo estágio.') };
+mapaEl.querySelector('.tarefas').onclick = fechaMapa; mapaEl.querySelector('.sair').onclick = saiLuta; document.getElementById('bSair').onclick = () => { if (confirm('Sair da luta? Você volta pro acampamento e pode usar os menus.')) saiLuta() };
 mapaEl.querySelector('.pocao').onclick = () => { clearInterval(contaT); contaN = 0; usaItem(S.inv.pocao > 0 && S.hp + hpMax() * ITENS.pocao.cura < hpMax() * 1.05 ? 'pocao' : S.inv.pocaoG > 0 ? 'pocaoG' : 'pocao'); infoMapa() };
 document.getElementById('bEst').addEventListener('click', () => mapaEl.classList.contains('on') ? (F.fim || F.perdeu || fechaMapa()) : abreMapa());
 
@@ -1600,7 +1604,7 @@ puxa.addEventListener('pointerdown', e => { puxaY = e.clientY; puxa.setPointerCa
 puxa.addEventListener('pointerup', e => { if (puxaY == null) return; const d = e.clientY - puxaY; puxaY = null; if (d > 30) painelCheio(true); else if (d < -30) painelCheio(false); else painelCheio(!S.cheio) });
 puxa.addEventListener('pointercancel', () => { puxaY = null });
 function hudRapido() { // energia e recarga das skills (mudam o tempo todo)
-  botaoComeca();
+  botaoComeca(); const bs = document.getElementById('bSair'), sl = !emLuta() || !!F.masm; if (bs.hidden !== sl) bs.hidden = sl;
   const em = enMax(); document.querySelector('#enB i').style.transform = 'scaleX(' + P.en / em + ')'; document.querySelector('#enB span').textContent = 'Energia ' + Math.floor(P.en) + '/' + em;
   document.querySelectorAll('#ctl .sk').forEach(b => { const k = b.dataset.k; if (CD[k] > 0) b.dataset.cd = Math.ceil(CD[k]); else delete b.dataset.cd; b.classList.toggle('sem', P.en < SKILLS[k].en) });
 }
@@ -2067,13 +2071,14 @@ function ferreiro() { // ⚒ ferreiro: cristais + ouro encantam a espada por alg
   const s = el('div', 'lojaSec forja'), v = el('div', 'vitrine'), at = S.enc && S.enc.n > 0 ? S.enc : null;
   s.append(el('div', 'tenda'), el('h3', null, '⚒️ Ferreiro'), el('p', 'dica', 'Os monstros deixam cair 💠 cristais. Com ' + FORJA_C + ' cristais e ' + FORJA_O + ' de ouro, ele encanta a sua espada por ' + FORJA_N + ' estágios.'), v);
   s.querySelector('.dica').style.marginBottom = '8px';
+  if (emLuta()) { const z = el('div', 'naLuta'), sb = el('button', null, '🏳 Sair da luta'); sb.onclick = saiLuta; z.append(el('span', null, 'O ferreiro só atende fora da luta.'), sb); s.insertBefore(z, v) }
   for (const k in FORJA) { const f = FORJA[k], mesmo = !!at && at.k === k, c = el('div', 'card' + (mesmo ? ' dono' : '')), b = el('button', 'comprar', '💠' + FORJA_C + ' + 🪙' + FORJA_O);
     if (mesmo) c.append(el('span', 'fita', 'faltam ' + at.n));
     c.append(el('span', 'ic', f.ic), el('span', 'nm', f.nome), el('span', 'ds', k === 'fogo' ? '+20% de dano, golpes em chamas' : 'O monstro fica lento'));
-    const pode = (S.mat || 0) >= FORJA_C && S.ouro >= FORJA_O; b.disabled = !pode;
+    const pode = (S.mat || 0) >= FORJA_C && S.ouro >= FORJA_O && !emLuta(); b.disabled = !pode;
     b.onclick = () => { if (!pode) return; S.mat -= FORJA_C; S.ouro -= FORJA_O; S.enc = { k, n: (mesmo ? at.n : 0) + FORJA_N }; corEspada(); salva(); hud(); lista();
-      mostraPremio({ ic: f.ic, tit: f.nome + '!', sub: 'O ferreiro encantou a sua espada', itens: [['⚔️', f.desc], ['🗺', 'vale ' + S.enc.n + ' estágios' + (emLuta() ? ', a partir do próximo' : '')]], cor: f.cor }) };
-    c.append(b); if (!pode) c.append(el('span', 'falta', (S.mat || 0) < FORJA_C ? 'faltam ' + (FORJA_C - (S.mat || 0)) + ' 💠' : 'faltam ' + (FORJA_O - S.ouro) + ' 🪙')); v.append(c) }
+      mostraPremio({ ic: f.ic, tit: f.nome + '!', sub: 'O ferreiro encantou a sua espada', itens: [['⚔️', f.desc], ['🗺', 'vale ' + S.enc.n + ' estágios']], cor: f.cor }) };
+    c.append(b); if (!pode) c.append(el('span', 'falta', emLuta() ? 'só fora da luta' : (S.mat || 0) < FORJA_C ? 'faltam ' + (FORJA_C - (S.mat || 0)) + ' 💠' : 'faltam ' + (FORJA_O - S.ouro) + ' 🪙')); v.append(c) }
   listaEl.append(s);
 }
 function heroina() {
