@@ -329,7 +329,7 @@
 <div id="arena">
   <div id="hud">
     <div class="esq">
-      <div class="nome" id="hNome">Shino<small id="hNv">Nível 1</small><b id="hPts" hidden></b></div>
+      <div class="nome" id="hNome">Hana<small id="hNv">Nível 1</small><b id="hPts" hidden></b></div>
       <div class="bar" id="hpB"><i></i><span>Vida 100/100</span></div>
       <div class="bar" id="enB"><i></i><span>Energia 40/40</span></div>
       <div class="bar" id="xpB"><i></i><span>XP 0/40</span></div>
@@ -377,9 +377,8 @@
 // Embaixo: hábitos, diárias e afazeres. Só as tarefas dão XP; cada nível dá pontos pra distribuir nos atributos,
 // e os atributos liberam as skills de espada (Força) e de magia (Magia). Sem classe: dá pra focar num lado ou fazer híbrido.
 const PERS = [ // arquivo, nome
-  ['sendagaya_shino', 'Shino'], ['sendagaya_shibu', 'Shibu'], ['darkness_shibu', 'Darkness Shibu'], ['sakurada_fumiriya', 'Fumiriya'],
-  ['victoria_rubin', 'Victoria Rubin'], ['vita', 'Vita'], ['vivi', 'Vivi'], ['hairsample_female', 'Moça (moletom)'], ['hairsample_male', 'Rapaz (moletom)'],
-  ['avatarsample_a', 'Avatar A'], ['avatarsample_b', 'Avatar B'], ['avatarsample_c', 'Avatar C'],
+  ['sendagaya_shino', 'Hana'], ['sendagaya_shibu', 'Rin'], ['darkness_shibu', 'Yami'], ['sakurada_fumiriya', 'Ren'],
+  ['victoria_rubin', 'Rubi'], ['vita', 'Mika'], ['vivi', 'Luna'], ['hairsample_female', 'Moça (moletom)'], ['hairsample_male', 'Rapaz (moletom)'],
 ];
 // recompensa por dificuldade: XP, ouro e vida perdida (hábito ruim ou diária esquecida)
 const DIF = { f: { n: 'Fácil', xp: 10, ouro: 3, dor: 0.06, cura: 0.04 }, m: { n: 'Médio', xp: 20, ouro: 6, dor: 0.11, cura: 0.07 }, d: { n: 'Difícil', xp: 35, ouro: 10, dor: 0.17, cura: 0.1 } }; // dor e cura: fração da vida máxima
@@ -424,6 +423,7 @@ function padrao() {
     afz: [t('Organizar a mesa', 'm', {}), t('Marcar o dentista', 'f', {})] };
 }
 let S; try { S = Object.assign(padrao(), JSON.parse(localStorage.getItem(CHAVE) || 'null') || {}) } catch (e) { S = padrao() }
+if (!(S.pers >= 0 && S.pers < PERS.length)) S.pers = 0 // save que usava um personagem que saiu do jogo volta pra primeira
 if (!S.attr) { S.attr = { for: 0, des: 0, vid: 0, est: 0, mag: 0 }; S.pontos = PTS_NIVEL * S.nv } // começa com 3 pontos (e quem já tinha nível ganha os dele)
 if (!S.lib) { S.lib = 1; S.est = 1; S.ok = {} }
 if (S.armad > 0) { S.armadT = (S.armadT || 0) + 3 * S.armad; S.armad = 0 } // armadura antiga (permanente) vira estágios de armadura
