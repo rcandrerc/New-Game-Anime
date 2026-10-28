@@ -1,7 +1,7 @@
 # New Game Anime
 
 Base pra um jogo novo com visual anime: 12 personagens VRoid prontos pro celular, com física de cabelo, franja, saia e busto
-e as mesmas 23 animações (Mixamo + Quaternius). A preferida até agora é a **Shino**.
+e as mesmas 23 animações (Mixamo + Quaternius). A preferida até agora é a **Hana** (arquivo `sendagaya_shino`).
 
 **Vila de teste:** https://rcandrerc.github.io/New-Game-Anime/ — mini vila jogável pra testar os personagens como num jogo:
 joystick virtual (ou WASD), arrastar a tela gira a câmera, pinça aproxima/afasta, botão de câmera lenta (1x, ½x, ¼x), botões Correr, Pular (2x = mortal), Dash (arrancada com rastro), Esquiva (rolamento, mergulho ou deslizar) e ⋯ (estilos e outras animações); correndo contra algo de até ~1 m ela sobe apoiando as mãos; torre de 6 m pra escalar (gruda andando contra ela, joystick sobe/desce/lados, no topo sobe na beirada, Pular solta), escada de mão na frente da torre e um muro pra subir correndo pela parede;
@@ -33,17 +33,16 @@ ouro pra loja (poção, espada, armadura). Hábito ruim e diária esquecida tira
 
 | Arquivo | Nome | Licença |
 |---|---|---|
-| sendagaya_shino | Shino | CC0 |
-| sendagaya_shibu | Shibu | CC0 |
-| darkness_shibu | Darkness Shibu | CC0 |
-| sakurada_fumiriya | Fumiriya | CC0 |
-| victoria_rubin | Victoria Rubin | CC0 |
-| vita | Vita | CC0 |
-| vivi | Vivi | CC0 |
+| sendagaya_shino | Hana | CC0 |
+| sendagaya_shibu | Rin | CC0 |
+| darkness_shibu | Yami | CC0 |
+| sakurada_fumiriya | Ren | CC0 |
+| victoria_rubin | Rubi | CC0 |
+| vita | Mika | CC0 |
+| vivi | Luna | CC0 |
 | hairsample_female / hairsample_male | Amostras de cabelo | CC0 |
-| avatarsample_a / b / c | AvatarSample A, B, C | licença da VRoid (modelos de exemplo do VRoid Studio; conferir os termos antes de vender) |
 
-Modelos de github.com/madjin/vrm-samples (pasta vroid). CC0 = domínio público, pode usar até em jogo pago.
+Os nomes acima são os nomes do jogo (os arquivos mantêm o nome original do modelo). O AvatarSample A, B e C saiu do jogo por precaução (licença própria da VRoid) e está só no repo privado de fontes. Modelos de github.com/madjin/vrm-samples (pasta vroid). CC0 = domínio público, pode usar até em jogo pago.
 
 Pra abrir a página no próprio PC: `python3 -m http.server 8000` na pasta do repositório e `http://localhost:8000/`.
 
