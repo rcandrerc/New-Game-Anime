@@ -430,7 +430,7 @@ if (S.armad > 0) { S.armadT = (S.armadT || 0) + 3 * S.armad; S.armad = 0 } // ar
 if (S.equip) for (const k of ['fada', 'amuleto']) if (S.equip[k] === 1) { const d = new Date(); d.setDate(d.getDate() + 7); S.equip[k] = isoDe(d) } // os bônus agora duram 7 dias
 if ('pocoes' in S) { S.inv = { pocao: S.pocoes || 0 }; delete S.pocoes } // as poções antigas viram itens do inventário
 function zeraProgresso() { // nível, pontos, ouro, equipamento e missão voltam ao começo; as tarefas e as escolhas ficam
-  const fica = {}; for (const k of ['pers', 'hab', 'diar', 'afz', 'aba', 'dia', 'auto', 'cheio', 'repete', 'meta', 'metas', 'hafz', 'per', 'tela', 'backup']) if (k in S) fica[k] = S[k];
+  const fica = {}; for (const k of ['pers', 'hab', 'diar', 'afz', 'aba', 'dia', 'auto', 'cheio', 'repete', 'meta', 'metas', 'hafz', 'per', 'tela', 'backup', 'rotina']) if (k in S) fica[k] = S[k];
   for (const k in S) delete S[k]; Object.assign(S, padrao(), fica); S.attr = { for: 0, des: 0, vid: 0, est: 0, mag: 0 }; S.pontos = PTS_NIVEL; S.zerado = 1;
 }
 function resetaJogo() { // o jogo volta pro começo e o histórico das tarefas zera; a lista de hábitos, diárias e afazeres fica
@@ -440,6 +440,28 @@ function resetaJogo() { // o jogo volta pro começo e o histórico das tarefas z
 }
 if (S.zerado !== 1) { zeraProgresso(); try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} } // o André pediu pra recomeçar do zero (uma vez só)
 function salva() { try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} }
+// rotina do André (v5, 28/10/2026): entra uma vez só como diárias; o que ele já tiver com o mesmo nome fica como está
+const ROTINA = [ // nome, dificuldade, categoria, dias da semana (0 = domingo), horário ('' = fim de semana, sem hora, na ordem da lista)
+  ['Acordar e café leve', 'f', 'saude', [1, 2, 3, 4, 5], '08:00'],
+  ['Pedal (1h40 a 2h)', 'd', 'esporte', [1, 2, 3, 5], '08:20'],
+  ['Barra 5x6', 'm', 'esporte', [1], '10:20'], ['Flexão 5x10', 'm', 'esporte', [2, 5], '10:20'], ['Prancha 5x40s', 'm', 'esporte', [3], '10:20'],
+  ['Barra 5x6 (quinta)', 'm', 'esporte', [4], '08:20'],
+  ['Levar no desenho', 'f', 'social', [4], '09:45'], ['Programação (quinta)', 'm', 'estudo', [4], '10:15'], ['Buscar no desenho', 'f', 'social', [4], '11:45'],
+  ['Almoço da filha e louça', 'm', 'casa', [1, 2, 3, 5], '11:00'], ['Almoço rápido da filha', 'm', 'casa', [4], '12:00'],
+  ['Jogar 50 min', 'f', 'lazer', [2, 3, 5], '12:00'],
+  ['Levar na escola', 'f', 'social', [1, 2, 3, 4, 5], '12:55'],
+  ['Quimera ou programação (1h45)', 'm', 'estudo', [1, 2, 3, 5], '13:15'],
+  ['Jogar 1h30', 'f', 'lazer', [4], '13:30'], ['Jogar 1h30 (segunda)', 'f', 'lazer', [1], '15:00'],
+  ['Noite com a família', 'f', 'social', [1], '18:00'],
+  ['Pedal (fim de semana)', 'd', 'esporte', [0, 6], ''], ['Prancha 5x40s (sábado)', 'm', 'esporte', [6], ''],
+  ['Quimera ou programação (1h a 2h)', 'm', 'estudo', [0, 6], ''], ['Jogar 1h30 (fim de semana)', 'f', 'lazer', [0, 6], ''],
+];
+if (S.rotina !== 5) {
+  const tem = new Set(S.diar.map(d => d.t));
+  const am = new Date(); am.setDate(am.getDate() + 1); const ini = isoDe(am); // começa amanhã, pra não cobrar o que já passou hoje
+  for (const [t, d, cat, dias, hora] of ROTINA) if (!tem.has(t)) S.diar.push({ id: uid(), t, d, ok: false, cat, hora, freq: { t: 'semana', dias }, ini, criado: ini });
+  S.rotina = 5; salva();
+}
 const A_ = k => S.attr[k] || 0;
 const hpMax = () => 100 + 8 * (S.nv - 1) + 15 * A_('vid');
 const enMax = () => 40 + 8 * A_('est');
@@ -1332,8 +1354,8 @@ function prep(d) { // diária com os campos novos (as antigas eram só sim ou n�
   for (const k of ['v', 'racha', 'melhor', 'sem']) d[k] = d[k] || 0; if (!d.ini) d.ini = hoje(); if (!d.criado) d.criado = d.ini; if (d.pago == null) d.pago = d.ok ? 1 : 0; return d;
 }
 const ehMax = d => d.tipo === 'num' && d.meta.op === 'max';
-function agendada(d, dt) { const f = d.freq; if (d.pausa) return false; if (f.t === 'semana') return (f.dias || []).includes(dData(dt).getDay());
-  if (f.t === 'cada') { const k = difDias(d.ini, dt); return k >= 0 && k % Math.max(2, f.n || 2) === 0 } return true }
+function agendada(d, dt) { const f = d.freq; if (d.pausa || (d.criado && dt < d.criado)) return false; if (f.t === 'semana') return (f.dias || []).includes(dData(dt).getDay());
+  if (f.t === 'cada') { const k = difDias(d.ini, dt); return k >= 0 && k % Math.max(2, f.n || 2) === 0 } return true } // antes de a diária existir (criado) ela não conta
 function feito(d) { if (d.tipo === 'num') return d.meta.op === 'max' ? d.v <= d.meta.n : d.v >= d.meta.n; if (d.tipo === 'lista') return d.itens.length > 0 && d.itens.every(i => i.ok); return !!d.ok }
 const semFeita = d => d.freq.t === 'vezes' && d.sem >= (d.freq.n || 3) && !d.pago; // já bateu a meta da semana
 function pendente(d) { prep(d); return agendada(d, hoje()) && !feito(d) && !semFeita(d) }
