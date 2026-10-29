@@ -1828,29 +1828,31 @@ function abreMapa(motivo, sel) { // motivo: 'venceu' ou 'perdeu'
   const W = folhaEl.clientWidth || 400, k = W / VW; folhaEl.style.height = VH * k + 'px'; desenhaPapel();
   NOS.forEach(([vx, vy], i) => {
     const n = i + 1, x = vx * k, y = vy * k, lib = n <= S.lib, b = document.createElement('button'), rot = document.createElement('div');
-    b.className = 'no' + (S.ok[n] ? ' feito' : '') + (lib ? '' : ' tranc') + (n === S.lib && !S.ok[n] ? ' atual' : '') + (n === N_EST ? ' chefe' : '') + (n === selN ? ' sel' : '');
+    b.className = 'no' + (S.ok[n] ? ' feito' : '') + (lib ? '' : ' tranc') + (n === S.lib && !S.ok[n] ? ' atual' : '') + (n === N_EST ? ' chefe' : '') + (n === escolha ? ' sel' : '');
     b.textContent = !lib ? '🔒' : n === N_EST ? '👹' : n; b.style.left = x + 'px'; b.style.top = y + 'px';
     b.setAttribute('aria-label', 'Estágio ' + n + ': ' + EST[i][0] + (lib ? '' : ' (trancado)'));
-    b.onclick = () => { if (!lib) { aviso('Passe do estágio ' + (n - 1) + ' pra liberar este.'); return } entraEstagio(n) }; // tocou no estágio: já entra pra jogar
+    b.onclick = () => { if (!lib) { aviso('Passe do estágio ' + (n - 1) + ' pra liberar este.'); return } escolha = n; folhaEl.querySelectorAll('.no').forEach((e, j) => e.classList.toggle('sel', j === i)); infoMapa() }; // tocou no estágio: mostra o botão Jogar pra confirmar
     rot.className = 'rot'; rot.style.left = x + 'px'; rot.style.top = y + (n === N_EST ? 6 : 0) + 'px'; rot.textContent = EST[i][0];
     rot.append(Object.assign(document.createElement('small'), S.ok[n] ? { textContent: '✓ vencido', className: 'ok' } : { textContent: lib ? 'nível ' + nvSugerido(n) + '+' + (PARKOUR[n] ? ' · 🧗' : '') : 'trancado' }));
     folhaEl.append(b, rot) });
   botaoMasm(); mapaEl.querySelector('.topo small').textContent = Object.keys(S.ok).length + ' de ' + N_EST + ' estágios vencidos · nível ' + S.nv;
   const [, sy] = NOS[(emLuta() && !F.masm ? F.n : S.lib) - 1]; roloEl.scrollTop = sy * k - roloEl.clientHeight * 0.5; infoMapa();
 }
-function infoMapa() { // a barra de baixo do mapa: o que fazer e os botões que sobram (poção, repetir, sair da luta)
-  const i = mapaEl.querySelector('.info .txt'), luta = emLuta() && !F.masm, np = (S.inv.pocao || 0) + (S.inv.pocaoG || 0);
-  i.textContent = luta ? 'Você está no estágio ' + F.n : 'Toque num estágio pra jogar';
-  i.append(Object.assign(document.createElement('small'), { textContent: (luta ? 'Toque nele pra voltar ou em outro pra trocar · ' : '') + 'vida ' + Math.ceil(S.hp) + '/' + hpMax() + ' · nível ' + S.nv }));
+let escolha = 0; // estágio tocado no mapa, esperando o Jogar (0 = nenhum)
+function infoMapa() { // a barra de baixo do mapa: o estágio tocado com o botão Jogar, ou o que fazer; mais poção, repetir e sair da luta
+  const i = mapaEl.querySelector('.info .txt'), luta = emLuta() && !F.masm, np = (S.inv.pocao || 0) + (S.inv.pocaoG || 0), n = escolha, jb = mapaEl.querySelector('.jogar');
+  const vida = 'vida ' + Math.ceil(S.hp) + '/' + hpMax(), dica = t => i.append(Object.assign(document.createElement('small'), { textContent: t }));
+  if (n) { const volta = luta && n === F.n, pode = podeJogar(n);
+    i.textContent = 'Estágio ' + n + ' · ' + EST[n - 1][0];
+    dica(volta ? 'Você está no meio deste estágio · ' + vida : !pode ? '🔒 Precisa nível ' + nvSugerido(n) + ' (você: ' + S.nv + '). Faça as tarefas pra subir.'
+      : (S.ok[n] ? '✓ Já vencido · ' : '') + (4 + Math.ceil(n / 3)) + ' grupos e um chefe' + (PARKOUR[n] ? ' · 🧗 ' + PARKOUR[n].length + ' de parkour' : '') + (luta ? ' · larga a luta do estágio ' + F.n : '') + ' · ' + vida);
+    jb.hidden = false; jb.disabled = !pode && !volta; jb.textContent = volta ? '▶ Voltar pra luta' : pode ? '⚔ Jogar' : '🔒 Nível ' + nvSugerido(n);
+  } else { i.textContent = luta ? 'Você está no estágio ' + F.n : 'Toque num estágio pra escolher'; dica(vida + ' · nível ' + S.nv);
+    jb.hidden = !luta; jb.disabled = false; jb.textContent = '▶ Voltar pra luta' }
   const rb = mapaEl.querySelector('.repete'); rb.classList.toggle('on', !!S.repete); rb.setAttribute('aria-pressed', !!S.repete); rb.textContent = S.repete ? '🔁 Repetindo' : '🔁 Repetir';
-  mapaEl.querySelector('.jogar').hidden = !luta; mapaEl.querySelector('.sair').hidden = !luta;
+  mapaEl.querySelector('.sair').hidden = !luta || !!n;
   const pb = mapaEl.querySelector('.pocao'); pb.textContent = '🧪 Poção' + (np ? ' ' + np : ''); pb.hidden = !np; pb.disabled = S.hp >= hpMax();
 }
-function entraEstagio(n) { // do mapa direto pra luta
-  if (emLuta() && !F.masm && n === F.n) { fechaMapa(); return } // é o estágio em que já está: só volta pra luta
-  if (!podeJogar(n)) { aviso('Precisa nível ' + nvSugerido(n) + ' pra entrar no estágio ' + n + ' (você: ' + S.nv + '). Faça as tarefas pra subir.', 3); return }
-  if (emLuta() && !confirm('Largar a luta do estágio ' + F.n + ' e ir pro estágio ' + n + '?')) return;
-  selN = n; joga() }
 function joga() { clearInterval(contaT); contaN = 0;
   if (emLuta() && selN === F.n && !F.masm) { fechaMapa(); return } // só estava olhando o mapa: volta pra mesma luta
   if (!podeJogar(selN)) { aviso('Precisa nível ' + nvSugerido(selN) + ' pra entrar (você: ' + S.nv + '). Faça as tarefas pra subir.'); return } fechaMapa(); comecaEstagio(selN) }
@@ -1860,12 +1862,12 @@ function botaoComeca() { // parado na trilha, sem mapa nem tela por cima: um bot
   const n = podeJogar(selN) ? selN : melhorEst(); const ta = tierAura(); if (b.hidden === !on && b.dataset.n == n && b.dataset.t == ta) return; b.hidden = !on; b.dataset.n = n; b.dataset.t = ta; b.innerHTML = '';
   const prox = AURAS.find((a, i) => i > ta && a); b.append(Object.assign(document.createElement('i'), { textContent: '🏕 Acampamento · ' + (ta ? '✨ ' + AURAS[ta][0] : '✨ aura no nível ' + AURAS[1][2]) + (ta && prox ? ' · próxima no nível ' + prox[2] : '') }), '⚔ Começar estágio ' + n, Object.assign(document.createElement('small'), { textContent: EST[n - 1][0] })) }
 document.getElementById('bComeca').addEventListener('click', e => { selN = +e.currentTarget.dataset.n || melhorEst(); joga() });
-function fechaMapa() { clearInterval(contaT); contaN = 0; mapaEl.classList.remove('on') }
-mapaEl.querySelector('.jogar').onclick = fechaMapa; mapaEl.querySelector('.masm').onclick = entraMasm;
+function fechaMapa() { clearInterval(contaT); contaN = 0; escolha = 0; mapaEl.classList.remove('on') }
+mapaEl.querySelector('.jogar').onclick = () => { if (!escolha) { fechaMapa(); return } selN = escolha; joga() }; mapaEl.querySelector('.masm').onclick = entraMasm;
 mapaEl.querySelector('.repete').onclick = () => { S.repete = !S.repete; salva(); infoMapa(); aviso(S.repete ? 'Repetir ligado: depois de vencer, o mapa já marca este mesmo estágio (bom pra juntar ouro).' : 'Repetir desligado: depois de vencer, o mapa marca o próximo estágio.') };
 mapaEl.querySelector('.tarefas').onclick = fechaMapa; mapaEl.querySelector('.sair').onclick = saiLuta; document.getElementById('bSair').onclick = () => { if (confirm('Sair da luta? Você volta pro acampamento e pode usar os menus.')) saiLuta() };
 mapaEl.querySelector('.pocao').onclick = () => { clearInterval(contaT); contaN = 0; usaItem(S.inv.pocao > 0 && S.hp + hpMax() * ITENS.pocao.cura < hpMax() * 1.05 ? 'pocao' : S.inv.pocaoG > 0 ? 'pocaoG' : 'pocao'); infoMapa() };
-document.getElementById('bEst').addEventListener('click', () => mapaEl.classList.contains('on') ? fechaMapa() : abreMapa());
+document.getElementById('bEst').addEventListener('click', () => { if (mapaEl.classList.contains('on')) fechaMapa(); else { escolha = 0; abreMapa() } });
 
 // ---------------- HUD ----------------
 function hud() {
