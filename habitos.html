@@ -456,11 +456,15 @@ const ROTINA = [ // nome, dificuldade, categoria, dias da semana (0 = domingo), 
   ['Pedal (fim de semana)', 'd', 'esporte', [0, 6], ''], ['Prancha 5x40s (sábado)', 'm', 'esporte', [6], ''],
   ['Quimera ou programação (1h a 2h)', 'm', 'estudo', [0, 6], ''], ['Jogar 1h30 (fim de semana)', 'f', 'lazer', [0, 6], ''],
 ];
-if (S.rotina !== 5) {
+if (!(S.rotina >= 5)) {
   const tem = new Set(S.diar.map(d => d.t));
   const am = new Date(); am.setDate(am.getDate() + 1); const ini = isoDe(am); // começa amanhã, pra não cobrar o que já passou hoje
   for (const [t, d, cat, dias, hora] of ROTINA) if (!tem.has(t)) S.diar.push({ id: uid(), t, d, ok: false, cat, hora, freq: { t: 'semana', dias }, ini, criado: ini });
   S.rotina = 5; salva();
+}
+if (!(S.rotina >= 6)) { // 29/10/2026: pesar todo dia (ele ajusta os dias depois); começa hoje
+  if (!S.diar.some(d => d.t === 'Registrar peso no MyFitnessPal')) S.diar.push({ id: uid(), t: 'Registrar peso no MyFitnessPal', d: 'f', ok: false, cat: 'saude', hora: '', freq: { t: 'todo' } });
+  S.rotina = 6; salva();
 }
 const A_ = k => S.attr[k] || 0;
 const hpMax = () => 100 + 8 * (S.nv - 1) + 15 * A_('vid');
