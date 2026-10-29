@@ -1966,6 +1966,7 @@ function importaBackup() { const i = document.createElement('input'); i.type = '
     if (!d || !Array.isArray(d.diar) || !Array.isArray(d.hab)) { aviso('Esse arquivo não é um backup do jogo.'); return }
     if (!confirm('Trocar tudo pelo backup' + (d.backup ? ' de ' + ddmm(d.backup) : '') + '? O que está no celular agora some.')) return; localStorage.setItem(CHAVE, JSON.stringify(d)); location.reload() }) }; i.click() }
 let instalaEv = null; addEventListener('beforeinstallprompt', e => { e.preventDefault(); instalaEv = e; if (aba === 'her') lista() });
+addEventListener('appinstalled', () => { instalaEv = null; aviso('📲 App instalado! Procure “Hábitos” na lista de apps do celular.'); if (aba === 'her') lista() });
 function instalaApp() { if (!instalaEv) return; instalaEv.prompt(); instalaEv.userChoice.finally(() => { instalaEv = null; lista() }) }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw-habitos.js').catch(() => {});
 // tela cheia: some a barra de endereço do navegador (o navegador só deixa depois de um toque; no iPhone só instalando como app)
@@ -2118,6 +2119,7 @@ function heroina() {
     sb.append(el('h3', null, 'Backup'), el('p', 'dica', 'Tudo fica só neste celular. O backup salva um arquivo nos downloads; se trocar de celular ou limpar os dados, é só restaurar. ' + (S.backup ? 'Último backup: ' + ddmm(S.backup) + '.' : 'Você ainda não fez nenhum.')), ex, im);
     ex.onclick = exportaBackup; im.onclick = importaBackup;
     if (instalaEv) { const ins = el('button', null, '📲 Instalar como app'); ins.style.marginTop = '8px'; ins.style.width = '100%'; ins.onclick = instalaApp; sb.append(ins) }
+    else if (!comoApp()) sb.append(el('p', 'dica', '📲 Se o celular disser que o app já está instalado, ele está na lista de apps (arraste a tela inicial pra cima e procure “Hábitos”); é só segurar o ícone e arrastar pra tela inicial. Se não achar, no Chrome toque em ⋮ e depois em “Adicionar à tela inicial”.'))
     listaEl.append(sb) }
   // atributos
   const s0 = el('div', 'sec'), h0 = el('h3', null, 'Atributos'); if (S.pontos) h0.append(el('span', 'pts', S.pontos + ' pra distribuir')); s0.append(h0);
