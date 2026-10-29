@@ -614,7 +614,7 @@ function montaMapa(n) {
     return { tipo: PK[i], x0, z0, ux: (x1 - x0) / L, uz: (z1 - z0) / L, L, i0: pertoTrilha(x0, z0)[0], i1: pertoTrilha(x1, z1)[0], feito: false, entrou: false, auto: false, quedas: 0 } });
   // grade de alturas cobrindo a trilha com folga
   let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const [x, z] of TP) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z) }
-  OX = Math.round((x0 + x1) / 2); OZ = Math.round((z0 + z1) / 2); TAM = Math.ceil(Math.max(x1 - x0, z1 - z0) + 70); GN = TAM + 1; ALTS = new Float32Array(GN * GN); DTR = new Float32Array(GN * GN);
+  OX = Math.round((x0 + x1) / 2); OZ = Math.round((z0 + z1) / 2); TAM = Math.ceil(Math.max(x1 - x0, z1 - z0) + 70); GN = TAM + 1; ALTS = new Float32Array(GN * GN); DTR = new Float32Array(GN * GN); const PKR = new Float32Array(GN * GN), PKB = new Float32Array(GN * GN); // pedra e fundo cavado dos trechos de parkour (pra pintar o chão)
   if (B.lago) { const i = (NT * (SEC.length ? 0.12 : 0.45)) | 0, j = i + 6, tx = TP[j][0] - TP[i][0], tz = TP[j][1] - TP[i][1], l = Math.hypot(tx, tz) || 1, lado = rd() < 0.5 ? 1 : -1;
     LAGO = { x: TP[i][0] - tz / l * lado * (B.lago + 4), z: TP[i][1] + tx / l * lado * (B.lago + 4), r: B.lago } } else LAGO = { x: 0, z: -9999, r: 0 };
   const T2 = TP.filter((_, i) => i % 3 === 0);
@@ -624,11 +624,12 @@ function montaMapa(n) {
     let h = ((ruido(x, z) * 0.9 + 0.9) * liso(4, 16, d) * 2.2 + liso(18, 40, d) * 6) * B.morro + Math.sin(x * 1.7) * Math.cos(z * 1.3) * 0.06;
     h *= liso(5, 11, df); // clareira plana do chefe no fim
     h -= (1 - liso(LAGO.r - 1.5, LAGO.r + 2.5, dl)) * (h + 0.7);
+    if (SEC.length) { h = pkTerreno(x, z, h, d); PKR[j * GN + i] = pkTerreno.r; PKB[j * GN + i] = pkTerreno.b }
     ALTS[j * GN + i] = h; DTR[j * GN + i] = Math.min(d, df < 7 ? 0.5 : 1e9) }
   { // chão: cores misturadas (grama de vários tons, manchas secas, terra da trilha, beira do lago)
     const geo = new THREE.PlaneGeometry(TAM, TAM, GN - 1, GN - 1); geo.rotateX(-Math.PI / 2); geo.translate(OX, 0, OZ);
     const pos = geo.attributes.position, cor = new Float32Array(pos.count * 3), c = new THREE.Color(), t = new THREE.Color(), s = B.solo;
-    const G1 = new THREE.Color(s.g1), G2 = new THREE.Color(s.g2), SECO = new THREE.Color(s.seco), ESC = new THREE.Color(s.esc), TERRA = new THREE.Color(s.terra), TERRA2 = new THREE.Color(s.terra2), AREIA = new THREE.Color(0xcdb98a);
+    const G1 = new THREE.Color(s.g1), G2 = new THREE.Color(s.g2), SECO = new THREE.Color(s.seco), ESC = new THREE.Color(s.esc), TERRA = new THREE.Color(s.terra), TERRA2 = new THREE.Color(s.terra2), AREIA = new THREE.Color(0xcdb98a), ROCHA_C = new THREE.Color(0x8a8274), FUNDO_C = new THREE.Color(0x3a2c20);
     for (let k = 0; k < pos.count; k++) {
       const x = pos.getX(k), z = pos.getZ(k), i = Math.round(x + TAM / 2 - OX), j = Math.round(z + TAM / 2 - OZ), h = ALTS[j * GN + i], d = DTR[j * GN + i], dl = Math.hypot(x - LAGO.x, z - LAGO.z), df = Math.hypot(x - FIM.x, z - FIM.z);
       pos.setY(k, h);
@@ -636,6 +637,7 @@ function montaMapa(n) {
       c.copy(G1).lerp(G2, n1); c.lerp(SECO, liso(0.62, 0.95, n2) * 0.45); c.lerp(ESC, liso(16, 30, d) * 0.5);
       t.copy(TERRA).lerp(TERRA2, n2); c.lerp(t, 1 - liso(1.1, 2.3 + n1 * 0.6, Math.min(d, Math.max(0, df - 4.5)))); // trilha com beira irregular e a clareira do fim
       c.lerp(AREIA, 1 - liso(LAGO.r - 0.2, LAGO.r + 1.2, dl));
+      if (SEC.length) { const q = j * GN + i, b = PKB[q]; c.lerp(ROCHA_C, PKR[q] * (0.55 + 0.3 * n2)); if (b > 0) c.lerp(AREIA, b * 0.8); else if (b < 0) c.lerp(FUNDO_C, -b * 0.85) } // ravina com pedra exposta, areia no riacho e terra escura no buraco
       c.convertSRGBToLinear(); cor[k * 3] = c.r; cor[k * 3 + 1] = c.g; cor[k * 3 + 2] = c.b }
     geo.setAttribute('color', new THREE.BufferAttribute(cor, 3)); geo.computeVertexNormals();
     const chao = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true })); chao.receiveShadow = true; MAPA.add(chao);
@@ -1088,7 +1090,7 @@ function anda(dx, dz) { // move a heroína sem entrar em árvore/pedra e sem sai
 // ---------------- parkour: pulo (2x = mortal), dash e escalada, com trechos de obstáculos na trilha ----------------
 // cada trecho é um desfiladeiro reto de 16 m com obstáculos que pedem as skills de movimento; no Manual o ouro do trecho vale 2x
 const PARKOUR = { 1: ['muro', 'fenda', 'colunas'] }; // por enquanto só a amostra no estágio 1
-const PK_NOME = { muro: 'Muros de pedra', fenda: 'Pedras do riacho', colunas: 'Colunas das ruínas' };
+const PK_NOME = { muro: 'Muros de pedra', fenda: 'Pedras do riacho', colunas: 'Colunas de pedra' };
 const PK_DICA = { muro: 'corra contra o muro pra subir', fenda: 'pule, mortal e dash pra cruzar', colunas: 'mortal pra subir e cruzar o buraco' };
 // u: ao longo do trecho (0 a 16 m), v: de lado. caixas: [u0, u1, altura, material, escala?, meia largura]; queda: [u0, u1, tipo] (água ou buraco: caiu, volta pro começo)
 // saltos: onde o automático pula [u, altura de onde pula, mortal?, dash?]
@@ -1112,31 +1114,70 @@ function placa(txt, sub) { // placa de madeira com o nome do trecho
   x.fillStyle = '#ffe9b0'; x.textAlign = 'center'; x.font = 'bold 50px system-ui,sans-serif'; x.fillText(txt, 256, 62); x.font = '600 28px system-ui,sans-serif'; x.fillStyle = '#ffd27a'; x.fillText(sub, 256, 104);
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return new THREE.MeshBasicMaterial({ map: t, side: THREE.DoubleSide, transparent: true });
 }
-function montaParkour() { // monta os trechos do estágio: paredes do desfiladeiro, obstáculos, água ou buraco com espinhos, faixas de começo e fim
+function pkTerreno(x, z, h, d) { // nos trechos o morro sobe dos dois lados (uma ravina) e o riacho e o buraco são cavados no chão
+  pkTerreno.r = 0; pkTerreno.b = 0;
+  for (const s of SEC) { const [u, v] = loc(s, x, z), av = Math.abs(v); if (u < -7 || u > s.L + 7 || av > 13 || d < av - 1.5) continue;
+    const ponta = liso(-7, -0.5, u) * (1 - liso(s.L + 0.5, s.L + 7, u)), lado = liso(PK_W + 0.3, PK_W + 2.3, av) * (1 - liso(8, 13, av)) * ponta;
+    h = Math.max(h, (3.4 + 1.4 * (ruido(x * 1.9, z * 1.9) * 0.5 + 0.5)) * lado); pkTerreno.r = Math.max(pkTerreno.r, liso(PK_W + 0.2, PK_W + 1.4, av) * ponta * (1 - liso(4.5, 7.5, av)));
+    const q = PK_FORMA[s.tipo].queda; if (!q || av > PK_W + 0.8) continue;
+    const f = liso(q[0] - 0.1, q[0] + 0.5, u) * (1 - liso(q[1] - 0.5, q[1] + 0.1, u)) * (1 - liso(PK_W, PK_W + 0.8, av));
+    if (f > 0) { h -= f * (q[2] === 'agua' ? 0.7 : 1.8); pkTerreno.b = q[2] === 'agua' ? f : -f } }
+  return h;
+}
+function rochaGeo(musgo, k) { // pedra irregular (icosaedro amassado com ruído), cada face com o seu tom de cinza e musgo verde por cima
+  const g = new THREE.IcosahedronGeometry(1, 2), p = g.attributes.position, a = ru(0, 9), b = ru(0, 9);
+  for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i), n = 1 + 0.2 * Math.sin(x * 2.9 + a) * Math.cos(z * 2.6 + b) + 0.12 * Math.sin(y * 4.7 + a * 2 + x * 1.8) + 0.07 * Math.cos(z * 7.1 + y * 5.3 + b);
+    p.setXYZ(i, x * n, Math.min(y * n, 0.72 + 0.06 * Math.sin(x * 5 + z * 4 + a)), z * n) } // topo meio achatado (dá pra pisar)
+  g.computeBoundingBox(); const bb = g.boundingBox, cor = new Float32Array(p.count * 3), c = new THREE.Color(), _a = new THREE.Vector3(), _b = new THREE.Vector3(), _n = new THREE.Vector3();
+  for (let i = 0; i < p.count; i++) p.setXYZ(i, (p.getX(i) - bb.min.x) / (bb.max.x - bb.min.x) - 0.5, (p.getY(i) - bb.min.y) / (bb.max.y - bb.min.y), (p.getZ(i) - bb.min.z) / (bb.max.z - bb.min.z) - 0.5); // cabe numa caixa de 1 x 1 x 1 com a base em 0
+  for (let f = 0; f < p.count; f += 3) {
+    _a.set(p.getX(f + 1) - p.getX(f), p.getY(f + 1) - p.getY(f), p.getZ(f + 1) - p.getZ(f)); _b.set(p.getX(f + 2) - p.getX(f), p.getY(f + 2) - p.getY(f), p.getZ(f + 2) - p.getZ(f)); _n.crossVectors(_a, _b).normalize();
+    const y = (p.getY(f) + p.getY(f + 1) + p.getY(f + 2)) / 3, t = rd();
+    c.set(t < 0.33 ? 0x8f887b : t < 0.66 ? 0x9d9688 : 0x7d776d).multiplyScalar(0.8 + 0.3 * y + ru(-0.06, 0.06));
+    if (musgo && _n.y > 0.55 - 0.25 * k) c.lerp(new THREE.Color(rd() < 0.5 ? 0x5f8a3e : 0x77a04a), Math.min(1, (_n.y - 0.3) * 1.6));
+    else if (y < 0.18) c.lerp(new THREE.Color(0x5a5244), 0.35); // base mais escura, suja de terra
+    c.convertSRGBToLinear(); for (let v = 0; v < 3; v++) cor.set([c.r, c.g, c.b], (f + v) * 3) }
+  g.setAttribute('color', new THREE.BufferAttribute(cor, 3)); g.computeVertexNormals(); return g;
+}
+function montaParkour() { // monta os trechos do estágio: pedras na beira da ravina, obstáculos de pedra, riacho ou buraco com pontas de pedra, placa de madeira na entrada
   SOL.length = 0; if (!SEC.length) return;
-  const mt = { rocha: [M(0x8a8174), M(0x9a9184), M(0x7a7266)], muro: M(0xbdb3a2), pedra: M(0x9c968c), coluna: M(0xdccfae), musgo: M(0x6f9a4a), buraco: M(0x1a120c), poste: M(0x7a4a2a),
-    agua: new THREE.MeshPhongMaterial({ color: new THREE.Color(0x4f9fc8).convertSRGBToLinear(), shininess: 90, specular: 0xffe0b0, transparent: true, opacity: 0.85 }),
-    ini: new THREE.MeshBasicMaterial({ color: 0xffd23a, transparent: true, opacity: 0.8 }), fim: new THREE.MeshBasicMaterial({ color: 0x5fd18a, transparent: true, opacity: 0.8 }) };
-  const caixa = (s, u0, u1, v0, v1, y0, y1, m, solida, climb) => {
-    const [x, z] = mundo(s, (u0 + u1) / 2, (v0 + v1) / 2), g = new THREE.Mesh(new THREE.BoxGeometry(v1 - v0, y1 - y0, u1 - u0), m);
-    g.position.set(x, (y0 + y1) / 2, z); g.rotation.y = Math.atan2(s.ux, s.uz); g.castShadow = !m.transparent; g.receiveShadow = true; MAPA.add(g);
-    if (solida) SOL.push({ x, z, ux: s.ux, uz: s.uz, hu: (u1 - u0) / 2, hv: (v1 - v0) / 2, top: y1, climb: !!climb }) };
+  const mRocha = new THREE.MeshLambertMaterial({ vertexColors: true }), mPau = M(0x6e4628);
+  const solida = (s, u0, u1, w, top, climb) => { const [x, z] = mundo(s, (u0 + u1) / 2, 0); SOL.push({ x, z, ux: s.ux, uz: s.uz, hu: (u1 - u0) / 2, hv: w, top, climb: !!climb }) };
+  const PEDRAS = [], _o = new THREE.Object3D(); // todas as pedras viram uma malha só (leve pro celular)
+  const poe = (g, x, y, z, sx, sy, sz, ry, rx = 0, rz = 0) => { _o.position.set(x, y, z); _o.scale.set(sx, sy, sz); _o.rotation.set(rx, ry, rz); _o.updateMatrix(); g.applyMatrix4(_o.matrix); PEDRAS.push(g) };
+  const rocha = (s, u, v, du, dv, yb, yt, musgo = 1, giro = 0) => { const [x, z] = mundo(s, u, v); poe(rochaGeo(musgo, 0), x, yb, z, dv, yt - yb, du, Math.atan2(s.ux, s.uz) + giro) }; // pedra irregular ocupando (du ao longo do trecho) x (dv de lado), de yb até yt
+  const colG = (() => { const g = new THREE.CylinderGeometry(0.42, 0.46, 1, 6).toNonIndexed(); g.translate(0, 0.5, 0); g.computeVertexNormals(); const p = g.attributes.position, n = g.attributes.normal, cor = new Float32Array(p.count * 3), c = new THREE.Color();
+    for (let i = 0; i < p.count; i++) { if (n.getY(i) > 0.5) c.set(0x7c8258); else c.set(0x6a645c).multiplyScalar(0.75 + 0.35 * p.getY(i)); c.convertSRGBToLinear(); cor.set([c.r, c.g, c.b], i * 3) }
+    g.setAttribute('color', new THREE.BufferAttribute(cor, 3)); return g })(), COL = [];
   for (const s of SEC) {
-    const f = PK_FORMA[s.tipo], y0 = s.y0 = altura(...mundo(s, s.L / 2, 0));
-    for (let u = -0.6; u < s.L + 0.6; u += 2) for (const l of [-1, 1]) { const w = ru(1.0, 1.6), h = ru(4.4, 5.6); // paredes de rocha dos dois lados
-      caixa(s, u, u + 2.1, l > 0 ? PK_W : -PK_W - w, l > 0 ? PK_W + w : -PK_W, y0 - 0.6, y0 + h, mt.rocha[(rd() * 3) | 0]) }
-    for (const [u0, u1, h, m, climb, hv] of f.caixas) { const w = hv || PK_W + 0.05;
-      caixa(s, u0, u1, -w, w, y0 - 0.6, y0 + h, mt[m], true, climb); if (m === 'muro') caixa(s, u0 - 0.04, u1 + 0.04, -w, w, y0 + h, y0 + h + 0.06, mt.musgo) }
-    if (f.queda) { const [q0, q1, tipo] = f.queda;
-      if (tipo === 'agua') caixa(s, q0, q1, -PK_W - 0.1, PK_W + 0.1, y0 - 0.4, y0 + 0.1, mt.agua);
-      else { caixa(s, q0, q1, -PK_W - 0.1, PK_W + 0.1, y0 - 0.4, y0 + 0.03, mt.buraco);
-        const L = []; for (let u = q0 + 0.3; u < q1 - 0.1; u += 0.55) for (let v = -PK_W + 0.3; v < PK_W - 0.1; v += 0.55) L.push(mundo(s, u + ru(-0.1, 0.1), v + ru(-0.1, 0.1)));
-        const es = new THREE.InstancedMesh(new THREE.ConeGeometry(0.1, 0.55, 5), M(0xa8aeb8), L.length); L.forEach(([x, z], i) => es.setMatrixAt(i, _mA.compose(_vA.set(x, y0 + 0.3, z), _qA.identity(), _sA.set(1, ru(0.7, 1.2), 1)))); es.castShadow = true; MAPA.add(es) } }
-    caixa(s, 0, 0.3, -PK_W, PK_W, y0, y0 + 0.03, mt.ini); caixa(s, s.L - 0.3, s.L, -PK_W, PK_W, y0, y0 + 0.03, mt.fim); // faixas de começo e de fim
-    for (const l of [-1, 1]) caixa(s, -0.2, 0.2, l * (PK_W - 0.1) - 0.2, l * (PK_W - 0.1) + 0.2, y0, y0 + 3.6, mt.poste); // portal com a placa
-    const pl = new THREE.Mesh(new THREE.PlaneGeometry(2 * PK_W, PK_W / 2), placa('🧗 ' + PK_NOME[s.tipo], PK_DICA[s.tipo])), [px, pz] = mundo(s, -0.25, 0);
-    pl.position.set(px, y0 + 3.2, pz); pl.rotation.y = Math.atan2(s.ux, s.uz) + Math.PI; MAPA.add(pl); s.placa = pl;
+    const f = PK_FORMA[s.tipo], y0 = s.y0 = altura(...mundo(s, -0.5, 0));
+    for (const l of [-1, 1]) for (let u = -3; u < s.L + 3; u += ru(1.2, 1.8)) { // pedras na beira da ravina, maiores no meio (nas pontas o morro desce)
+      const k = liso(-3, 1, u) * (1 - liso(s.L - 1, s.L + 3, u)), w = ru(1.3, 2.1), v = l * (PK_W + 0.35 + w * 0.42), [x, z] = mundo(s, u, v);
+      rocha(s, u, v, ru(1.4, 2.3), w, altura(x, z) - 0.8, y0 + (1.6 + 3 * k) * ru(0.75, 1.1), 1, ru(-0.3, 0.3)) }
+    for (const [u0, u1, top, m, climb, hv] of f.caixas) { const w = hv || PK_W + 0.05; solida(s, u0, u1, w, y0 + top, climb);
+      if (m === 'muro') { const n = 3; for (let i = 0; i < n; i++) { const vv = -PK_W + (i + 0.5) * (2 * PK_W / n); rocha(s, (u0 + u1) / 2 + ru(-0.05, 0.05), vv, u1 - u0 + 0.3, 2 * PK_W / n + 0.7, y0 - 0.6, y0 + top + ru(0, 0.07), 1, ru(-0.15, 0.15)) } }
+      else if (m === 'pedra') rocha(s, (u0 + u1) / 2, 0, u1 - u0 + 0.25, 2 * w + 0.2, y0 - 1.0, y0 + top + 0.03, 1, ru(-0.2, 0.2));
+      else for (let u = u0 + 0.35; u < u1; u += 0.62) for (let v = -PK_W + 0.3 + ((u * 1.6) % 0.36); v < PK_W; v += 0.7) COL.push([...mundo(s, u + ru(-0.1, 0.1), v + ru(-0.1, 0.1)), y0 - 2, y0 + top + ru(-0.1, 0.1)]) } // colunas de basalto
+    const q = f.queda;
+    if (q && q[2] === 'agua') { const g = new THREE.PlaneGeometry(2 * PK_W + 1.4, q[1] - q[0] + 0.6); g.rotateX(-Math.PI / 2);
+      const a = new THREE.Mesh(g, new THREE.MeshPhongMaterial({ color: new THREE.Color(0x4f9fc8).convertSRGBToLinear(), shininess: 90, specular: 0xffe0b0, transparent: true, opacity: 0.82 })), [x, z] = mundo(s, (q[0] + q[1]) / 2, 0);
+      a.position.set(x, y0 - 0.14, z); a.rotation.y = Math.atan2(s.ux, s.uz); MAPA.add(a) }
+    else if (q) for (let u = q[0] + 0.3; u < q[1] - 0.2; u += 0.5) for (let v = -PK_W + 0.3; v < PK_W - 0.2; v += 0.55) { if (rd() < 0.25) continue; // pontas de pedra no fundo do buraco
+      const [x, z] = mundo(s, u + ru(-0.12, 0.12), v + ru(-0.12, 0.12)), g = new THREE.ConeGeometry(1, 1, 5).toNonIndexed(), h = ru(0.5, 0.95), w = ru(0.1, 0.18); g.translate(0, 0.5, 0); g.computeVertexNormals();
+      const p = g.attributes.position, cor = new Float32Array(p.count * 3), c = new THREE.Color(); for (let i = 0; i < p.count; i++) { c.set(0x7d776d).multiplyScalar(0.7 + 0.4 * p.getY(i)).convertSRGBToLinear(); cor.set([c.r, c.g, c.b], i * 3) }
+      g.setAttribute('color', new THREE.BufferAttribute(cor, 3)); poe(g, x, altura(x, z) - 0.1, z, w, h, w, ru(0, 6), ru(-0.15, 0.15), ru(-0.15, 0.15)) }
+    { // placa de madeira na entrada, do lado esquerdo
+      const [px, pz] = mundo(s, -1.1, -PK_W + 0.45), ga = Math.atan2(s.ux, s.uz), poste = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.6, 0.12), mPau);
+      poste.position.set(px, altura(px, pz) + 0.8, pz); poste.castShadow = true; MAPA.add(poste);
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.375), placa('🧗 ' + PK_NOME[s.tipo], PK_DICA[s.tipo])); pl.position.set(px, altura(px, pz) + 1.4, pz); pl.rotation.y = ga + Math.PI + 0.35; MAPA.add(pl); s.placa = pl }
   }
+  if (PEDRAS.length) { const n = PEDRAS.reduce((a, g) => a + g.attributes.position.count, 0), pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), cor = new Float32Array(n * 3); let o = 0;
+    for (const g of PEDRAS) { pos.set(g.attributes.position.array, o * 3); nor.set(g.attributes.normal.array, o * 3); cor.set(g.attributes.color.array, o * 3); o += g.attributes.position.count; g.dispose() }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); g.setAttribute('color', new THREE.BufferAttribute(cor, 3));
+    const m = new THREE.Mesh(g, mRocha); m.castShadow = m.receiveShadow = true; MAPA.add(m) }
+  if (COL.length) { const im = new THREE.InstancedMesh(colG, mRocha, COL.length), c = new THREE.Color();
+    COL.forEach(([x, z, yb, yt], i) => { im.setMatrixAt(i, _mA.compose(_vA.set(x, yb, z), _qA.setFromAxisAngle(_Y, ru(0, 1.05)), _sA.set(ru(0.85, 1.15), yt - yb, ru(0.85, 1.15)))); im.setColorAt(i, c.setScalar(ru(0.82, 1.1))) });
+    im.castShadow = im.receiveShadow = true; MAPA.add(im) }
 }
 function chaoEm(x, z, y) { // altura do que está embaixo: o chão ou o topo de uma caixa que dá pra pisar (topo abaixo dos pés + degrau)
   let h = altura(x, z); chaoEm.terra = true;
