@@ -49,6 +49,8 @@
   #ctl .sk.R{background:radial-gradient(circle at 50% 35%,#36c49a,#0c5040 75%);border-color:rgba(190,255,230,.75)}
   #ctl button svg{width:60%;height:60%;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 1px #000c);pointer-events:none}
   #bAtk svg{width:56%;height:56%}
+  #bPulo,#bDash{background:radial-gradient(circle at 50% 35%,#3ab6d8,#0c4a62 75%);border:2px solid rgba(200,240,255,.75);box-shadow:0 2px 8px #0008,inset 0 2px 5px #fff3}
+  #bPulo{right:226px;bottom:14px;width:62px;height:62px} #bDash{right:232px;bottom:86px;width:50px;height:50px} /* movimento: à esquerda das skills */
   .ico{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,#d0742e,#5e2a0c 75%);border:1.5px solid rgba(255,225,190,.6)}
   .ico.M{background:radial-gradient(circle at 50% 35%,#5a74e8,#1a2370 75%);border-color:rgba(200,215,255,.6)} .ico.R{background:radial-gradient(circle at 50% 35%,#36c49a,#0c5040 75%);border-color:rgba(190,255,230,.6)}
   .ico svg{width:62%;height:62%;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
@@ -342,7 +344,7 @@
       <button id="bPocao" hidden>🧪 0</button>
     </div>
   </div>
-  <div id="ctl"><div id="stick"><div id="knob"></div></div><button id="bAtk" aria-label="Atacar"></button></div>
+  <div id="ctl"><div id="stick"><div id="knob"></div></div><button id="bAtk" aria-label="Atacar"></button><button id="bPulo" aria-label="Pular (no ar de novo: mortal)"></button><button id="bDash" aria-label="Dash"></button></div>
   <div id="barras"></div><div id="nums"></div><div id="dor"></div>
   <div id="faixa"></div>
   <button id="bComeca" hidden></button>
@@ -600,16 +602,20 @@ function montaMapa(n) {
   for (const o of [...MAPA.children]) { MAPA.remove(o); if (!o.userData.emprestado) { o.geometry.dispose(); if (o.material.dispose) o.material.dispose() } }
   OBST.length = 0; semente = 1000 + n * 7919;
   // trilha da fase: começa na origem e vai serpenteando, sem se afastar demais do centro
-  const comp = LEST[0] + LEST[1] * n + 22, passo = 8, pts = [[0, 0]]; let a = ru(0, 6.28), x = 0, z = 0;
+  const PK = PARKOUR[n] || [], comp = LEST[0] + LEST[1] * n + 22 + PK.length * 24, passo = 8, pts = [[0, 0]]; let a = ru(0, 6.28), x = 0, z = 0;
+  const nk = Math.ceil(comp * 1.04 / passo), KS = PK.map((_, i) => Math.round(nk * (0.22 + 0.6 * (i + 0.5) / PK.length))); // ponto da trilha onde começa cada trecho de parkour
   for (let k = 0; k * passo < comp * 1.04; k++) {
-    a += ru(-0.75, 0.75); const r = Math.hypot(x, z); if (r > 26) { const ac = Math.atan2(-x, -z); let d = ((ac - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI; a += d * 0.5 }
+    const vira = ru(-0.75, 0.75); if (KS.some(q => k >= q - 1 && k <= q + 2)) { x += Math.sin(a) * passo; z += Math.cos(a) * passo; pts.push([x, z]); continue } // o trecho de parkour é reto (16 m) e o caminho até ele também
+    a += vira; const r = Math.hypot(x, z); if (r > 26) { const ac = Math.atan2(-x, -z); let d = ((ac - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI; a += d * 0.5 }
     x += Math.sin(a) * passo; z += Math.cos(a) * passo; pts.push([x, z]) }
   const curva = new THREE.CatmullRomCurve3(pts.map(([x, z]) => new THREE.Vector3(x, 0, z)), false, 'catmullrom', 0.5);
   TP = curva.getSpacedPoints(NT - 1).map(v => [v.x, v.z]); TL = curva.getLength(); TPASSO = TL / (NT - 1); FIM = { x: TP[NT - 1][0], z: TP[NT - 1][1] };
+  SEC = KS.map((q, i) => { const [x0, z0] = pts[q], [x1, z1] = pts[q + 2], L = Math.hypot(x1 - x0, z1 - z0);
+    return { tipo: PK[i], x0, z0, ux: (x1 - x0) / L, uz: (z1 - z0) / L, L, i0: pertoTrilha(x0, z0)[0], i1: pertoTrilha(x1, z1)[0], feito: false, entrou: false, auto: false, quedas: 0 } });
   // grade de alturas cobrindo a trilha com folga
   let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const [x, z] of TP) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z) }
   OX = Math.round((x0 + x1) / 2); OZ = Math.round((z0 + z1) / 2); TAM = Math.ceil(Math.max(x1 - x0, z1 - z0) + 70); GN = TAM + 1; ALTS = new Float32Array(GN * GN); DTR = new Float32Array(GN * GN);
-  if (B.lago) { const i = (NT * 0.45) | 0, j = i + 6, tx = TP[j][0] - TP[i][0], tz = TP[j][1] - TP[i][1], l = Math.hypot(tx, tz) || 1, lado = rd() < 0.5 ? 1 : -1;
+  if (B.lago) { const i = (NT * (SEC.length ? 0.12 : 0.45)) | 0, j = i + 6, tx = TP[j][0] - TP[i][0], tz = TP[j][1] - TP[i][1], l = Math.hypot(tx, tz) || 1, lado = rd() < 0.5 ? 1 : -1;
     LAGO = { x: TP[i][0] - tz / l * lado * (B.lago + 4), z: TP[i][1] + tx / l * lado * (B.lago + 4), r: B.lago } } else LAGO = { x: 0, z: -9999, r: 0 };
   const T2 = TP.filter((_, i) => i % 3 === 0);
   for (let j = 0; j < GN; j++) for (let i = 0; i < GN; i++) {
@@ -646,14 +652,14 @@ function montaMapa(n) {
       '#include <begin_vertex>\n#ifdef USE_INSTANCING\n float fa = instanceMatrix[3].x * 0.35 + instanceMatrix[3].z * 0.27;\n#else\n float fa = 0.0;\n#endif\n transformed.x += sin(uV * 1.8 + fa) * 0.09 * position.y / 0.4; transformed.z += cos(uV * 1.3 + fa) * 0.05 * position.y / 0.4;') };
     mat.customProgramCacheKey = () => 'grama';
     const N = B.grama, im = new THREE.InstancedMesh(geo, mat, N), m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3(); let k2n = 0;
-    for (let k = 0; k < N * 4 && k2n < N; k++) { const x = OX + ru(-TAM / 2 + 4, TAM / 2 - 4), z = OZ + ru(-TAM / 2 + 4, TAM / 2 - 4), d = dTrilha(x, z); if (d < 1.6 || Math.hypot(x - LAGO.x, z - LAGO.z) < LAGO.r + 0.4 || d > 22) continue;
+    for (let k = 0; k < N * 4 && k2n < N; k++) { const x = OX + ru(-TAM / 2 + 4, TAM / 2 - 4), z = OZ + ru(-TAM / 2 + 4, TAM / 2 - 4), d = dTrilha(x, z); if (d < 1.6 || Math.hypot(x - LAGO.x, z - LAGO.z) < LAGO.r + 0.4 || d > 22 || naSecao(x, z, 1.5)) continue;
       const k2 = ru(0.7, 1.5) * (d < 3 ? 0.7 : 1); im.setMatrixAt(k2n++, m.compose(p.set(x, altura(x, z) - 0.02, z), q.setFromAxisAngle(_Y, ru(0, 6.28)), s.set(k2, k2 * ru(0.8, 1.3), k2))) }
     im.count = k2n; im.receiveShadow = true; MAPA.add(im) }
-  cenario(B);
+  cenario(B); montaParkour();
 }
 function cenario(B) {
   const rx = () => OX + ru(-TAM / 2 + 3, TAM / 2 - 3), rz = () => OZ + ru(-TAM / 2 + 3, TAM / 2 - 3);
-  const livre = (x, z, dmin, raio) => dTrilha(x, z) > dmin && Math.hypot(x - LAGO.x, z - LAGO.z) > LAGO.r + 1 && Math.hypot(x - FIM.x, z - FIM.z) > 8 && Math.hypot(x - TP[0][0], z - TP[0][1]) > 4 && !OBST.some(o => Math.hypot(o.x - x, o.z - z) < o.r + raio);
+  const livre = (x, z, dmin, raio) => dTrilha(x, z) > dmin && Math.hypot(x - LAGO.x, z - LAGO.z) > LAGO.r + 1 && Math.hypot(x - FIM.x, z - FIM.z) > 8 && Math.hypot(x - TP[0][0], z - TP[0][1]) > 4 && !OBST.some(o => Math.hypot(o.x - x, o.z - z) < o.r + raio) && !naSecao(x, z, 1.5);
   const arv = {}, nomes = []; for (const n in B.arv) { arv[n] = []; for (let i = 0; i < B.arv[n]; i++) nomes.push(n) }
   for (let k = 0; k < B.nArv * 12 && OBST.length < B.nArv; k++) { const x = rx(), z = rz(), d = dTrilha(x, z); if (d > 26 || !livre(x, z, B.aberto, 1.6)) continue;
     if (d < 9 && rd() < 0.55) continue; // mais aberto perto da trilha, mata fechada mais longe
@@ -674,7 +680,7 @@ function cenario(B) {
       if (perto) continue; pedras[pn[k % 3]].push([x, z, ru(0, 6.28), s]); OBST.push({ x, z, r: 0.9 * s }) } }
   for (const n in pedras) espalha(n, pedras[n], true);
   // pedrinhas na beira da trilha e em volta do lago
-  { const L = []; for (let i = 0; i < 70; i++) { const j = (rd() * NT) | 0, a = ru(0, 6.28), rr = ru(1.8, 2.8), x = TP[j][0] + Math.cos(a) * rr, z = TP[j][1] + Math.sin(a) * rr; if (dTrilha(x, z) > 1.5) L.push([x, z, ru(0, 6.28), ru(0.8, 1.6)]) }
+  { const L = []; for (let i = 0; i < 70; i++) { const j = (rd() * NT) | 0, a = ru(0, 6.28), rr = ru(1.8, 2.8), x = TP[j][0] + Math.cos(a) * rr, z = TP[j][1] + Math.sin(a) * rr; if (dTrilha(x, z) > 1.5 && !naSecao(x, z, 1.5)) L.push([x, z, ru(0, 6.28), ru(0.8, 1.6)]) }
     if (LAGO.r) for (let i = 0; i < 26; i++) { const a = i / 26 * 6.283 + ru(-0.1, 0.1), rr = LAGO.r + ru(0.3, 1.0); L.push([LAGO.x + Math.cos(a) * rr, LAGO.z + Math.sin(a) * rr, ru(0, 6.28), ru(1.2, 2.4)]) }
     espalha('Pebble_Round_2', L, false) }
   // flores em manchas, arbustos, samambaias, cogumelos e capim alto
@@ -700,7 +706,7 @@ const POLEN = (() => { const N = 70, pos = new Float32Array(N * 3), base = [];
 // ---------------- sons (Kenney, CC0, e sintetizados) ----------------
 const SOM = { ctx: null, buf: {}, vol: null, ruido: null };
 const SONS = { acerto: ['acerto1', 'acerto2', 'acerto3'], critico: ['critico1', 'critico2'], queda: ['queda'], metal: ['metal1', 'metal2'], dor: ['dor'],
-  vitoria: ['jingle_vitoria'] }; // sem as vozes de narrador
+  vitoria: ['jingle_vitoria'], pulo: ['pulo1', 'pulo2'], aterrissa: ['aterrissa'] }; // sem as vozes de narrador
 function somLiga() {
   if (SOM.ctx) return; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
   SOM.ctx = new AC(); SOM.vol = SOM.ctx.createGain(); SOM.vol.gain.value = 0.7; SOM.vol.connect(SOM.ctx.destination);
@@ -769,11 +775,12 @@ function estrondo(vol = 0.8) { // explosão grave
 }
 
 // ---------------- heroína ----------------
-const P = { x: 0, z: 0, y: 0, face: 0, si: 0, atk: null, desm: 0, comem: 0, hit: 0, en: 40, atkFila: false };
-const player = new THREE.Group(); sc.add(player);
+const P = { x: 0, z: 0, y: 0, face: 0, si: 0, atk: null, desm: 0, comem: 0, hit: 0, en: 40, atkFila: false,
+  modo: 'normal', vy: 0, chao: true, pulos: 0, flip: 0, flipT: 0.56, dash: 0, dashT: 0.28, dashCd: 0, land: 0, jt: 9, sp: 0, rm: null, parede: null }; // modo: normal, raiz (animação que move o corpo) ou parede (escalando)
+const player = new THREE.Group(), corpoH = new THREE.Group(); player.add(corpoH); sc.add(player); // corpoH: o corpo dela (inclina no dash)
 let R = null, mix = null, cur = null, pedido = 0, K = 0.64, ALT = 1.55, RUN = 2.9; const cache = {};
 const ONCE = new Set(['Esp1', 'Esp2', 'Esp3', 'Esp4', 'EspCombo', 'EspGiro', 'EspSalto', 'EspRaio', 'MagBola', 'MagChao', 'MagOnda', 'Sword_Dash_Full', 'Sword_A', 'Sword_B', 'Sword_C',
-  'Spell_Shoot', 'Hit_A', 'Death_A', 'Ranged_Magic_Raise', 'Ranged_Magic_Summon']);
+  'Spell_Shoot', 'Hit_A', 'Death_A', 'Ranged_Magic_Raise', 'Ranged_Magic_Summon', 'Flip_Front', 'Jump_Start', 'Jump_Run', 'Land_A', 'Land_B', 'Ledge_Up', 'Wall_Climb_Run', 'Wall_Run']);
 function tocar(n, rate = 1, fade = 0.15) {
   const a = R && R.act[n]; if (!a) return;
   if (cur !== n) {
@@ -790,9 +797,9 @@ function carregar(i) {
   const [arq, nome] = PERS[i] || PERS[0], meu = ++pedido; carga(R ? null : 'Carregando ' + nome + '…', 0);
   (cache[arq] || (cache[arq] = new Promise((ok, erro) => _gl.load('personagens/' + arq + '.glb', ok, e => { if (e.total && meu === pedido && !R) carga('Carregando ' + nome + '…', e.loaded / e.total) }, erro)))).then(gl => {
     if (meu !== pedido) return;
-    if (R) { player.remove(R.root); mix.stopAllAction() }
+    if (R) { corpoH.remove(R.root); mix.stopAllAction() }
     if (!gl.__A) gl.__A = VRMC.prep(gl);
-    const A = gl.__A, root = A.gl.scene; player.add(root); root.userData.vrm.J = null;
+    const A = gl.__A, root = A.gl.scene; corpoH.add(root); root.userData.vrm.J = null;
     root.traverse(o => { if (o.isMesh) { o.castShadow = !o.material.transparent; o.receiveShadow = true } });
     mix = new THREE.AnimationMixer(root); R = { root, act: {} }; cur = null;
     for (const c of A.an.animations) R.act[c.name] = mix.clipAction(c.clone());
@@ -1025,7 +1032,7 @@ const gvel = g => pausa > 0 ? 0 : (g.vel || 1) * velAtk();
 let comboN = 0, comboT = 9;
 function maisPerto(max = 1e9) { let m = null, md = max; for (const b of BICHOS) if (b.vivo) { const d = Math.hypot(b.x - P.x, b.z - P.z) - b.r; if (d < md) { md = d; m = b } } return m }
 function atacar(tipo = 'combo') {
-  if (!R || P.desm) return false;
+  if (!R || P.desm || P.modo !== 'normal' || P.dash > 0) return false;
   if (P.atk) { if (tipo === 'combo' && P.atk.tipo === 'combo' && P.atk.t > P.atk.g.dur * 0.25) P.atkFila = true; return false }
   let g;
   if (tipo === 'combo') { const C = R.act.Esp1 ? COMBO : COMBO_Q; comboN = comboT < 0.6 ? (comboN + 1) % C.length : 0; g = C[comboN] }
@@ -1074,7 +1081,197 @@ function ataquePasso(dt) {
 function anda(dx, dz) { // move a heroína sem entrar em árvore/pedra e sem sair do vale
   const nx = P.x + dx, nz = P.z + dz; if (dTrilha(nx, nz) > 11 && dTrilha(nx, nz) > dTrilha(P.x, P.z)) return;
   for (const o of OBST) { const ex = nx - o.x, ez = nz - o.z, m = o.r + 0.3; if (ex * ex + ez * ez < m * m && Math.hypot(P.x - o.x, P.z - o.z) >= m) return }
-  P.x = nx; P.z = nz;
+  if (SEC.length && bandaFora(nx, nz) && !bandaFora(P.x, P.z)) { if (dx && !bandaFora(P.x + dx, P.z)) P.x += dx; else if (dz && !bandaFora(P.x, P.z + dz)) P.z += dz; return } // parede do desfiladeiro: escorrega nela
+  P.x = nx; P.z = nz; if (SOL.length) empurraSol();
+}
+
+// ---------------- parkour: pulo (2x = mortal), dash e escalada, com trechos de obstáculos na trilha ----------------
+// cada trecho é um desfiladeiro reto de 16 m com obstáculos que pedem as skills de movimento; no Manual o ouro do trecho vale 2x
+const PARKOUR = { 1: ['muro', 'fenda', 'colunas'] }; // por enquanto só a amostra no estágio 1
+const PK_NOME = { muro: 'Muros de pedra', fenda: 'Pedras do riacho', colunas: 'Colunas das ruínas' };
+const PK_DICA = { muro: 'corra contra o muro pra subir', fenda: 'pule, mortal e dash pra cruzar', colunas: 'mortal pra subir e cruzar o buraco' };
+// u: ao longo do trecho (0 a 16 m), v: de lado. caixas: [u0, u1, altura, material, escala?, meia largura]; queda: [u0, u1, tipo] (água ou buraco: caiu, volta pro começo)
+// saltos: onde o automático pula [u, altura de onde pula, mortal?, dash?]
+const PK_FORMA = {
+  muro: { caixas: [[4, 4.8, 1.3, 'muro', true], [10, 11.2, 2.8, 'muro', true]], saltos: [] },
+  fenda: { caixas: [[3, 4.6, 0.5, 'pedra', false, 1.5], [7.8, 9.4, 0.5, 'pedra', false, 1.5]], queda: [1, 15, 'agua'], saltos: [[0.75, 0, 0, 0], [4.35, 0.5, 1, 0], [9.15, 0.5, 1, 1]] },
+  colunas: { caixas: [[3, 5, 1.0, 'coluna'], [5, 7, 2.6, 'coluna'], [10.4, 12.4, 2.6, 'coluna']], queda: [7, 10.4, 'buraco'], saltos: [[2.3, 0, 0, 0], [4.3, 1.0, 1, 0], [6.7, 2.6, 1, 0]] } };
+const PK_W = 2.6, PKK = 0.64, JUMPV = 7.2 * PKK, GRAV = 17 * PKK, RAD = 0.32, STEP = 0.45; // meia largura do corredor; pulo e gravidade iguais aos da vila (os mesmos pra todos os personagens, pros vãos darem certo)
+let SEC = []; const SOL = []; // trechos do estágio e as caixas sólidas deles (dá pra pisar em cima; as de muro dá pra escalar)
+const loc = (s, x, z) => { const dx = x - s.x0, dz = z - s.z0; return [dx * s.ux + dz * s.uz, -dx * s.uz + dz * s.ux] };
+const mundo = (s, u, v) => [s.x0 + s.ux * u - s.uz * v, s.z0 + s.uz * u + s.ux * v];
+const locB = (b, x, z) => { const dx = x - b.x, dz = z - b.z; return [dx * b.ux + dz * b.uz, -dx * b.uz + dz * b.ux] };
+function naSecao(x, z, f = 0) { for (const s of SEC) { const [u, v] = loc(s, x, z); if (u > -f && u < s.L + f && Math.abs(v) < PK_W + f) return s } return null }
+function bandaFora(x, z) { // atrás das paredes do desfiladeiro (não dá pra contornar o trecho por fora)
+  for (const s of SEC) { const [u, v] = loc(s, x, z), av = Math.abs(v); if (u > -0.2 && u < s.L + 0.2 && av > PK_W - RAD && av < 12 && dTrilha(x, z) > av - 1.2) return true }
+  return false;
+}
+function placa(txt, sub) { // placa de madeira com o nome do trecho
+  const c = document.createElement('canvas'); c.width = 512; c.height = 128; const x = c.getContext('2d');
+  x.fillStyle = '#6a4024'; x.fillRect(0, 0, 512, 128); x.strokeStyle = '#3a200e'; x.lineWidth = 10; x.strokeRect(5, 5, 502, 118);
+  x.fillStyle = '#ffe9b0'; x.textAlign = 'center'; x.font = 'bold 50px system-ui,sans-serif'; x.fillText(txt, 256, 62); x.font = '600 28px system-ui,sans-serif'; x.fillStyle = '#ffd27a'; x.fillText(sub, 256, 104);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return new THREE.MeshBasicMaterial({ map: t, side: THREE.DoubleSide, transparent: true });
+}
+function montaParkour() { // monta os trechos do estágio: paredes do desfiladeiro, obstáculos, água ou buraco com espinhos, faixas de começo e fim
+  SOL.length = 0; if (!SEC.length) return;
+  const mt = { rocha: [M(0x8a8174), M(0x9a9184), M(0x7a7266)], muro: M(0xbdb3a2), pedra: M(0x9c968c), coluna: M(0xdccfae), musgo: M(0x6f9a4a), buraco: M(0x1a120c), poste: M(0x7a4a2a),
+    agua: new THREE.MeshPhongMaterial({ color: new THREE.Color(0x4f9fc8).convertSRGBToLinear(), shininess: 90, specular: 0xffe0b0, transparent: true, opacity: 0.85 }),
+    ini: new THREE.MeshBasicMaterial({ color: 0xffd23a, transparent: true, opacity: 0.8 }), fim: new THREE.MeshBasicMaterial({ color: 0x5fd18a, transparent: true, opacity: 0.8 }) };
+  const caixa = (s, u0, u1, v0, v1, y0, y1, m, solida, climb) => {
+    const [x, z] = mundo(s, (u0 + u1) / 2, (v0 + v1) / 2), g = new THREE.Mesh(new THREE.BoxGeometry(v1 - v0, y1 - y0, u1 - u0), m);
+    g.position.set(x, (y0 + y1) / 2, z); g.rotation.y = Math.atan2(s.ux, s.uz); g.castShadow = !m.transparent; g.receiveShadow = true; MAPA.add(g);
+    if (solida) SOL.push({ x, z, ux: s.ux, uz: s.uz, hu: (u1 - u0) / 2, hv: (v1 - v0) / 2, top: y1, climb: !!climb }) };
+  for (const s of SEC) {
+    const f = PK_FORMA[s.tipo], y0 = s.y0 = altura(...mundo(s, s.L / 2, 0));
+    for (let u = -0.6; u < s.L + 0.6; u += 2) for (const l of [-1, 1]) { const w = ru(1.0, 1.6), h = ru(4.4, 5.6); // paredes de rocha dos dois lados
+      caixa(s, u, u + 2.1, l > 0 ? PK_W : -PK_W - w, l > 0 ? PK_W + w : -PK_W, y0 - 0.6, y0 + h, mt.rocha[(rd() * 3) | 0]) }
+    for (const [u0, u1, h, m, climb, hv] of f.caixas) { const w = hv || PK_W + 0.05;
+      caixa(s, u0, u1, -w, w, y0 - 0.6, y0 + h, mt[m], true, climb); if (m === 'muro') caixa(s, u0 - 0.04, u1 + 0.04, -w, w, y0 + h, y0 + h + 0.06, mt.musgo) }
+    if (f.queda) { const [q0, q1, tipo] = f.queda;
+      if (tipo === 'agua') caixa(s, q0, q1, -PK_W - 0.1, PK_W + 0.1, y0 - 0.4, y0 + 0.1, mt.agua);
+      else { caixa(s, q0, q1, -PK_W - 0.1, PK_W + 0.1, y0 - 0.4, y0 + 0.03, mt.buraco);
+        const L = []; for (let u = q0 + 0.3; u < q1 - 0.1; u += 0.55) for (let v = -PK_W + 0.3; v < PK_W - 0.1; v += 0.55) L.push(mundo(s, u + ru(-0.1, 0.1), v + ru(-0.1, 0.1)));
+        const es = new THREE.InstancedMesh(new THREE.ConeGeometry(0.1, 0.55, 5), M(0xa8aeb8), L.length); L.forEach(([x, z], i) => es.setMatrixAt(i, _mA.compose(_vA.set(x, y0 + 0.3, z), _qA.identity(), _sA.set(1, ru(0.7, 1.2), 1)))); es.castShadow = true; MAPA.add(es) } }
+    caixa(s, 0, 0.3, -PK_W, PK_W, y0, y0 + 0.03, mt.ini); caixa(s, s.L - 0.3, s.L, -PK_W, PK_W, y0, y0 + 0.03, mt.fim); // faixas de começo e de fim
+    for (const l of [-1, 1]) caixa(s, -0.2, 0.2, l * (PK_W - 0.1) - 0.2, l * (PK_W - 0.1) + 0.2, y0, y0 + 3.6, mt.poste); // portal com a placa
+    const pl = new THREE.Mesh(new THREE.PlaneGeometry(2 * PK_W, PK_W / 2), placa('🧗 ' + PK_NOME[s.tipo], PK_DICA[s.tipo])), [px, pz] = mundo(s, -0.25, 0);
+    pl.position.set(px, y0 + 3.2, pz); pl.rotation.y = Math.atan2(s.ux, s.uz) + Math.PI; MAPA.add(pl); s.placa = pl;
+  }
+}
+function chaoEm(x, z, y) { // altura do que está embaixo: o chão ou o topo de uma caixa que dá pra pisar (topo abaixo dos pés + degrau)
+  let h = altura(x, z); chaoEm.terra = true;
+  for (const b of SOL) { if (b.top > y + STEP || b.top <= h) continue; const [du, dv] = locB(b, x, z); if (Math.abs(du) < b.hu + RAD * 0.6 && Math.abs(dv) < b.hv + RAD * 0.6) { h = b.top; chaoEm.terra = false } }
+  return h;
+}
+function empurraSol() { // não atravessa caixa alta demais pra subir de degrau
+  for (const b of SOL) { if (b.top <= P.y + STEP) continue; const [du, dv] = locB(b, P.x, P.z), ou = b.hu + RAD - Math.abs(du), ov = b.hv + RAD - Math.abs(dv);
+    if (ou > 0 && ov > 0) { if (ou < ov) { const k = Math.sign(du) * ou; P.x += b.ux * k; P.z += b.uz * k } else { const k = Math.sign(dv) * ov; P.x -= b.uz * k; P.z += b.ux * k } } }
+}
+function pular() { // no chão pula; no ar, o segundo pulo é o mortal; na parede, se solta
+  if (!R || P.desm || LOB.on || F.parado) return; if (soltar()) return; if (P.modo !== 'normal' || P.dash > 0 || P.atk) return;
+  if (P.chao) { P.vy = JUMPV; P.chao = false; P.pulos = 1; P.jt = 0; P.land = 0; som('pulo', 0.5) }
+  else if (P.pulos < 2) { P.vy = Math.max(P.vy, JUMPV * 0.9); P.pulos = 2; P.flip = 0.001; P.flipT = R.act.Flip_Front ? dur('Flip_Front') : 0.56; vush(0.35, 500, 1500, 0.3) }
+}
+function dash() { // arrancada reta com rastro (no ar, 1 por pulo)
+  if (!R || P.desm || LOB.on || F.parado || P.modo !== 'normal' || P.dash > 0 || P.dashCd > 0 || P.atk || (!P.chao && P.dashAr)) return;
+  P.flip = 0; P.land = 0; P.ddx = Math.sin(P.face); P.ddz = Math.cos(P.face); P.dashT = 0.28; P.dashV = 14 * PKK; P.dash = P.dashT; P.dashCd = 0.35;
+  if (!P.chao) { P.vy = Math.max(0, P.vy); P.dashAr = true } rastroLiga(); vush(0.3, 600, 3000, 0.5);
+}
+// escalada: movimento de raiz (a animação sobe/avança o corpo pela curva gravada no .glb)
+function raiz(nome, depois, sy = 1, sz = 1, ate = 1) {
+  const c = curva(nome); if (!c || !R.act[nome]) return false;
+  P.rm = { nome, c, t: 0, dur: c.t[c.t.length - 1] * ate, x0: P.x, y0: P.y, z0: P.z, fx: Math.sin(P.face), fz: Math.cos(P.face), sy, sz, depois };
+  P.modo = 'raiz'; P.vy = 0; P.land = 0; P.dash = 0; P.flip = 0; cur = null; return true;
+}
+const velSubida = n => { const c = curva(n); return c ? Math.abs(c.y[c.y.length - 1]) / c.t[c.t.length - 1] : 0.5 };
+function normalDe(b) { const [du, dv] = locB(b, P.x, P.z); return Math.abs(du) / b.hu > Math.abs(dv) / b.hv ? [b.ux * Math.sign(du), b.uz * Math.sign(du), true] : [-b.uz * Math.sign(dv), b.ux * Math.sign(dv), false] }
+function grudar(b, nx, nz, eu) { P.modo = 'parede'; P.parede = { b, nx, nz, eu }; P.face = Math.atan2(-nx, -nz); P.vy = 0; P.dash = 0; P.flip = 0; P.land = 0; P.chao = false; cur = null }
+function fimRaiz() { P.modo = 'normal'; P.rm = null; P.chao = false; P.vy = 0; cur = null }
+function tentaEscalar(v) { // andando/correndo contra um muro: corre pela parede (baixo) ou gruda e escala (alto)
+  if (!v || P.dash > 0 || P.modo !== 'normal' || P.atk || !R.act.Wall_Up) return;
+  const fx = P.x + Math.sin(P.face) * (RAD + 0.12), fz = P.z + Math.cos(P.face) * (RAD + 0.12);
+  for (const b of SOL) {
+    if (!b.climb) continue; const [du, dv] = locB(b, fx, fz); if (Math.abs(du) > b.hu || Math.abs(dv) > b.hv) continue;
+    const h = b.top - P.y; if (h <= STEP) continue;
+    const [nx, nz, eu] = normalDe(b); if (Math.sin(P.face) * nx + Math.cos(P.face) * nz > -0.5) continue; // tem que estar de frente
+    P.face = Math.atan2(-nx, -nz); const correndo = P.chao && v > 2.2 * K;
+    if (correndo && curva('Wall_Run') && h <= 2.05 * K / 0.68) { // até ~2 m: corre pela parede e fica em pé em cima
+      const c = curva('Wall_Run'), [a0, a1] = locB(b, P.x, P.z), ate = Math.min(Math.abs(eu ? a0 : a1), RAD + 0.9);
+      raiz('Wall_Run', () => { fimRaiz(); P.y = Math.max(b.top, chaoEm(P.x, P.z, b.top + 1)); P.chao = true }, h / c.y[c.y.length - 1], ate / c.z[c.z.length - 1]); return }
+    if (correndo && curva('Wall_Climb_Run') && h > 2.05 * K / 0.68) { raiz('Wall_Climb_Run', () => { P.rm = null; grudar(b, nx, nz, eu) }, 1, 0.08, 0.28); return } // parede alta: sobe correndo uns passos e gruda
+    if (h > 1.0 * K / 0.68) { grudar(b, nx, nz, eu); return }
+  }
+}
+function passoEspecial(dt, ix, iy) {
+  if (P.modo === 'raiz') { const m = P.rm; m.t += dt; const [y, z] = naCurva(m.c, m.t);
+    P.x = m.x0 + m.fx * z * m.sz; P.y = m.y0 + y * m.sy; P.z = m.z0 + m.fz * z * m.sz; if (m.t >= m.dur) { const f = m.depois; P.rm = null; f() } return }
+  if (P.modo !== 'parede') return;
+  const sobe = -iy, lado = ix, { b, nx, nz, eu } = P.parede, v = velSubida('Wall_Up'); P.sobe = sobe; P.lado = lado; // joystick: pra cima sobe, pros lados anda de lado
+  P.y += (Math.abs(sobe) > 0.3 ? Math.sign(sobe) : 0) * v * dt;
+  if (Math.abs(lado) > 0.3) { P.x += nz * Math.sign(lado) * 0.55 * K / 0.68 * dt; P.z -= nx * Math.sign(lado) * 0.55 * K / 0.68 * dt }
+  let [du, dv] = locB(b, P.x, P.z); const lim = (a, m) => Math.max(-m, Math.min(m, a));
+  if (eu) { du = Math.sign(du) * (b.hu + RAD * 0.75); dv = lim(dv, Math.min(b.hv, PK_W) - 0.4) } else { dv = Math.sign(dv) * (b.hv + RAD * 0.75); du = lim(du, b.hu - 0.3) }
+  P.x = b.x + b.ux * du - b.uz * dv; P.z = b.z + b.uz * du + b.ux * dv;
+  const lc = curva('Ledge_Up');
+  if (lc && sobe > 0.3 && P.y >= b.top - lc.y[lc.y.length - 1]) { P.y = b.top - lc.y[lc.y.length - 1]; raiz('Ledge_Up', () => { fimRaiz(); P.y = Math.max(b.top, chaoEm(P.x, P.z, b.top + 1)); P.chao = true }); return }
+  if (sobe < -0.3 && P.y <= chaoEm(P.x + nx * 0.3, P.z + nz * 0.3, P.y) + 0.02) { P.modo = 'normal'; P.parede = null; cur = null }
+}
+function soltar() { // pular estando na parede: se solta pra trás
+  if (P.modo !== 'parede') return false; const { nx, nz } = P.parede;
+  P.modo = 'normal'; P.parede = null; P.x += nx * 0.35; P.z += nz * 0.35; P.face = Math.atan2(nx, nz); P.vy = JUMPV * 0.55; P.chao = false; P.pulos = 2; cur = null; return true;
+}
+function gravidade(dt) { // queda, pouso (no chão ou em cima das caixas) e o tempo do mortal
+  if (P.dash > 0) P.vy = 0; else P.vy -= GRAV * dt;
+  P.y += P.vy * dt; const g = chaoEm(P.x, P.z, P.y);
+  if (P.y <= g || (P.chao && P.vy <= 0 && P.y - g < 0.3)) { // pousou (ou continua grudada no chão, descendo morro)
+    if (!P.chao && P.vy < -3 * PKK) { P.landN = P.vy < -11 * PKK && R.act.Land_B ? 'Land_B' : 'Land_A'; P.land = R.act[P.landN] ? dur(P.landN) : 0 }
+    if (!P.chao && P.vy < -4 * PKK) som('aterrissa', Math.min(0.8, -P.vy / (20 * PKK)));
+    if (!P.chao) { P.pulos = 0; P.flip = 0; P.dashAr = false; P.autoS = null }
+    P.y = g; P.vy = 0; P.chao = true; P.naTerra = chaoEm.terra;
+  } else P.chao = false;
+  P.jt += dt; if (P.flip > 0) { P.flip += dt; if (P.flip > P.flipT) P.flip = 0 }
+  if (P.land > 0) { P.land -= dt; if (P.sp > 2.6 * K && P.land < dur(P.landN) - 0.15) P.land = 0 }
+}
+function autoParkour() { // no automático ela atravessa o trecho sozinha: pula, dá mortal, dash e escala nas horas certas
+  for (const s of SEC) {
+    const [u, v] = loc(s, P.x, P.z); if (u < -5 || u > s.L || Math.abs(v) > 6 || (u < -2.5 && maisPerto(7.5))) continue;
+    const [ax, az] = mundo(s, Math.max(u, -5) + 2.5, 0), tx = ax - P.x, tz = az - P.z, tl = Math.hypot(tx, tz) || 1;
+    if (P.modo === 'normal' && P.chao && !P.atk && P.dash <= 0) for (const [ut, yt, duplo, dsh] of PK_FORMA[s.tipo].saltos) if (u >= ut && u < ut + 0.6 && Math.abs(P.y - s.y0 - yt) < 0.25) { pular(); P.autoS = { duplo, dsh }; break }
+    if (!P.chao && P.autoS && P.modo === 'normal') { if (P.autoS.duplo && P.pulos === 1 && P.vy <= 0.4) pular(); else if (P.autoS.dsh && P.pulos === 2 && P.vy <= 0 && !P.dashAr) dash() }
+    return [tx / tl * RUN, tz / tl * RUN];
+  }
+  return null;
+}
+function secoesPasso() { // entrou, caiu, terminou: o progresso dos trechos do estágio
+  for (const s of SEC) if (s.placa) s.placa.material.opacity = Math.min(1, Math.max(0, (s.placa.position.distanceTo(cam.position) - 2.5) / 3)); // a placa some quando a câmera passa por ela
+  if (LOB.on || F.fim || F.perdeu || P.desm) return;
+  for (const s of SEC) {
+    const [u, v] = loc(s, P.x, P.z), dentro = u > 0 && u < s.L && Math.abs(v) < PK_W + 0.5;
+    if (S.auto && !s.avisou && !s.feito && u > -14 && u < -5 && Math.abs(v) < 8) { s.avisou = true; aviso('🧗 Parkour à frente! No 🕹 Manual o ouro do trecho vale 2x.', 3.2) }
+    if (s.feito) continue;
+    if (dentro) { if (!s.entrou) { s.entrou = true; if (!S.auto) aviso('🧗 ' + PK_NOME[s.tipo] + ': ' + PK_DICA[s.tipo], 3) } if (S.auto) s.auto = true }
+    const q = PK_FORMA[s.tipo].queda;
+    if (q && dentro && P.chao && P.naTerra && P.modo === 'normal' && u > q[0] && u < q[1]) { caiuSecao(s); return }
+    if (s.entrou && u >= s.L - 0.3 && Math.abs(v) < PK_W + 0.5) concluiSecao(s);
+  }
+}
+function vaiPara(s, u) { // coloca a heroína num ponto do trecho, de pé, olhando pra frente
+  const [x, z] = mundo(s, u, 0); P.x = x; P.z = z; P.y = chaoEm(x, z, 99); P.vy = 0; P.chao = true; P.modo = 'normal'; P.rm = null; P.parede = null; P.dash = 0; P.flip = 0; P.land = 0; P.pulos = 0; P.autoS = null; P.atk = null;
+  P.face = Math.atan2(s.ux, s.uz); P.si = ultimoSi = pertoTrilha(x, z)[0]; cur = null;
+}
+function caiuSecao(s) {
+  const agua = PK_FORMA[s.tipo].queda[2] === 'agua'; s.quedas++;
+  faiscas(P.x, P.y + 0.15, P.z, 18, agua ? 0x9ad8ff : 0xb08a60); som('queda', 0.5, agua ? 1.3 : 0.9); numero(agua ? 'splash!' : 'caiu!', P.x, P.y + ALT, P.z, 'dor');
+  if (S.auto && s.quedas >= 3) { vaiPara(s, s.L + 0.2); concluiSecao(s); return } // o automático nunca fica preso
+  vaiPara(s, 0.4); camAlvo.set(P.x, P.y, P.z);
+}
+function concluiSecao(s) {
+  s.feito = true; F.pk = (F.pk || 0) + 1; const x = s.auto ? 1 : 2, o = (6 + 2 * F.n) * x; S.ouro += o; S.pkM = (S.pkM || 0) + (s.auto ? 0 : 1);
+  numero('+' + o + ' 🪙', P.x, P.y + ALT + 0.5, P.z, 'ouro'); plim(7); brilho(s.auto ? 0xffe066 : 0x7dffd8);
+  faixa(s.auto ? 'Parkour concluído!' : 'Parkour no manual! 2x', PK_NOME[s.tipo] + ' · +' + o + ' 🪙' + (s.auto ? ' (no Manual seria ' + o * 2 + ')' : ''), 2.2); salva(); hud();
+}
+function pkEmpurraBicho(b) { // os monstros não entram nos trechos de parkour (esperam na entrada ou na saída)
+  for (const s of SEC) { const [u, v] = loc(s, b.x, b.z); if (u < -0.8 || u > s.L + 0.8 || Math.abs(v) > 12 || dTrilha(b.x, b.z) < Math.abs(v) - 1.2) continue;
+    [b.x, b.z] = mundo(s, u < s.L / 2 ? -0.8 : s.L + 0.8, v) }
+}
+// rastro do dash: faixa azul-clara suave (forte no meio do corpo, some em cima, embaixo e no fim)
+const RN = 28, RV = 5, rastroPts = [], rastroGeo = new THREE.BufferGeometry();
+rastroGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(RN * RV * 3), 3)); rastroGeo.setAttribute('a', new THREE.BufferAttribute(new Float32Array(RN * RV), 1));
+{ const idx = []; for (let i = 0; i < RN - 1; i++) for (let j = 0; j < RV - 1; j++) { const k = i * RV + j; idx.push(k, k + 1, k + RV, k + 1, k + RV + 1, k + RV) } rastroGeo.setIndex(idx) }
+const rastro = new THREE.Mesh(rastroGeo, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+  vertexShader: 'attribute float a; varying float va; void main(){ va = a; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: 'varying float va; void main(){ gl_FragColor = vec4(0.45, 0.78, 1.0, va); }' }));
+rastro.frustumCulled = false; rastro.visible = false; sc.add(rastro);
+const PERFIL = [0, 0.55, 1, 0.7, 0]; // de baixo pra cima
+function rastroLiga() { rastroPts.length = 0; rastro.visible = true }
+function rastroPasso(dt) {
+  if (!rastro.visible) return; if (P.dash > 0) rastroPts.unshift({ x: P.x, y: P.y, z: P.z, t: 0 });
+  for (const p of rastroPts) p.t += dt; while (rastroPts.length > RN || (rastroPts.length && rastroPts[rastroPts.length - 1].t > 0.3)) rastroPts.pop();
+  if (!rastroPts.length) { rastro.visible = false; return }
+  const pos = rastroGeo.attributes.position.array, al = rastroGeo.attributes.a.array;
+  for (let i = 0; i < RN; i++) { const p = rastroPts[Math.min(i, rastroPts.length - 1)], f = (i < rastroPts.length ? Math.max(0, 1 - p.t / 0.3) : 0) * (1 - i / RN) * 0.42;
+    for (let j = 0; j < RV; j++) { const k = i * RV + j; pos[k * 3] = p.x; pos[k * 3 + 1] = p.y + ALT * (0.12 + 0.78 * j / (RV - 1)); pos[k * 3 + 2] = p.z; al[k] = f * PERFIL[j] } }
+  rastroGeo.attributes.position.needsUpdate = rastroGeo.attributes.a.needsUpdate = true;
 }
 
 // ---------------- monstros (Ultimate Monsters da Quaternius, CC0) espalhados pela trilha ----------------
@@ -1127,13 +1324,17 @@ function comecaEstagio(n, quieto, masm) { // quieto: só monta a fase e deixa el
   for (const b of [...BICHOS]) some(b);
   montaMapa(n); const ini = 4, L = (NT - 3 - ini) * TPASSO; // o chefe espera na clareira do fim
   masm = !!masm && !quieto; Object.assign(F, { n, ini, L, G: 4 + Math.ceil(n / 3) + (masm ? 2 : 0), prox: 0, feitos: 0, prog: 0, fim: false, perdeu: false, t: 0, masm });
-  F.pos = []; for (let g = 0; g < F.G; g++) F.pos.push(14 + (L - 14) * (g / (F.G - 1)));
+  // os grupos ficam espalhados pela trilha, longe dos trechos de parkour (7 m antes e depois de cada um)
+  const Z = SEC.map(s => [(s.i0 - ini) * TPASSO - 7, (s.i1 - ini) * TPASSO + 7]), livreL = L - 14 - Z.reduce((a, [p, q]) => a + q - p, 0);
+  F.pos = []; for (let g = 0; g < F.G; g++) { let d = 14 + livreL * (g / (F.G - 1)); for (const [p, q] of Z) if (d >= p) d += q - p; F.pos.push(g === F.G - 1 ? L : d) }
+  F.pk = 0; F.siMax = ini;
   P.x = TP[F.ini][0]; P.z = TP[F.ini][1]; P.y = altura(P.x, P.z); P.si = ultimoSi = F.ini; P.atk = null;
+  Object.assign(P, { modo: 'normal', rm: null, parede: null, vy: 0, chao: true, pulos: 0, flip: 0, dash: 0, land: 0, autoS: null }); corpoH.rotation.x = 0;
   const j = F.ini + 20; P.face = Math.atan2(TP[j][0] - P.x, TP[j][1] - P.z); yaw = P.face + Math.PI; camAlvo.set(P.x, P.y, P.z);
   ambiente(masm ? 4 : EST[n - 1][1]); F.parado = !!quieto; F.cena = (F.cena || 0) + 1; if (quieto) { F.fim = true; corEspada(); hud(); return }
   F.def = S.armadT > 0; if (F.def) { S.armadT--; salva() } // cada estágio jogado gasta 1 da armadura
   F.enc = S.enc && S.enc.n > 0 ? S.enc.k : null; if (F.enc) { S.enc.n--; salva() } corEspada(); // e 1 do encanto do ferreiro
-  faixa(masm ? '🏰 Masmorra' : 'Estágio ' + n, (masm ? 'do fim de semana · monstros mais fortes' : EST[n - 1][0] + (n === N_EST ? ' · chefe final' : '')) + (F.def ? ' · 🛡' : '') + (F.enc ? ' · ' + FORJA[F.enc].ic : ''), 2.2); hud();
+  faixa(masm ? '🏰 Masmorra' : 'Estágio ' + n, (masm ? 'do fim de semana · monstros mais fortes' : EST[n - 1][0] + (n === N_EST ? ' · chefe final' : '') + (SEC.length ? ' · 🧗 ' + SEC.length + ' trechos de parkour' : '')) + (F.def ? ' · 🛡' : '') + (F.enc ? ' · ' + FORJA[F.enc].ic : ''), 2.2); hud();
 }
 function venceEstagio() {
   F.fim = true; S.venc = (S.venc || 0) + 1;
@@ -1158,7 +1359,7 @@ function bichosPasso(dt) {
     const perto = 0.95 * K / 0.64 * (b.chefe ? 1.3 : 1); let mv = 0;
     if (b.est === 'leva') { if (b.t > 0.35) b.est = 'anda' }
     else if (b.est === 'ataca') {
-      if (!b.bateu && b.t > 0.38) { b.bateu = true; if (d < perto + 0.5 && !P.desm) levaDano(b.dano, b) }
+      if (!b.bateu && b.t > 0.38) { b.bateu = true; if (d < perto + 0.5 && !P.desm && Math.abs(P.y - b.y) < 1.2) levaDano(b.dano, b) }
       if (b.t > 0.9) { b.est = 'anda'; b.cd = (b.chefe ? 1.4 : 1.8) + Math.random() * 0.5 }
     } else if (P.desm || (!b.bravo && d > 7.5)) { b.anima('Idle'); b.est = 'parado'; if (P.desm) b.bravo = false }
     else if (d > perto) { if (!b.avisou) { b.avisou = true; if (b.chefe) faixa('Chefe!', NOME_CHEFE[b.tipo] + (F.n === N_EST ? ' · o chefe final' : ''), 2) } b.est = 'anda'; mv = b.chefe ? 1.3 : 1.7; b.face = Math.atan2(dx, dz); b.anima('Walk'); b.bravo = true }
@@ -1167,7 +1368,7 @@ function bichosPasso(dt) {
     if (pausa > 0) mv = 0;
     b.x += (Math.sin(b.face) * mv + b.kx) * dt; b.z += (Math.cos(b.face) * mv + b.kz) * dt; b.kx *= Math.pow(0.02, dt); b.kz *= Math.pow(0.02, dt);
     for (const o of BICHOS) if (o !== b && o.vivo) { const ex = b.x - o.x, ez = b.z - o.z, e = Math.hypot(ex, ez), m = b.r + o.r; if (e < m && e > 1e-4) { b.x += ex / e * (m - e) * 0.5; b.z += ez / e * (m - e) * 0.5 } }
-    b.y = altura(b.x, b.z); b.g.position.set(b.x, b.y, b.z); b.g.rotation.y = b.face;
+    if (SEC.length) pkEmpurraBicho(b); b.y = altura(b.x, b.z); b.g.position.set(b.x, b.y, b.z); b.g.rotation.y = b.face;
   }
 }
 function levaDano(v, b) {
@@ -1178,7 +1379,7 @@ function levaDano(v, b) {
   if (S.hp <= 0) desmaia(); else if (!P.atk && b) { P.hit = 0.3; tocar('Hit_A', 1.3, 0.08) }
 }
 function desmaia() {
-  P.desm = 4.5; P.atk = null; F.perdeu = true; FXC.vivo = false; tocar('Death_A', 1, 0.1);
+  P.desm = 4.5; P.atk = null; F.perdeu = true; Object.assign(P, { modo: 'normal', rm: null, parede: null, dash: 0, flip: 0 }); FXC.vivo = false; tocar('Death_A', 1, 0.1);
   faixa('Derrota…', 'faça suas tarefas pra ficar mais forte e tente de novo', 2.8); salva(); hud();
 }
 function levanta() {
@@ -1202,12 +1403,14 @@ cv.addEventListener('pointermove', e => {
 });
 const solta = e => { if (e.pointerId === stick.id) { stick.id = null; stick.dx = stick.dy = 0; knob.style.transform = ''; stickEl.style.left = '16px'; stickEl.style.top = ''; stickEl.style.bottom = '16px' } if (arrasta && e.pointerId === arrasta.id) arrasta = null };
 cv.addEventListener('pointerup', solta); cv.addEventListener('pointercancel', solta);
-const tecla = new Set(); addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; tecla.add(e.key.toLowerCase()); if (e.key === 'j') atacar('combo') }); addEventListener('keyup', e => tecla.delete(e.key.toLowerCase()));
+const tecla = new Set(); addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; tecla.add(e.key.toLowerCase()); if (e.key === 'j') atacar('combo'); if (e.key === ' ') { e.preventDefault(); pular() } if (e.key === 'k') dash() }); addEventListener('keyup', e => tecla.delete(e.key.toLowerCase()));
 const toque = (b, f) => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); somLiga(); f() });
-toque(document.getElementById('bAtk'), () => atacar('combo'));
+toque(document.getElementById('bAtk'), () => atacar('combo')); toque(document.getElementById('bPulo'), pular); toque(document.getElementById('bDash'), dash);
 toque(document.getElementById('bModo'), () => { S.auto = !S.auto; salva(); hud(); aviso(S.auto ? 'Automático: o herói segue a trilha e luta sozinho.' : 'Manual: joystick à esquerda, Atacar e as skills à direita.') });
 // ícones das skills (desenhados em SVG): o mesmo símbolo no botão e na lista da aba Herói
 const ICO = {
+  pulo: '<path d="M12 20V7M7 11.5L12 6.5l5 5"/><path d="M5 3.5c2-1.5 4.5-1.5 7 0s5 1.5 7 0"/>',
+  dash: '<path d="M9 5.5l7 6.5-7 6.5M14 5.5l7 6.5-7 6.5"/><path d="M2 9h4M3 15h3"/>',
   atk: '<path d="M20 4L9.5 14.5M20 4h-4.5M20 4v4.5"/><path d="M6.5 11.5l6 6M9.5 14.5L4 20"/>',
   rola: '<path d="M18.5 12.5a6.5 6.5 0 1 1-1.9-5.1"/><path d="M17.5 3.5v4h-4"/><path d="M3 21h6M2 17.5h3"/>',
   investida: '<path d="M21 5l-8.5 8.5M21 5h-3.5M21 5v3.5M10 11l3.5 3.5M11.8 12.8L8 16.6"/><path d="M2 9h6M3 13h4M2 17h3.5"/>',
@@ -1219,7 +1422,7 @@ const ICO = {
   magchao: '<path d="M12 2.5l1.9 5.2 5.1-2.3-2.3 5.1 5.2 1.9-5.2 1.9 2.3 5.1-5.1-2.3-1.9 5.2-1.9-5.2-5.1 2.3 2.3-5.1L2.5 12.4l5.2-1.9-2.3-5.1 5.1 2.3z" fill="#fff" fill-opacity=".2"/>',
   magonda: '<path d="M2 7.5c2.5-3.5 5-3.5 7.5 0s5 3.5 7.5 0 3.5-2 5-2"/><path d="M2 12.5c2.5-3.5 5-3.5 7.5 0s5 3.5 7.5 0 3.5-2 5-2"/><path d="M2 17.5c2.5-3.5 5-3.5 7.5 0s5 3.5 7.5 0 3.5-2 5-2"/>' };
 const icone = k => '<svg viewBox="0 0 24 24" aria-hidden="true">' + (ICO[k] || ICO.atk) + '</svg>';
-document.getElementById('bAtk').innerHTML = icone('atk');
+document.getElementById('bAtk').innerHTML = icone('atk'); document.getElementById('bPulo').innerHTML = icone('pulo'); document.getElementById('bDash').innerHTML = icone('dash');
 // botões das skills liberadas, em dois arcos em volta do Atacar (até 4 no de dentro, o resto no de fora)
 function botoesSkill() {
   const ctl = document.getElementById('ctl'); ctl.querySelectorAll('.sk').forEach(b => b.remove());
@@ -1254,35 +1457,53 @@ function heroiPasso(dt) {
   P.en = Math.min(enMax(), P.en + enRegen() * dt);
   if (P.desm) { P.desm -= dt; if (P.desm <= 0) levanta(); return }
   if (P.hit > 0) P.hit -= dt;
-  let mx = 0, mz = 0;
+  P.dashCd = Math.max(0, (P.dashCd || 0) - dt);
+  let mx = 0, mz = 0, ix = 0, iy = 0;
   if (!S.auto) {
-    let ix = stick.dx, iy = stick.dy;
+    ix = stick.dx; iy = stick.dy;
     if (tecla.has('a')) ix -= 1; if (tecla.has('d')) ix += 1; if (tecla.has('w')) iy -= 1; if (tecla.has('s')) iy += 1;
     const l = Math.hypot(ix, iy); if (l > 0.12) { const k = Math.min(1, l), fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
       mx = (rx * ix - fx * iy) / l * k * RUN; mz = (rz * ix - fz * iy) / l * k * RUN }
   } else if (!F.fim && !F.perdeu) {
-    const alvo = maisPerto(F.prox >= F.G && F.prog > F.L - 4 ? 40 : 7.5);
+    const ap = autoParkour();
+    if (ap) { [mx, mz] = ap; iy = -1 } // no trecho de parkour: corre pela linha do meio (e na parede, sobe)
+    else { const alvo = maisPerto(F.prox >= F.G && F.prog > F.L - 4 ? 40 : 7.5);
     if (alvo) { const dx = alvo.x - P.x, dz = alvo.z - P.z, dc = Math.hypot(dx, dz) || 1, d = dc - alvo.r, alc = 0.9 * K / 0.64;
       if (!P.atk) { const tiro = d > 2.5 && d < 8 && liberada('magbola') && CD.magbola <= 0 && P.en >= SKILLS.magbola.en;
         if (d > alc && !tiro) { mx = dx / dc * RUN; mz = dz / dc * RUN } else { P.face = Math.atan2(dx, dz); autoLuta(alvo, d) } } }
     else { // segue a trilha, no passo de quem está explorando
-      const alvoI = Math.min(NT - 1, P.si + Math.round(2.5 / TPASSO)), tx = TP[alvoI][0] - P.x, tz = TP[alvoI][1] - P.z, tl = Math.hypot(tx, tz) || 1; if (tl > 0.6) { mx = tx / tl * RUN * 0.62; mz = tz / tl * RUN * 0.62 } }
+      const alvoI = Math.min(NT - 1, P.si + Math.round(2.5 / TPASSO)), tx = TP[alvoI][0] - P.x, tz = TP[alvoI][1] - P.z, tl = Math.hypot(tx, tz) || 1; if (tl > 0.6) { mx = tx / tl * RUN * 0.62; mz = tz / tl * RUN * 0.62 } } }
   }
   if (LOB.on) { mx = 0; mz = 0 } // no acampamento ela fica no palco
   if (P.atk) { mx *= 0.1; mz *= 0.1 }
-  const v = Math.hypot(mx, mz);
-  if (v > 0.05) { anda(mx * dt, mz * dt); if (!P.atk) { const nv = Math.atan2(mx, mz); let d = ((nv - P.face + Math.PI * 3) % (Math.PI * 2)) - Math.PI; P.face += d * Math.min(1, dt * 10) } }
-  for (const b of BICHOS) if (b.vivo) { const ex = P.x - b.x, ez = P.z - b.z, e = Math.hypot(ex, ez), m = b.r + 0.3; if (e < m && e > 1e-4) anda(ex / e * (m - e), ez / e * (m - e)) }
+  const v = Math.hypot(mx, mz); P.sp = v;
+  if (P.modo !== 'normal') passoEspecial(dt, ix, iy); // escalando (ou no movimento de raiz da escalada)
+  else {
+    if (P.dash > 0) { const x = 1 - P.dash / P.dashT, f = 1.6 * (1 - x) ** 0.7 + 0.15; P.dash -= dt; anda(P.ddx * P.dashV * f * dt, P.ddz * P.dashV * f * dt) }
+    else if (v > 0.05) { anda(mx * dt, mz * dt); if (!P.atk) { const nv = Math.atan2(mx, mz); let d = ((nv - P.face + Math.PI * 3) % (Math.PI * 2)) - Math.PI; P.face += d * Math.min(1, dt * 10) } }
+    for (const b of BICHOS) if (b.vivo && Math.abs(P.y - b.y) < 1.2) { const ex = P.x - b.x, ez = P.z - b.z, e = Math.hypot(ex, ez), m = b.r + 0.3; if (e < m && e > 1e-4) anda(ex / e * (m - e), ez / e * (m - e)) }
+    if (!LOB.on) tentaEscalar(v);
+  }
   ataquePasso(dt);
-  P.y = LOB.on ? LOB.y : altura(P.x, P.z);
-  // anda na trilha: conta a distância (só pra frente) e mantém monstros à frente
+  if (LOB.on) { P.y = LOB.y; P.vy = 0; P.chao = true } else if (P.modo === 'normal') gravidade(dt);
+  // anda na trilha: conta a distância (só pra frente, sem contar de novo o que já andou) e mantém monstros à frente
   const [si] = pertoTrilha(P.x, P.z, P.si, 120); let ds = si - ultimoSi; if (ds < -NT / 2) ds += NT; if (ds > NT / 2) ds -= NT;
-  if (ds > 0 && ds < 40) { S.dist += ds * TPASSO; F.prog += ds * TPASSO }
+  if (ds > 0 && ds < 40) { S.dist += ds * TPASSO; if (si > F.siMax) { F.prog += (si - Math.max(F.siMax, ultimoSi)) * TPASSO; F.siMax = si } }
   F.t += dt;
-  P.si = ultimoSi = si; manteGrupos();
-  if (P.atk) tocar(P.atk.g.a, gvel(P.atk.g), 0.06);
-  else if (!(P.hit > 0) && !(P.comem > 0)) { if (v > 0.3) tocar(v > RUN * 0.55 ? 'Running_A' : 'Walking_A', v > RUN * 0.55 ? v / RUN : 1); else tocar(BICHOS.some(b => b.vivo && b.bravo) && R.act.Sword_Idle ? 'Sword_Idle' : 'Idle_A', 1) }
+  P.si = ultimoSi = si; manteGrupos(); secoesPasso();
+  animaHeroi(v); rastroPasso(dt);
   if (P.comem > 0) P.comem -= dt;
+}
+function animaHeroi(v) { // qual animação toca agora (escalada, golpe, mortal, dash, no ar, pouso, andar)
+  corpoH.rotation.x = P.dash > 0 ? 0.42 * Math.sin(Math.PI * Math.min(1, (1 - P.dash / P.dashT) * 1.2)) : 0; // inclina pra frente no dash
+  if (P.modo === 'raiz') return tocar(P.rm.nome, 1, 0.1);
+  if (P.modo === 'parede') { const s = P.sobe || 0, l = Math.abs(P.lado || 0) > 0.3; return tocar(s > 0.3 || l ? 'Wall_Up' : s < -0.3 ? 'Wall_Down' : cur === 'Wall_Down' ? 'Wall_Down' : 'Wall_Up', Math.abs(s) > 0.3 ? 1 : l ? 0.6 : 0, 0.2) }
+  if (P.atk) return tocar(P.atk.g.a, gvel(P.atk.g), 0.06);
+  if (P.flip > 0 && R.act.Flip_Front) return tocar('Flip_Front', 1, 0.08);
+  if (P.dash > 0) return tocar('Running_A', 1.9, 0.05);
+  if (!P.chao && !LOB.on) return P.pulos === 1 && P.vy > 0 && P.jt < 0.45 && R.act.Jump_Start ? tocar(v > 2.6 * K && R.act.Jump_Run ? 'Jump_Run' : 'Jump_Start', 1, 0.08) : tocar('Fall_Idle', 1, 0.25);
+  if (P.land > 0 && P.landN && R.act[P.landN]) return tocar(P.landN, 1, 0.06);
+  if (!(P.hit > 0) && !(P.comem > 0)) { if (v > 0.3) tocar(v > RUN * 0.55 ? 'Running_A' : 'Walking_A', v > RUN * 0.55 ? v / RUN : 1); else tocar(BICHOS.some(b => b.vivo && b.bravo) && R.act.Sword_Idle ? 'Sword_Idle' : 'Idle_A', 1) }
 }
 
 // ---------------- números, barras e efeitos de tarefa ----------------
@@ -1585,7 +1806,7 @@ function infoMapa() { // a barra de baixo do mapa: qual estágio, se dá pra ent
   const n = selN, i = mapaEl.querySelector('.info .txt'), pode = podeJogar(n), volta = emLuta() && n === F.n && !F.masm, np = (S.inv.pocao || 0) + (S.inv.pocaoG || 0);
   i.textContent = 'Estágio ' + n + ' · ' + EST[n - 1][0];
   i.append(Object.assign(document.createElement('small'), { textContent: volta ? 'Você está no meio deste estágio.' : !pode ? '🔒 Precisa nível ' + nvSugerido(n) + ' (você: ' + S.nv + '). Faça as tarefas pra subir.'
-    : (S.ok[n] ? '✓ Já vencido (dá pra repetir pra juntar ouro)' : 'Nível ' + nvSugerido(n) + ' ✓') + ' · ' + (4 + Math.ceil(n / 3)) + ' grupos e um chefe · vida ' + Math.ceil(S.hp) + '/' + hpMax() }));
+    : (S.ok[n] ? '✓ Já vencido (dá pra repetir pra juntar ouro)' : 'Nível ' + nvSugerido(n) + ' ✓') + ' · ' + (4 + Math.ceil(n / 3)) + ' grupos e um chefe' + (PARKOUR[n] ? ' · 🧗 ' + PARKOUR[n].length + ' trechos de parkour (2x no Manual)' : '') + ' · vida ' + Math.ceil(S.hp) + '/' + hpMax() }));
   const rb = mapaEl.querySelector('.repete'); rb.classList.toggle('on', !!S.repete); rb.setAttribute('aria-pressed', !!S.repete); rb.textContent = S.repete ? '🔁 Repetindo' : '🔁 Repetir';
   const jb = mapaEl.querySelector('.jogar'); jb.disabled = !pode && !volta; jb.textContent = volta ? '▶ Voltar pra luta' : pode ? '⚔ Começar' + (contaN ? ' (' + contaN + ')' : '') : '🔒 Nível ' + nvSugerido(n);
   const pb = mapaEl.querySelector('.pocao'); pb.textContent = '🧪 Poção' + (np ? ' ' + np : ''); pb.hidden = !np; pb.disabled = S.hp >= hpMax(); mapaEl.querySelector('.sair').hidden = !emLuta() || !!F.masm;
@@ -1615,7 +1836,7 @@ function hud() {
   const m = hpMax(); S.hp = Math.min(S.hp, m);
   document.querySelector('#hpB i').style.transform = 'scaleX(' + S.hp / m + ')'; document.querySelector('#hpB span').textContent = 'Vida ' + Math.ceil(S.hp) + '/' + m;
   document.querySelector('#xpB i').style.transform = 'scaleX(' + S.xp / xpProx() + ')'; document.querySelector('#xpB span').textContent = 'XP ' + S.xp + '/' + xpProx();
-  document.getElementById('hOuro').textContent = '🪙 ' + S.ouro; const be = document.getElementById('bEst'); be.textContent = F.fim || F.perdeu ? '🗺 Mapa' : F.masm ? '🏰 Masmorra' : '⚔ Estágio ' + F.n; if (!F.fim && !F.perdeu) be.append(Object.assign(document.createElement('small'), { textContent: F.feitos + '/' + F.G }));
+  document.getElementById('hOuro').textContent = '🪙 ' + S.ouro; const be = document.getElementById('bEst'); be.textContent = F.fim || F.perdeu ? '🗺 Mapa' : F.masm ? '🏰 Masmorra' : '⚔ Estágio ' + F.n; if (!F.fim && !F.perdeu) be.append(Object.assign(document.createElement('small'), { textContent: F.feitos + '/' + F.G + (SEC.length ? ' · 🧗' + (F.pk || 0) + '/' + SEC.length : '') }));
   const bm = document.getElementById('bModo'); bm.textContent = S.auto ? '▶ Auto' : '🕹 Manual'; bm.classList.toggle('manual', !S.auto); document.body.classList.toggle('manual', !S.auto);
   document.getElementById('bPocao').hidden = true;
   const pend = S.diar.filter(pendente).length; document.querySelector('[data-aba="diar"]').innerHTML = '✅ Diárias' + (pend ? '<b>' + pend + '</b>' : '');
