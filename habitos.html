@@ -74,16 +74,8 @@
   #dor{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 46px 12px rgba(220,30,20,.45);opacity:0;transition:opacity .35s}
   #bEst{font-weight:800;font-size:12.5px;padding:5px 10px;border-radius:999px;background:linear-gradient(#5b3a8a,#3a2560);border-color:#b98cff;white-space:nowrap}
   #bEst small{font-weight:700;opacity:.85;margin-left:4px}
-  #hojeTela{position:fixed;inset:0;z-index:33;display:none;align-items:center;justify-content:center;background:rgba(8,10,18,.72);padding:12px}
-  #hojeTela.on{display:flex}
-  .hojeCx{width:100%;max-width:640px;max-height:100%;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:0 10px 40px #000a}
-  .hojeCx h2{margin:0 0 2px;font-size:20px} .hojeCx .hsub{color:var(--fg2);font-size:13px;margin-bottom:8px}
   .pbar{height:14px;border-radius:8px;background:#2a3350;overflow:hidden;margin:6px 0 4px} .pbar i{display:block;height:100%;background:linear-gradient(90deg,#2f9a64,#7ddc8a);border-radius:8px}
   .pbar.chefe i{background:linear-gradient(90deg,#b0303a,#ff6a5a)}
-  .hojeBot{display:flex;gap:8px;margin-top:12px} .hojeBot button{flex:1;padding:12px;font-weight:800;font-size:15px;border-radius:12px}
-  .hojeBot .jg{background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border-color:#fff3c4}
-  .bau{width:100%;padding:12px;margin:8px 0;font-size:16px;font-weight:900;border-radius:12px;background:linear-gradient(#ffd86b,#d08a1a);color:#3a2000;border:2px solid #fff3c4;animation:pulsa 1.2s ease-in-out infinite}
-  .bau.off{animation:none;background:#2a3350;color:var(--fg2);border-color:var(--line);font-weight:700;font-size:14px}
   /* ---------- prêmio na frente de tudo (baú, chefe, conquistas, nível) ---------- */
   #premio{position:fixed;inset:0;z-index:45;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 45%,rgba(70,45,10,.95),rgba(4,6,12,.98));padding:10px;overflow:hidden;cursor:pointer}
   #premio.on{display:flex}
@@ -120,8 +112,6 @@
   .aberto .pOk{visibility:visible;animation:entra .4s .8s both}
   @media (max-height:440px){ .palco{height:118px} .bauG{transform:scale(.85)} .pIc{font-size:70px} .pCx h2{font-size:21px} }
   /* hoje: hábitos bons de um toque, missões e masmorra */
-  .hbs{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px} .hbs button{font-size:13px;padding:7px 10px;border-radius:999px;font-weight:700;background:#24402f;border-color:#3f7a52}
-  .hbs button b{color:#8dffb0;margin-right:3px}
   .mis{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px} .mis span{flex:1} .mis small{color:var(--fg2);font-weight:700;white-space:nowrap}
   .mis.ok span{text-decoration:line-through;color:var(--fg2)} .mis.ok small{color:#7ddc8a}
   .tag.foco{background:#5a4610;color:#ffe066}
@@ -129,8 +119,14 @@
   .tal .v{font-weight:900;color:#ffe066;min-width:34px;text-align:center} .tal button{width:38px;height:38px;padding:0;font-size:20px;font-weight:900}
   #mapa .masm{position:absolute;right:10px;top:10px;z-index:2;padding:8px 12px;border-radius:12px;font:800 13px system-ui,sans-serif;color:#fff;background:linear-gradient(#5b2a8a,#2e1450);border:2px solid #c99cff;box-shadow:0 3px 10px #000a}
   #mapa .masm.off{opacity:.7;filter:saturate(.4)}
-  .hojeBar{background:var(--card);border-radius:12px;padding:8px 12px;margin:4px 0 8px;cursor:pointer}
+  .hojeBar{background:var(--card);border-radius:12px;padding:8px 12px;margin:4px 0 8px}
   .hojeBar small{display:block;color:var(--fg2);font-size:12px;margin-top:3px} .hojeBar b{font-size:13.5px}
+  .hTopo{display:flex;align-items:center;gap:8px} .hTopo b{flex:1;min-width:0}
+  .bauMini{flex:none;padding:6px 12px;border-radius:999px;font-weight:800;font-size:13px;background:#2a3350;color:var(--fg2)}
+  .bauMini.pronto{background:linear-gradient(#ffd86b,#d08a1a);color:#3a2000;border:2px solid #fff3c4;animation:pulsa 1.2s ease-in-out infinite}
+  .bauMini.aberto{background:#1f4a35;color:#bff0cf;border-color:#2f9a64}
+  .hMais{display:block;width:100%;margin-top:6px;padding:5px 0 0;background:none;border:0;border-top:1px solid var(--line);border-radius:0;text-align:left;font-size:12.5px;font-weight:700;color:var(--fg2)}
+  .hDet{margin-top:4px} .hDet>b{display:block;margin-top:8px;font-size:13px} .hDet .hsub{color:var(--fg2);font-size:12.5px;margin:4px 0}
   .conq{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px} .conq div{background:var(--card2);border-radius:10px;padding:7px 4px;text-align:center;font-size:11px;color:var(--fg2)}
   .conq div b{display:block;font-size:24px} .conq div.off{opacity:.35;filter:grayscale(1)} .conq div span{display:block;color:var(--fg);font-weight:700;font-size:11.5px}
   .graf{width:100%;max-width:480px;height:auto;display:block;margin:0 auto} .tend{display:flex;justify-content:space-between;font-size:13px;padding:4px 2px;border-bottom:1px solid var(--line)} .tend .up{color:#7ddc8a;font-weight:800} .tend .dn{color:#ff8a7a;font-weight:800}
@@ -150,7 +146,7 @@
     body{flex-direction:row} #arena{flex:1 1 0;min-width:0;min-height:0;height:100%} #painel{flex:0 0 min(46%,440px);min-width:0;border-top:none;border-left:1px solid var(--line)}
     body.cheio #arena{flex:1 1 0} body.cheio #puxa{writing-mode:vertical-rl;height:100%;width:38px;padding:0 0 0 env(safe-area-inset-right,0px)}}
   @media (orientation:portrait){.calCorpo{flex-direction:column;overflow-y:auto}.calEsq,.calDir{overflow:visible;flex:none}}
-  #mapa{position:fixed;inset:0;z-index:30;display:none;background:#1a120b}
+  #mapa{position:absolute;inset:0;z-index:30;display:none;background:#1a120b;touch-action:pan-y} /* fica no lugar da heroína: as tarefas continuam do lado */
   #mapa.on{display:block}
   #mapa .rolo{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   #mapa .folha{position:relative;width:100%;max-width:560px;margin:0 auto}
@@ -170,9 +166,9 @@
   #mapa .rot small.ok{color:#8a1a10}
   #mapa .info{position:absolute;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:544px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 12px;border-radius:12px;
     background:linear-gradient(#3a2414f2,#24160cf2);border:2px solid #8a5a24;box-shadow:0 4px 14px #000a}
-  #mapa .info{max-width:720px !important;flex-wrap:wrap} #mapa .info .txt{flex:1 1 230px;min-width:0;font:700 15px/1.2 Georgia,serif;color:#ffe9b8} #mapa .info .bts{display:flex;gap:6px;flex:1 1 auto;justify-content:flex-end}
+  #mapa .info{max-width:720px !important;flex-wrap:wrap;padding:6px 6px 6px 10px !important;gap:6px !important} #mapa .info .txt{flex:1 1 120px;min-width:0;font:700 13.5px/1.2 Georgia,serif;color:#ffe9b8} #mapa .info .bts{display:flex;gap:6px;flex:1 1 auto;justify-content:flex-end}
   #mapa .info small{display:block;font:600 11.5px/1.25 system-ui,sans-serif;color:#e6d2a8}
-  #mapa .bts button{white-space:nowrap} #mapa .jogar{flex:none;padding:10px 18px;min-width:130px;border-radius:10px;font:900 15px system-ui,sans-serif;background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border:2px solid #fff3c4;box-shadow:0 3px 0 #7a4a00}
+  #mapa .bts button{white-space:nowrap;padding:8px 10px !important;font-size:12.5px !important} #mapa .bts button[hidden]{display:none} #mapa .jogar{flex:none;padding:10px 18px;border-radius:10px;font:900 15px system-ui,sans-serif;background:linear-gradient(#ffd85a,#e09a1a);color:#3a2000;border:2px solid #fff3c4;box-shadow:0 3px 0 #7a4a00}
   #mapa .repete{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#3a2a1a;color:#ffe9b8;border:2px solid #6a4a24;opacity:.7}
   #mapa .repete.on{opacity:1;background:#2f6a3a;border-color:#8fe0a0}
   #mapa .pocao{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#4a2030;color:#ffe9b8;border:2px solid #9a4a64}
@@ -349,6 +345,8 @@
   <div id="faixa"></div>
   <button id="bComeca" hidden></button>
   <div id="carga"><b>Carregando…</b><div class="bar"><i></i></div></div>
+  <div id="mapa"><div class="rolo"><div class="folha"><canvas aria-hidden="true"></canvas></div></div><div class="topo"><b>Mapa da Missão</b><small></small></div><button class="masm" hidden>🏰 Masmorra</button>
+    <div class="info"><div class="txt"></div><div class="bts"><button class="pocao">🧪 Poção</button><button class="repete" aria-pressed="false">🔁 Repetir</button><button class="sair" hidden>🏳 Sair da luta</button><button class="jogar" hidden>▶ Voltar pra luta</button><button class="tarefas">✕ Fechar</button></div></div></div>
 </div>
 <div id="painel">
   <button id="puxa" aria-label="Esconder ou mostrar as tarefas"></button>
@@ -365,11 +363,8 @@
 </div>
 <div id="aviso"></div>
 <div id="ed" role="dialog" aria-label="Configurar tarefa"></div>
-<div id="hojeTela" role="dialog" aria-label="Hoje"></div>
 <div id="calTela" role="dialog" aria-label="Calendário"></div>
 <div id="premio" role="dialog" aria-label="Prêmio"></div>
-<div id="mapa"><div class="rolo"><div class="folha"><canvas aria-hidden="true"></canvas></div></div><div class="topo"><b>Mapa da Missão</b><small></small></div><button class="masm" hidden>🏰 Masmorra</button>
-  <div class="info"><div class="txt"></div><div class="bts"><button class="pocao">🧪 Poção</button><button class="repete" aria-pressed="false">🔁 Repetir</button><button class="tarefas">📋 Tarefas</button><button class="sair" hidden>🏳 Sair da luta</button><button class="jogar">⚔ Começar</button></div></div></div>
 <script src="js/three.min.js"></script>
 <script src="js/GLTFLoader.js"></script>
 <script src="js/vrm_char.js"></script>
@@ -1433,7 +1428,7 @@ function botoesSkill() {
     toque(b, () => atacar(k)); ctl.append(b) });
 }
 const emLuta = () => !F.fim && !F.perdeu;
-function saiLuta() { if (!emLuta()) return; comecaEstagio(F.n, true); if (mapaEl.classList.contains('on')) infoMapa(); if (aba === 'inv') lista(); aviso('Você saiu da luta. Toque em ⚔ Começar quando quiser voltar.', 3) } // larga o estágio e fica parada na trilha
+function saiLuta() { if (!emLuta()) return; comecaEstagio(F.n, true); if (mapaEl.classList.contains('on')) infoMapa(); if (aba === 'inv') lista(); aviso('Você saiu da luta. Quando quiser voltar, é só tocar no estágio no 🗺 Mapa.', 3) } // larga o estágio e fica parada na trilha
 function usaItem(k) { // poção só fora da luta: no mapa, antes de começar o estágio
   const it = ITENS[k]; if (!(S.inv[k] > 0)) return;
   if (it.xp2) { if (S.xp2 === hoje()) { aviso('📜 O XP já está dobrado hoje.'); return } S.inv[k]--; S.xp2 = hoje(); brilho(0xffe066); plim(4); aviso('📜 XP dobrado nas tarefas até o fim do dia!', 3); salva(); hud(); if (aba === 'inv') lista(); return }
@@ -1788,40 +1783,44 @@ function voltaAcampamento(n) { selN = n; comecaEstagio(n, true); hud() }
 function abreMapa(motivo, sel) { // motivo: 'venceu' ou 'perdeu'
   mapaEl.classList.add('on'); folhaEl.querySelectorAll('.no,.rot').forEach(e => e.remove());
   selN = Math.min(sel || (F.parado ? selN : F.fim ? S.lib : F.n), S.lib); clearInterval(contaT); contaN = 0;
-  if (motivo) comecaEstagio(selN, true); // acabou o estágio: volta pro acampamento, fora da luta, e só luta de novo quando tocar em Começar
+  if (motivo) comecaEstagio(selN, true); // acabou o estágio: volta pro acampamento, fora da luta, e só luta de novo quando tocar num estágio
   const W = folhaEl.clientWidth || 400, k = W / VW; folhaEl.style.height = VH * k + 'px'; desenhaPapel();
   NOS.forEach(([vx, vy], i) => {
     const n = i + 1, x = vx * k, y = vy * k, lib = n <= S.lib, b = document.createElement('button'), rot = document.createElement('div');
     b.className = 'no' + (S.ok[n] ? ' feito' : '') + (lib ? '' : ' tranc') + (n === S.lib && !S.ok[n] ? ' atual' : '') + (n === N_EST ? ' chefe' : '') + (n === selN ? ' sel' : '');
     b.textContent = !lib ? '🔒' : n === N_EST ? '👹' : n; b.style.left = x + 'px'; b.style.top = y + 'px';
     b.setAttribute('aria-label', 'Estágio ' + n + ': ' + EST[i][0] + (lib ? '' : ' (trancado)'));
-    b.onclick = () => { clearInterval(contaT); contaN = 0; if (!lib) { aviso('Passe do estágio ' + (n - 1) + ' pra liberar este.'); return } selN = n; folhaEl.querySelectorAll('.no').forEach((e, j) => e.classList.toggle('sel', j === i)); infoMapa() };
+    b.onclick = () => { if (!lib) { aviso('Passe do estágio ' + (n - 1) + ' pra liberar este.'); return } entraEstagio(n) }; // tocou no estágio: já entra pra jogar
     rot.className = 'rot'; rot.style.left = x + 'px'; rot.style.top = y + (n === N_EST ? 6 : 0) + 'px'; rot.textContent = EST[i][0];
-    rot.append(Object.assign(document.createElement('small'), S.ok[n] ? { textContent: '✓ vencido', className: 'ok' } : { textContent: lib ? 'nível ' + nvSugerido(n) + '+' : 'trancado' }));
+    rot.append(Object.assign(document.createElement('small'), S.ok[n] ? { textContent: '✓ vencido', className: 'ok' } : { textContent: lib ? 'nível ' + nvSugerido(n) + '+' + (PARKOUR[n] ? ' · 🧗' : '') : 'trancado' }));
     folhaEl.append(b, rot) });
   botaoMasm(); mapaEl.querySelector('.topo small').textContent = Object.keys(S.ok).length + ' de ' + N_EST + ' estágios vencidos · nível ' + S.nv;
-  const [, sy] = NOS[selN - 1]; roloEl.scrollTop = sy * k - roloEl.clientHeight * 0.5; infoMapa();
+  const [, sy] = NOS[(emLuta() && !F.masm ? F.n : S.lib) - 1]; roloEl.scrollTop = sy * k - roloEl.clientHeight * 0.5; infoMapa();
 }
-function infoMapa() { // a barra de baixo do mapa: qual estágio, se dá pra entrar e um botão grande pra começar
-  const n = selN, i = mapaEl.querySelector('.info .txt'), pode = podeJogar(n), volta = emLuta() && n === F.n && !F.masm, np = (S.inv.pocao || 0) + (S.inv.pocaoG || 0);
-  i.textContent = 'Estágio ' + n + ' · ' + EST[n - 1][0];
-  i.append(Object.assign(document.createElement('small'), { textContent: volta ? 'Você está no meio deste estágio.' : !pode ? '🔒 Precisa nível ' + nvSugerido(n) + ' (você: ' + S.nv + '). Faça as tarefas pra subir.'
-    : (S.ok[n] ? '✓ Já vencido (dá pra repetir pra juntar ouro)' : 'Nível ' + nvSugerido(n) + ' ✓') + ' · ' + (4 + Math.ceil(n / 3)) + ' grupos e um chefe' + (PARKOUR[n] ? ' · 🧗 ' + PARKOUR[n].length + ' trechos de parkour (2x no Manual)' : '') + ' · vida ' + Math.ceil(S.hp) + '/' + hpMax() }));
+function infoMapa() { // a barra de baixo do mapa: o que fazer e os botões que sobram (poção, repetir, sair da luta)
+  const i = mapaEl.querySelector('.info .txt'), luta = emLuta() && !F.masm, np = (S.inv.pocao || 0) + (S.inv.pocaoG || 0);
+  i.textContent = luta ? 'Você está no estágio ' + F.n : 'Toque num estágio pra jogar';
+  i.append(Object.assign(document.createElement('small'), { textContent: (luta ? 'Toque nele pra voltar ou em outro pra trocar · ' : '') + 'vida ' + Math.ceil(S.hp) + '/' + hpMax() + ' · nível ' + S.nv }));
   const rb = mapaEl.querySelector('.repete'); rb.classList.toggle('on', !!S.repete); rb.setAttribute('aria-pressed', !!S.repete); rb.textContent = S.repete ? '🔁 Repetindo' : '🔁 Repetir';
-  const jb = mapaEl.querySelector('.jogar'); jb.disabled = !pode && !volta; jb.textContent = volta ? '▶ Voltar pra luta' : pode ? '⚔ Começar' + (contaN ? ' (' + contaN + ')' : '') : '🔒 Nível ' + nvSugerido(n);
-  const pb = mapaEl.querySelector('.pocao'); pb.textContent = '🧪 Poção' + (np ? ' ' + np : ''); pb.hidden = !np; pb.disabled = S.hp >= hpMax(); mapaEl.querySelector('.sair').hidden = !emLuta() || !!F.masm;
+  mapaEl.querySelector('.jogar').hidden = !luta; mapaEl.querySelector('.sair').hidden = !luta;
+  const pb = mapaEl.querySelector('.pocao'); pb.textContent = '🧪 Poção' + (np ? ' ' + np : ''); pb.hidden = !np; pb.disabled = S.hp >= hpMax();
 }
+function entraEstagio(n) { // do mapa direto pra luta
+  if (emLuta() && !F.masm && n === F.n) { fechaMapa(); return } // é o estágio em que já está: só volta pra luta
+  if (!podeJogar(n)) { aviso('Precisa nível ' + nvSugerido(n) + ' pra entrar no estágio ' + n + ' (você: ' + S.nv + '). Faça as tarefas pra subir.', 3); return }
+  if (emLuta() && !confirm('Largar a luta do estágio ' + F.n + ' e ir pro estágio ' + n + '?')) return;
+  selN = n; joga() }
 function joga() { clearInterval(contaT); contaN = 0;
   if (emLuta() && selN === F.n && !F.masm) { fechaMapa(); return } // só estava olhando o mapa: volta pra mesma luta
   if (!podeJogar(selN)) { aviso('Precisa nível ' + nvSugerido(selN) + ' pra entrar (você: ' + S.nv + '). Faça as tarefas pra subir.'); return } fechaMapa(); comecaEstagio(selN) }
 const melhorEst = () => { let n = Math.min(S.lib, N_EST); while (n > 1 && !podeJogar(n)) n--; return n }; // o estágio mais alto que dá pra jogar
 function botaoComeca() { // parado na trilha, sem mapa nem tela por cima: um botão grande pra começar
-  const b = document.getElementById('bComeca'), on = !!F.parado && !mapaEl.classList.contains('on') && !hojeEl.classList.contains('on') && !premioOn;
+  const b = document.getElementById('bComeca'), on = !!F.parado && !mapaEl.classList.contains('on') && !premioOn;
   const n = podeJogar(selN) ? selN : melhorEst(); const ta = tierAura(); if (b.hidden === !on && b.dataset.n == n && b.dataset.t == ta) return; b.hidden = !on; b.dataset.n = n; b.dataset.t = ta; b.innerHTML = '';
   const prox = AURAS.find((a, i) => i > ta && a); b.append(Object.assign(document.createElement('i'), { textContent: '🏕 Acampamento · ' + (ta ? '✨ ' + AURAS[ta][0] : '✨ aura no nível ' + AURAS[1][2]) + (ta && prox ? ' · próxima no nível ' + prox[2] : '') }), '⚔ Começar estágio ' + n, Object.assign(document.createElement('small'), { textContent: EST[n - 1][0] })) }
 document.getElementById('bComeca').addEventListener('click', e => { selN = +e.currentTarget.dataset.n || melhorEst(); joga() });
 function fechaMapa() { clearInterval(contaT); contaN = 0; mapaEl.classList.remove('on') }
-mapaEl.querySelector('.jogar').onclick = joga; mapaEl.querySelector('.masm').onclick = entraMasm;
+mapaEl.querySelector('.jogar').onclick = fechaMapa; mapaEl.querySelector('.masm').onclick = entraMasm;
 mapaEl.querySelector('.repete').onclick = () => { S.repete = !S.repete; salva(); infoMapa(); aviso(S.repete ? 'Repetir ligado: depois de vencer, o mapa já marca este mesmo estágio (bom pra juntar ouro).' : 'Repetir desligado: depois de vencer, o mapa marca o próximo estágio.') };
 mapaEl.querySelector('.tarefas').onclick = fechaMapa; mapaEl.querySelector('.sair').onclick = saiLuta; document.getElementById('bSair').onclick = () => { if (confirm('Sair da luta? Você volta pro acampamento e pode usar os menus.')) saiLuta() };
 mapaEl.querySelector('.pocao').onclick = () => { clearInterval(contaT); contaN = 0; usaItem(S.inv.pocao > 0 && S.hp + hpMax() * ITENS.pocao.cura < hpMax() * 1.05 ? 'pocao' : S.inv.pocaoG > 0 ? 'pocaoG' : 'pocao'); infoMapa() };
@@ -2020,41 +2019,28 @@ function abreBau() { // sempre responde: abre o baú na frente de tudo ou diz o 
   const ouro = 15 + 2 * S.nv + ((Math.random() * 16) | 0), x = Math.random(), it = x < 0.1 ? 'pocaoG' : x < 0.4 ? 'pocao' : x < 0.55 ? 'perg' : null, cr = Math.random() < 0.5 ? 1 + ((Math.random() * 3) | 0) : 0;
   S.ouro += ouro; if (it) S.inv[it] = (S.inv[it] || 0) + 1; if (cr) S.mat = (S.mat || 0) + cr;
   const itens = [['🪙', '+' + ouro + ' de ouro']]; if (it) itens.push([ITENS[it].ic, ITENS[it].nome]); if (cr) itens.push(['💠', '+' + cr + (cr > 1 ? ' cristais' : ' cristal')]);
-  salva(); hud(); lista(); if (hojeEl.classList.contains('on')) desenhaHoje();
+  salva(); hud(); lista();
   mostraPremio({ bau: true, tit: 'Baú do dia!', sub: 'Você fez todas as diárias de hoje', itens });
 }
-function barraHoje() { const r = statusHoje(), c = el('div', 'hojeBar'), pb = el('div', 'pbar'), i = el('i'); i.style.width = (r.tot ? r.ok / r.tot * 100 : 0) + '%'; pb.append(i);
-  c.append(el('b', null, '☀ Hoje: ' + r.ok + ' de ' + r.tot + ' diárias' + (S.bauDia === hoje() ? ' · 🎁 baú aberto' : r.ok === r.tot && r.tot ? ' · 🎁 baú liberado!' : ' · faça todas pra abrir o baú 🎁')), pb);
-  const M = missoes(); if (M.L.length) c.append(el('small', null, '🎯 Missões do dia: ' + M.L.filter(m => m.ok).length + ' de ' + M.L.length + ' · toque pra ver'));
-  c.onclick = () => bauPronto() ? abreBau() : abreHoje(); return c }
-const hojeEl = document.getElementById('hojeTela');
-function abreHoje() { viraDia(); chefeSemana(); hojeEl.classList.add('on'); desenhaHoje() }
-function fechaHoje() { hojeEl.classList.remove('on'); hojeEl.innerHTML = '' }
-function desenhaHoje() {
-  const h = hoje(), r = statusHoje(), cx = el('div', 'hojeCx'), hr = new Date().getHours(); hojeEl.innerHTML = ''; hojeEl.append(cx);
-  cx.append(el('h2', null, (hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite') + '! ☀'), el('div', 'hsub', SEM_N[dData(h).getDay()] + ', ' + ddmm(h) + ' · ' + PERS[S.pers][1] + ' nível ' + S.nv));
-  const pb = el('div', 'pbar'), i = el('i'); i.style.width = (r.tot ? r.ok / r.tot * 100 : 0) + '%'; pb.append(i);
-  cx.append(el('b', null, r.tot ? r.ok + ' de ' + r.tot + ' diárias feitas' + (r.ok === r.tot ? ' 🎉' : '') : 'Nenhuma diária pra hoje'), pb);
-  const falta = r.L.filter(d => !(feito(d) || semFeita(d)));
-  for (const d of falta) { const it = el('div', 'item'), b = el('button', 'chk' + (d.nao ? ' mal' : ''), d.nao ? '✗' : ''), tx = el('div', 'txt'); tx.append(el('span', null, d.t), el('small', null, d.tipo === 'sn' ? 'toque quando fizer' : 'marque na aba Diárias'));
-    b.onclick = () => { if (d.tipo !== 'sn') { fechaHoje(); fechaMapa(); trocaAba('diar'); return } d.ok = true; d.nao = false; confere(d); salva(); hud(); lista(); desenhaHoje() }; it.append(b, tx); cx.append(it) }
-  const bb = el('button', 'bau' + (bauPronto() ? '' : ' off'), S.bauDia === h ? '🎁 Baú de hoje já aberto' : bauPronto() ? '🎁 Abrir o baú do dia!' : '🎁 Faltam ' + falta.length + (falta.length === 1 ? ' diária' : ' diárias') + ' pro baú'); bb.onclick = abreBau; cx.append(bb);
-  const hb = S.hab.filter(t => t.pos); if (hb.length) { cx.append(el('b', null, '💪 Hábitos bons · toque quando fizer')); const g = el('div', 'hbs');
-    for (const t of hb) { const b = el('button'); b.append(el('b', null, '+'), t.t + (t.c ? ' ×' + t.c : '')); b.onclick = () => { fazHabito(t); desenhaHoje() }; g.append(b) } cx.append(g) }
-  { const M = missoes(); if (M.L.length) { cx.append(el('b', null, '🎯 Missões do dia (' + M.L.filter(m => m.ok).length + ' de ' + M.L.length + ')'));
-    for (const m of M.L) { const d = el('div', 'mis' + (m.ok ? ' ok' : '')); d.append(el('span', null, MIS[m.k].t(m.n)), el('small', null, m.ok ? '✓' : misFeito(m) + '/' + m.n)); cx.append(d) }
-    cx.append(el('div', 'hsub', M.fim ? 'Todas feitas hoje! Amanhã tem outras.' : 'Cada uma dá ouro; as ' + M.L.length + ' juntas dão uma poção.')) } }
-  if (S.xp2 === h) cx.append(el('div', 'hsub', '📜 XP dobrado hoje (pergaminho).'));
-  { const t = S.hm && S.hm.mes === mesDe(h) && focoDe(S.hm); if (t) cx.append(el('div', 'hsub', '⭐ Hábito do mês: ' + t.t + ' · ' + pctFoco(S.hm).p + '% (precisa 80%)')) }
-  { const fd = fdsDe(h); if (fd) { const pc = semanaPct(); cx.append(el('div', 'hsub', '🏰 Masmorra do fim de semana: ' + (S.masmV === fd ? 'vencida ✓' : pc >= 80 ? 'liberada! (' + pc + '% das diárias da semana) Entre pelo mapa.' : 'pede 80% das diárias nos últimos 7 dias (você: ' + pc + '%).'))) } }
-  const c = S.cs; if (c) { const pc = el('div', 'pbar chefe'), ic = el('i'); ic.style.width = (c.venceu ? 0 : c.hp / c.max * 100) + '%'; pc.append(ic);
-    cx.append(el('b', null, '🐉 ' + c.nome + (c.venceu ? ' · derrotado! ✓' : ' · ' + Math.ceil(c.hp) + '/' + c.max + ' de vida')), pc, el('div', 'hsub', c.venceu ? 'Volta mais forte no domingo.' : 'Cada tarefa feita bate nele (o XP vira dano). Derrote até sábado pra ganhar o prêmio.')) }
-  if (!S.backup || difDias(S.backup, h) > 7) { const bk = el('div', 'hsub', '💾 Faz tempo que você não salva um backup (aba Herói).'); cx.append(bk) }
-  const bt = el('div', 'hojeBot'), t = el('button', null, '📋 Tarefas'), j = el('button', 'jg', '⚔ Jogar');
-    t.onclick = () => { fechaHoje(); fechaMapa(); trocaAba('diar') }; j.onclick = () => { fechaHoje(); fechaMapa() }; bt.append(t, j); cx.append(bt); // Jogar leva pro acampamento; o estágio se escolhe no mapa
-  { const np = (S.inv.pocao || 0) + (S.inv.pocaoG || 0); if (np && S.hp < hpMax()) { const pc = el('button', null, '🧪 Tomar poção antes (' + Math.ceil(S.hp) + '/' + hpMax() + ' de vida)'); pc.style.cssText = 'width:100%;margin-top:8px'; pc.onclick = () => { usaItem(S.inv.pocao > 0 && S.hp + hpMax() * ITENS.pocao.cura < hpMax() * 1.05 ? 'pocao' : S.inv.pocaoG > 0 ? 'pocaoG' : 'pocao'); desenhaHoje() }; cx.append(pc) } }
+let hojeAb = false; // os detalhes do dia (missões, chefe, masmorra) abrem ali mesmo na lista, sem janela por cima
+function barraHoje() { const r = statusHoje(), h = hoje(), c = el('div', 'hojeBar'), pb = el('div', 'pbar'), i = el('i'); i.style.width = (r.tot ? r.ok / r.tot * 100 : 0) + '%'; pb.append(i);
+  const topo = el('div', 'hTopo'), aberto = S.bauDia === h, pronto = bauPronto();
+  const bb = el('button', 'bauMini' + (pronto ? ' pronto' : aberto ? ' aberto' : ''), aberto ? '🎁 Aberto ✓' : pronto ? '🎁 Abrir o baú!' : '🎁 Faltam ' + (r.tot - r.ok)); bb.onclick = () => abreBau();
+  topo.append(el('b', null, '☀ Hoje: ' + r.ok + ' de ' + r.tot + ' diárias' + (r.tot && r.ok === r.tot ? ' 🎉' : '')), bb); c.append(topo, pb);
+  if (!aberto) c.append(el('small', null, pronto ? 'Tudo feito! Abra o baú do dia pra pegar o prêmio.' : 'Faça todas as diárias de hoje pra abrir o baú do dia.'));
+  const M = missoes(), mais = el('button', 'hMais', (hojeAb ? '▴ ' : '▾ ') + (M.L.length ? '🎯 Missões do dia ' + M.L.filter(m => m.ok).length + '/' + M.L.length + ' · ' : '') + '🐉 Chefe da semana');
+  mais.setAttribute('aria-expanded', hojeAb); mais.onclick = () => { hojeAb = !hojeAb; lista() }; c.append(mais);
+  if (hojeAb) detalhesHoje(c); return c }
+function detalhesHoje(cx) { const h = hoje(), M = missoes(), d = el('div', 'hDet'); cx.append(d);
+  if (M.L.length) { for (const m of M.L) { const x = el('div', 'mis' + (m.ok ? ' ok' : '')); x.append(el('span', null, MIS[m.k].t(m.n)), el('small', null, m.ok ? '✓' : misFeito(m) + '/' + m.n)); d.append(x) }
+    d.append(el('div', 'hsub', M.fim ? 'Todas feitas hoje! Amanhã tem outras.' : 'Cada missão dá ouro; as ' + M.L.length + ' juntas dão uma poção.')) }
+  const c = chefeSemana(); if (c) { const pc = el('div', 'pbar chefe'), ic = el('i'); ic.style.width = (c.venceu ? 0 : c.hp / c.max * 100) + '%'; pc.append(ic);
+    d.append(el('b', null, '🐉 ' + c.nome + (c.venceu ? ' · derrotado! ✓' : ' · ' + Math.ceil(c.hp) + '/' + c.max + ' de vida')), pc, el('div', 'hsub', c.venceu ? 'Volta mais forte no domingo.' : 'Cada tarefa feita bate nele (o XP vira dano). Derrote até sábado pra ganhar o prêmio.')) }
+  { const fd = fdsDe(h); if (fd) { const pc = semanaPct(); d.append(el('div', 'hsub', '🏰 Masmorra do fim de semana: ' + (S.masmV === fd ? 'vencida ✓' : pc >= 80 ? 'liberada! (' + pc + '% das diárias da semana) Entre pelo mapa.' : 'pede 80% das diárias nos últimos 7 dias (você: ' + pc + '%).'))) } }
+  { const t = S.hm && S.hm.mes === mesDe(h) && focoDe(S.hm); if (t) d.append(el('div', 'hsub', '⭐ Hábito do mês: ' + t.t + ' · ' + pctFoco(S.hm).p + '% (precisa 80%)')) }
+  if (S.xp2 === h) d.append(el('div', 'hsub', '📜 XP dobrado hoje (pergaminho).'));
+  if (!S.backup || difDias(S.backup, h) > 7) d.append(el('div', 'hsub', '💾 Faz tempo que você não salva um backup (aba Herói).'));
 }
-hojeEl.addEventListener('click', e => { if (e.target === hojeEl) fechaHoje() });
 // ---------------- chefe da semana: perde vida com o XP das tarefas ----------------
 const CHEFES_S = ['Dragão da Preguiça', 'Rei da Procrastinação', 'Sombra do Cansaço', 'Golem da Bagunça', 'Hidra das Desculpas'];
 function chefeSemana() {
@@ -2123,7 +2109,7 @@ function checaMissoes() { const M = missoes(); let novo = 0;
   for (const m of M.L) if (!m.ok && misFeito(m) >= m.n) { m.ok = 1; novo++; const o = 10 + 2 * S.nv; S.ouro += o; aviso('🎯 Missão cumprida: ' + MIS[m.k].t(m.n) + ' · +' + o + ' 🪙', 3); plim(4) }
   if (novo && !M.fim && M.L.every(m => m.ok)) { M.fim = 1; S.misT = (S.misT || 0) + 1; const o = 20 + 3 * S.nv; S.ouro += o; S.inv.pocao = (S.inv.pocao || 0) + 1;
     setTimeout(() => mostraPremio({ ic: '🎯', tit: 'Missões do dia completas!', itens: [['🧪', 'Poção de vida'], ['🪙', '+' + o + ' de ouro']] }), 700) }
-  if (novo) { salva(); if (hojeEl.classList.contains('on')) setTimeout(desenhaHoje, 0) } }
+  if (novo) { salva(); if (aba === 'diar') setTimeout(lista, 0) } }
 // ---------------- hábito do mês: 1 tarefa em foco dá o dobro de XP; com 80% dos dias até o fim do mês, medalha ----------------
 const mesDe = dt => dt.slice(0, 7), nomeMes = m => MESES[+m.slice(5, 7) - 1] + ' de ' + m.slice(0, 4);
 const fimMes = m => isoDe(new Date(+m.slice(0, 4), +m.slice(5, 7), 0));
@@ -2378,7 +2364,7 @@ function heroina() {
     for (const [v, t] of [[5, '5 min'], [8, '8 min'], [15, '15 min'], [0, 'Normal']]) { const bt = el('button', telaMin() === v ? 'on' : null, t); bt.onclick = () => { S.tela = v; salva(); if (!v) soltaTela(); else prendeTela(); lista() }; sg.append(bt) }
     st.append(el('p', 'dica', 'Quanto tempo a tela fica acesa sem você tocar, com o jogo aberto. Depois disso o celular apaga no tempo normal dele.'), sg); listaEl.append(st) }
   const s4 = el('div', 'sec'); s4.append(el('h3', null, 'Como funciona'));
-  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 30 estágios (toque em ⚔ Estágio pra ver o mapa). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede 2 níveis a mais que o anterior, 3 a partir do 11 (o nível aparece no mapa): sem esse nível o estágio não abre, então sem fazer as tarefas você não passa. Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. O herói luta sozinho (Auto) ou com você no controle (Manual). Os monstros dão ouro pra loja. Vida: não volta sozinha (nem ao vencer). Cada tarefa cumprida cura um pouco (mais nas difíceis); fora isso, só poção, comprada com ouro na aba Inventário e tomada no mapa antes de começar o estágio. Hábito ruim e diária esquecida tiram vida; se zerar, perde e recomeça o estágio. Fazendo todas as diárias do dia você abre o baú 🎁, e cada tarefa bate no chefe da semana 🐉. Tudo fica salvo neste celular.';
+  const p = el('p', 'dica'); p.textContent = 'Só as tarefas dão XP e sobem o nível. A missão é passar dos 30 estágios (toque em 🗺 Mapa e depois no estágio pra jogar). Cada estágio é um trecho da trilha com grupos de monstros e um chefe no fim, e cada um pede 2 níveis a mais que o anterior, 3 a partir do 11 (o nível aparece no mapa): sem esse nível o estágio não abre, então sem fazer as tarefas você não passa. Travou? Ligue o 🔁 no mapa pra repetir um estágio e juntar ouro. O herói luta sozinho (Auto) ou com você no controle (Manual). Os monstros dão ouro pra loja. Vida: não volta sozinha (nem ao vencer). Cada tarefa cumprida cura um pouco (mais nas difíceis); fora isso, só poção, comprada com ouro na aba Inventário e tomada no mapa antes de começar o estágio. Hábito ruim e diária esquecida tiram vida; se zerar, perde e recomeça o estágio. Fazendo todas as diárias do dia você abre o baú 🎁, e cada tarefa bate no chefe da semana 🐉. Tudo fica salvo neste celular.';
   s4.append(p);
   const z = el('button', null, 'Apagar tudo (inclusive as tarefas)'); z.style.marginTop = '8px'; z.onclick = () => { if (confirm('Apagar todo o progresso e as tarefas?')) { localStorage.removeItem(CHAVE); location.reload() } }; s4.append(z);
   listaEl.append(s4);
@@ -2643,7 +2629,8 @@ function quadro(t) {
   numsPasso(dt); r.render(sc, cam);
 }
 new ResizeObserver(tam).observe(arena);
-comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); try { trocaAba(aba) } catch (e) { console.error(e) } try { hud() } catch (e) { console.error(e) } carregar(S.pers); requestAnimationFrame(quadro); try { abreHoje() } catch (e) { console.error(e) } // o jogo abre no mapa, com o resumo de hoje por cima; um erro na lista nunca pode travar o carregamento
+new ResizeObserver(() => { if (mapaEl.classList.contains('on')) abreMapa() }).observe(mapaEl); // o mapa acompanha quando as tarefas escondem ou aparecem
+comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); try { trocaAba(aba) } catch (e) { console.error(e) } try { hud() } catch (e) { console.error(e) } carregar(S.pers); requestAnimationFrame(quadro); try { viraDia(); chefeSemana(); lista() } catch (e) { console.error(e) } // abre direto nas tarefas, com a heroína no acampamento do lado (sem janela por cima); um erro na lista nunca pode travar o carregamento
 // ---------------- tela acesa: o celular não apaga enquanto joga; só depois de uns minutos sem tocar (Screen Wake Lock) ----------------
 const TELA = { trava: null, ult: Date.now() };
 function telaMin() { return S.tela == null ? 8 : S.tela } // (função, não const: a aba Herói usa antes desta linha rodar) minutos sem tocar até deixar o celular apagar (0 = o tempo normal do celular)
