@@ -1696,10 +1696,13 @@ function lista() {
   } else if (aba === 'diar') {
     if (S.diar.length) listaEl.append(barraHoje());
     if (!S.diar.length) listaEl.append(el('div', 'vazio', 'Diárias são as tarefas de rotina. Se ficar alguma sem fazer no dia dela, o herói perde vida quando o dia vira.'));
-    const L = filtroCats(S.diar).map(prep), h = hoje(), hj = L.filter(d => agendada(d, h)), fora = L.filter(d => !agendada(d, h));
+    if (S.diar.length) { const f = el('div', 'filtro'), so = S.verDiar !== 'todas', chip = (k, txt, on) => { const b = el('button', on ? 'on' : null, txt); b.onclick = () => { S.verDiar = k; salva(); lista() }; f.append(b) };
+      chip('hoje', '☀ Só as de hoje', so); chip('todas', '📋 Todas', !so); listaEl.append(f) } // padrão: só as diárias do dia
+    const L = filtroCats(S.diar).map(prep), h = hoje(), hj = L.filter(d => agendada(d, h)), fora = S.verDiar === 'todas' ? L.filter(d => !agendada(d, h)) : [], esc = L.length - hj.length - fora.length;
     hj.sort((a, b) => (a.hora || '99') < (b.hora || '99') ? -1 : (a.hora || '99') > (b.hora || '99') ? 1 : 0); // com horário primeiro, na ordem do relógio
     for (const t of hj) linhaDiaria(t);
     if (fora.length) { listaEl.append(el('div', 'grupo', 'Não é pra hoje')); for (const t of fora) linhaDiaria(t) }
+    if (esc) { const b = el('button', 'vazio', esc + (esc === 1 ? ' diária de outro dia escondida · ver todas' : ' diárias de outros dias escondidas · ver todas')); b.style.cssText = 'display:block;width:100%;font:inherit;cursor:pointer'; b.onclick = () => { S.verDiar = 'todas'; salva(); lista() }; listaEl.append(b) }
     const p = el('p', 'dica'); p.style.padding = '4px 6px'; p.textContent = 'Toque no quadrado: 1 vez = feita, 2 vezes = não feita (fica vermelho). Toque no nome pra configurar: dias da semana, meta em número, checklist, horário, categoria e pausa. Fazer vários dias seguidos (🔥) dá XP a mais.'; listaEl.append(p);
   } else if (aba === 'afz') {
     if (!S.afz.length) listaEl.append(el('div', 'vazio', 'Afazeres são tarefas de uma vez só. Valem 50% a mais de XP e somem quando você marca.'));
