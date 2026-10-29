@@ -2119,7 +2119,7 @@ function heroina() {
     sb.append(el('h3', null, 'Backup'), el('p', 'dica', 'Tudo fica só neste celular. O backup salva um arquivo nos downloads; se trocar de celular ou limpar os dados, é só restaurar. ' + (S.backup ? 'Último backup: ' + ddmm(S.backup) + '.' : 'Você ainda não fez nenhum.')), ex, im);
     ex.onclick = exportaBackup; im.onclick = importaBackup;
     if (instalaEv) { const ins = el('button', null, '📲 Instalar como app'); ins.style.marginTop = '8px'; ins.style.width = '100%'; ins.onclick = instalaApp; sb.append(ins) }
-    else if (!comoApp()) sb.append(el('p', 'dica', '📲 Se o celular disser que o app já está instalado, ele está na lista de apps (arraste a tela inicial pra cima e procure “Hábitos”); é só segurar o ícone e arrastar pra tela inicial. Se não achar, no Chrome toque em ⋮ e depois em “Adicionar à tela inicial”.'))
+    else if (!comoApp()) sb.append(el('p', 'dica', '📲 Se o celular disser que o app já está instalado, ele está na lista de apps (arraste a tela inicial pra cima e procure “Hábitos”); é só segurar o ícone e arrastar pra tela inicial. Se não achar (comum no Xiaomi): Configurações → Apps → Chrome → Outras permissões → libere “Atalhos da tela inicial”, e depois no Chrome toque em ⋮ → “Adicionar à tela inicial”.'))
     listaEl.append(sb) }
   // atributos
   const s0 = el('div', 'sec'), h0 = el('h3', null, 'Atributos'); if (S.pontos) h0.append(el('span', 'pts', S.pontos + ' pra distribuir')); s0.append(h0);
