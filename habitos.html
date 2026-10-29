@@ -306,7 +306,7 @@
   .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:10px 0 8px;text-align:center;font-size:12px}
   .cal b{color:var(--fg2);font-size:11px} .cal span{padding:5px 0;border-radius:7px;background:#2a3350;color:var(--fg2)}
   .cal button{padding:8px 0;border-radius:7px;background:#2a3350;color:var(--fg2);font-size:13px;font-weight:700;border:2px solid transparent}
-  .cal button.b{background:#1f6b45;color:#fff} .cal button.r{background:#6a2a2a;color:#fff} .cal button.m{background:#7a6424;color:#fff} .cal button.hj{border-color:var(--accent)} .cal button.sel{border-color:#fff} .cal button:disabled{opacity:.3}
+  .cal button.b{background:#1f6b45;color:#fff} .cal button.r{background:#6a2a2a;color:#fff} .cal button.m{background:#7a6424;color:#fff} .cal button.hj{border-color:var(--accent)} .cal button.sel{border-color:#fff} .cal button:disabled{opacity:.3} .cal button.fut{background:#232a42;color:var(--fg2)} .cal button.fut small{opacity:.75}
   .calTopo{display:flex;align-items:center;justify-content:space-between;gap:8px} .calTopo button{width:44px;font-size:18px} .calTopo b{font-size:16px}
   .calTag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#2a3350;color:var(--fg2);margin-left:6px} .calTag.ed{background:#1f6b45;color:#fff}
   .cal span.b{background:#1f6b45;color:#fff} .cal span.r{background:#6a2a2a;color:#fff} .cal span.hj{outline:2px solid var(--accent)} .cal span.fut{opacity:.3}
@@ -1980,13 +1980,14 @@ function lista() {
   } else if (aba === 'prog') progresso(); else if (aba === 'inv') inventario(); else if (aba === 'cal') abaCalendario(); else heroina();
   listaEl.scrollTop = top;
 }
-// ---------------- calendário: ver qualquer dia; hoje e ontem dá pra corrigir (ex.: marcou depois da meia-noite) ----------------
+// ---------------- calendário: ver qualquer dia; hoje e ontem dá pra corrigir (ex.: marcou depois da meia-noite); dias futuros mostram o que vai cair (só consulta) ----------------
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 let calMes = null, calDia = null;
 const editavel = dt => dt >= somaDia(hoje(), -1) && dt <= hoje();
 function estadoDia(d, dt) { // 1 feita, 0 não feita, null sem registro
   if (dt === hoje()) return feito(d) || semFeita(d) ? 1 : d.nao ? 0 : null; return d.hist[dt] ?? null }
 const diariasDoDia = dt => S.diar.map(prep).filter(d => d.hist[dt] != null || (dt >= d.criado && agendada(d, dt) && d.freq.t !== 'vezes') || (dt === hoje() && agendada(d, dt)));
+const agendaDia = dt => S.diar.map(prep).filter(d => d.freq.t !== 'vezes' && agendada(d, dt)).sort((a, b) => (a.hora || '99') < (b.hora || '99') ? -1 : (a.hora || '99') > (b.hora || '99') ? 1 : 0); // pra planejar: o que cai num dia futuro
 function resumoDia(dt) { if (dt === hoje()) return statusHoje(); let ok = 0, tot = 0; for (const d of diariasDoDia(dt)) { const v = estadoDia(d, dt); if (v != null) { tot++; ok += v } } return { ok, tot } }
 function refazRacha(d) { // sequência contada de novo pelo histórico (depois de corrigir ontem)
   if (d.freq.t === 'vezes') return; let r = 0;
@@ -2003,7 +2004,7 @@ function corrigeOntem(d) { // ontem já fechou: marcar dá a recompensa (e devol
 }
 function abaCalendario() { // a aba só resume e abre o calendário em tela cheia (no celular deitado a lista fica pequena demais)
   const h = hoje(), r = resumoDia(h), sc = el('div', 'sec'), b = el('button', 'reset abreCal', '📅 Abrir calendário');
-  sc.append(el('h3', null, 'Calendário'), el('p', 'dica', 'Hoje: ' + r.ok + ' de ' + r.tot + ' diárias feitas. Veja qualquer dia; hoje e ontem dá pra corrigir.'), b); b.onclick = abreCal; listaEl.append(sc);
+  sc.append(el('h3', null, 'Calendário'), el('p', 'dica', 'Hoje: ' + r.ok + ' de ' + r.tot + ' diárias feitas. Veja qualquer dia (os próximos também, pra planejar); hoje e ontem dá pra corrigir.'), b); b.onclick = abreCal; listaEl.append(sc);
 }
 const calEl = document.getElementById('calTela');
 function abreCal() { viraDia(); calDia = calDia || hoje(); calMes = calDia.slice(0, 8) + '01'; calEl.classList.add('on'); desenhaCal() }
@@ -2016,7 +2017,7 @@ function desenhaCal() {
   cab.append(el('b', null, '📅 Calendário'), x); calEl.append(cab, corpo); corpo.append(esq, dir);
   // mês
   const topo = el('div', 'calTopo'), ant = el('button', null, '‹'), prox = el('button', null, '›');
-  ant.onclick = () => { calMes = somaDia(calMes, -1).slice(0, 8) + '01'; desenhaCal() }; prox.onclick = () => { calMes = somaDia(calMes, 32).slice(0, 8) + '01'; desenhaCal() }; prox.disabled = calMes >= h.slice(0, 8) + '01';
+  ant.onclick = () => { calMes = somaDia(calMes, -1).slice(0, 8) + '01'; desenhaCal() }; prox.onclick = () => { calMes = somaDia(calMes, 32).slice(0, 8) + '01'; desenhaCal() }; prox.disabled = calMes >= somaDia(h.slice(0, 8) + '01', 366).slice(0, 8) + '01'; // até um ano pra frente
   ant.setAttribute('aria-label', 'Mês anterior'); prox.setAttribute('aria-label', 'Próximo mês');
   topo.append(ant, el('b', null, MESES[m.getMonth()] + ' de ' + m.getFullYear()), prox); esq.append(topo);
   const g = el('div', 'cal calG'); for (const s of SEM) g.append(el('b', null, s)); for (let i = 0; i < m.getDay(); i++) g.append(el('i'));
@@ -2024,15 +2025,16 @@ function desenhaCal() {
   for (let dt = calMes; dt.slice(0, 7) === calMes.slice(0, 7); dt = somaDia(dt, 1)) {
     const r = dt > h ? { ok: 0, tot: 0 } : resumoDia(dt), dd = dt, cls = dt > h || !r.tot ? '' : r.ok === r.tot ? 'b' : r.ok ? 'm' : 'r';
     if (r.tot) { comD++; okT += r.ok; totT += r.tot; if (r.ok === r.tot) perf++ }
-    const b = el('button', cls + (dt === h ? ' hj' : '') + (dt === calDia ? ' sel' : '')); b.append(el('span', 'n', String(+dt.slice(8))), el('small', null, r.tot ? r.ok + '/' + r.tot : ''));
-    b.disabled = dt > h; b.onclick = () => { calDia = dd; desenhaCal() }; b.setAttribute('aria-label', ddmm(dt) + (r.tot ? ': ' + r.ok + ' de ' + r.tot + ' diárias' : '')); g.append(b) }
+    const fut = dt > h ? agendaDia(dt).length : 0, b = el('button', cls + (dt > h ? ' fut' : '') + (dt === h ? ' hj' : '') + (dt === calDia ? ' sel' : '')); b.append(el('span', 'n', String(+dt.slice(8))), el('small', null, r.tot ? r.ok + '/' + r.tot : fut ? String(fut) : ''));
+    b.onclick = () => { calDia = dd; desenhaCal() }; b.setAttribute('aria-label', ddmm(dt) + (r.tot ? ': ' + r.ok + ' de ' + r.tot + ' diárias' : fut ? ': ' + fut + ' diárias agendadas' : '')); g.append(b) }
   esq.append(g);
   const res = el('div', 'calRes'), cx = (v, t) => { const d = el('div'); d.append(el('b', null, v), el('small', null, t)); res.append(d) };
   cx(perf + '/' + comD, 'dias perfeitos'); cx(totT ? Math.round(okT / totT * 100) + '%' : '—', 'diárias feitas'); cx('🔥 ' + melhorRacha(), 'melhor sequência');
-  esq.append(res, el('div', 'calLeg', '🟩 todas · 🟨 parte · 🟥 nenhuma'));
+  esq.append(res, el('div', 'calLeg', '🟩 todas · 🟨 parte · 🟥 nenhuma · nos próximos dias, o número é quantas diárias caem'));
   // dia escolhido
-  const dt = calDia, ed = editavel(dt), t = el('h3', null, (dt === h ? 'Hoje' : dt === somaDia(h, -1) ? 'Ontem' : SEM_N[dData(dt).getDay()]) + ', ' + ddmm(dt));
-  t.append(el('span', 'calTag' + (ed ? ' ed' : ''), ed ? '✏️ dá pra corrigir' : '🔒 só consulta')); dir.append(t);
+  const dt = calDia, ed = editavel(dt), t = el('h3', null, (dt === h ? 'Hoje' : dt === somaDia(h, -1) ? 'Ontem' : dt === somaDia(h, 1) ? 'Amanhã' : SEM_N[dData(dt).getDay()]) + ', ' + ddmm(dt));
+  t.append(el('span', 'calTag' + (ed ? ' ed' : ''), ed ? '✏️ dá pra corrigir' : dt > h ? '🔭 planejar · só consulta' : '🔒 só consulta')); dir.append(t);
+  if (dt > h) { diaFuturo(dir, dt); dir.scrollTop = topoDir; return }
   const L = diariasDoDia(dt);
   if (L.length) dir.append(el('div', 'grupo', 'Diárias'));
   for (const d of L) { const v = estadoDia(d, dt), it = el('div', 'item' + (v === 1 ? ' feito' : '')), b = el('button', 'chk' + (v === 0 ? ' mal' : ''), v === 1 ? '✓' : v === 0 ? '✗' : '');
@@ -2048,6 +2050,16 @@ function desenhaCal() {
   if (!L.length && !HB.length && !af) dir.append(el('div', 'vazio', 'Nada registrado neste dia.'));
   if (ed && dt !== h) dir.append(el('p', 'dica', 'Ontem ainda dá pra corrigir: marcar como feita dá o XP e devolve a vida que a falta tirou. De anteontem pra trás fica só pra consulta.'));
   dir.scrollTop = topoDir;
+}
+function diaFuturo(dir, dt) { // só mostra: nada aqui marca nem muda o jogo
+  const L = agendaDia(dt), V = S.diar.map(prep).filter(d => d.freq.t === 'vezes' && agendada(d, dt)), A = S.afz.filter(t => t.prazo === dt);
+  if (L.length) { dir.append(el('div', 'grupo', 'Diárias (' + L.length + ')')); for (const d of L) { const it = el('div', 'item'), b = el('button', 'chk', ''), tx = el('div', 'txt'); b.disabled = true;
+    tx.append(el('span', null, d.t)); if (d.tipo === 'num') tx.append(el('small', null, 'meta: ' + (d.meta.op === 'max' ? 'até ' : 'pelo menos ') + d.meta.n + (d.meta.un ? ' ' + d.meta.un : ''))); else if (d.tipo === 'lista' && d.itens.length) tx.append(el('small', null, d.itens.length + ' itens na lista'));
+    it.append(b, tx); if (d.hora) it.append(el('span', 'mini', '⏰ ' + d.hora)); dir.append(it) } }
+  if (V.length) { dir.append(el('div', 'grupo', 'Pra fazer algumas vezes na semana')); for (const d of V) { const it = el('div', 'item'), tx = el('div', 'txt'); tx.append(el('span', null, d.t), el('small', null, (d.freq.n || 3) + 'x por semana, no dia que der')); it.append(tx); dir.append(it) } }
+  if (A.length) { dir.append(el('div', 'grupo', 'Afazeres com prazo neste dia')); for (const t of A) { const it = el('div', 'item'), tx = el('div', 'txt'); tx.append(el('span', null, t.t)); it.append(tx, el('span', 'mini', '📅 prazo')); dir.append(it) } }
+  if (!L.length && !V.length && !A.length) dir.append(el('div', 'vazio', 'Nada agendado pra este dia.'));
+  dir.append(el('p', 'dica', 'Dia que ainda não chegou: dá pra ver o que vai cair pra planejar, mas marcar só no dia. Diárias pausadas não aparecem.'));
 }
 // ---------------- hoje: o que falta, baú do dia ----------------
 function statusHoje() { const h = hoje(), L = S.diar.map(prep).filter(d => agendada(d, h) && (d.freq.t !== 'vezes' || feito(d) || semFeita(d)));
