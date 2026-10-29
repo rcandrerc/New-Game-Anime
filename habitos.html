@@ -15,7 +15,7 @@
   button.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
   /* ---------- mundo (metade de cima) ---------- */
   #arena{position:relative;flex:0 0 48%;min-height:280px;overflow:hidden;background:#f2c597;touch-action:none}
-  #arena canvas{display:block;touch-action:none}
+  #arena>canvas{display:block;touch-action:none} /* só o do jogo: o papel do mapa também é um canvas e precisa deixar deslizar */
   #hud{position:absolute;left:0;right:0;top:0;padding:calc(8px + env(safe-area-inset-top,0px)) 10px 0;display:flex;gap:8px;align-items:flex-start;pointer-events:none}
   #hud .esq{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;filter:drop-shadow(0 1px 2px #0009)}
   #hud .nome{font-weight:800;font-size:15px;text-shadow:0 1px 2px #000}
@@ -2672,7 +2672,7 @@ function quadro(t) {
   numsPasso(dt); r.render(sc, cam);
 }
 new ResizeObserver(tam).observe(arena);
-new ResizeObserver(() => { if (mapaEl.classList.contains('on')) abreMapa() }).observe(mapaEl); // o mapa acompanha quando as tarefas escondem ou aparecem
+{ let lw = 0; new ResizeObserver(() => { const w = mapaEl.clientWidth; if (!mapaEl.classList.contains('on') || w === lw) { lw = w; return } lw = w; const e = escolha, y = roloEl.scrollTop / (roloEl.scrollHeight || 1); abreMapa(); escolha = e; roloEl.scrollTop = y * roloEl.scrollHeight; if (e) { folhaEl.querySelectorAll('.no').forEach((b, j) => b.classList.toggle('sel', j === e - 1)); infoMapa() } }).observe(mapaEl) } // o mapa acompanha quando as tarefas escondem ou aparecem (só muda a largura; a altura mexendo não pode puxar o mapa de volta)
 comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); try { trocaAba(aba) } catch (e) { console.error(e) } try { hud() } catch (e) { console.error(e) } carregar(S.pers); requestAnimationFrame(quadro); try { viraDia(); chefeSemana(); lista() } catch (e) { console.error(e) } // abre direto nas tarefas, com a heroína no acampamento do lado (sem janela por cima); um erro na lista nunca pode travar o carregamento
 // ---------------- tela acesa: o celular não apaga enquanto joga; só depois de uns minutos sem tocar (Screen Wake Lock) ----------------
 const TELA = { trava: null, ult: Date.now() };
