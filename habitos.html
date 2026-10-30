@@ -220,6 +220,9 @@
   .atr button:disabled{opacity:.25}
   .sec button.reset.verde{background:#1f6b45;border-color:#2f9a64}
   .sec button.reset{width:100%;font-weight:800;background:#8a2e2e;border-color:#c05050}
+  .conta input{display:block;width:100%;margin-top:8px;font:inherit;font-size:15px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;user-select:text;-webkit-user-select:text}
+  .conta .bts{display:flex;gap:8px;margin-top:8px} .conta .bts button{flex:1;font-weight:700} .conta p{margin:0 0 8px} .conta .ou{margin:10px 0 0;text-align:center}
+  .conta button.link{background:none;border:none;color:var(--fg2);text-decoration:underline;padding:6px 0 0;font-size:12.5px}
   .skills{display:flex;flex-direction:column;gap:6px}
   .sk1{display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:10px;background:#2a3350;border-left:4px solid var(--esp)}
   .sk1.M{border-left-color:var(--mag)} .sk1.off{opacity:.5}
@@ -364,6 +367,7 @@
 <script src="js/three.min.js"></script>
 <script src="js/GLTFLoader.js"></script>
 <script src="js/vrm_char.js"></script>
+<script src="js/firebase-config.js"></script>
 <script>
 // Jogo de hábitos (estilo Habitica) com os personagens do New Game Anime, pro celular em pé.
 // Em cima: a heroína segue uma trilha num vale e luta com os monstros que encontra, sozinha (Auto) ou com joystick (Manual).
@@ -432,33 +436,8 @@ function resetaJogo() { // o jogo volta pro começo e o histórico das tarefas z
   for (const d of S.diar) { d.hist = {}; d.racha = d.melhor = d.sem = d.v = 0; d.ok = false; d.nao = false; d.pago = 0; d.dado = null; d.metas = []; for (const i of d.itens || []) i.ok = false; }
 }
 if (S.zerado !== 1) { zeraProgresso(); try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} } // o André pediu pra recomeçar do zero (uma vez só)
-function salva() { try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} }
-// rotina do André (v5, 28/10/2026): entra uma vez só como diárias; o que ele já tiver com o mesmo nome fica como está
-const ROTINA = [ // nome, dificuldade, categoria, dias da semana (0 = domingo), horário ('' = fim de semana, sem hora, na ordem da lista)
-  ['Acordar e café leve', 'f', 'saude', [1, 2, 3, 4, 5], '08:00'],
-  ['Pedal (1h40 a 2h)', 'd', 'esporte', [1, 2, 3, 5], '08:20'],
-  ['Barra 5x6', 'm', 'esporte', [1], '10:20'], ['Flexão 5x10', 'm', 'esporte', [2, 5], '10:20'], ['Prancha 5x40s', 'm', 'esporte', [3], '10:20'],
-  ['Barra 5x6 (quinta)', 'm', 'esporte', [4], '08:20'],
-  ['Levar no desenho', 'f', 'social', [4], '09:45'], ['Programação (quinta)', 'm', 'estudo', [4], '10:15'], ['Buscar no desenho', 'f', 'social', [4], '11:45'],
-  ['Almoço da filha e louça', 'm', 'casa', [1, 2, 3, 5], '11:00'], ['Almoço rápido da filha', 'm', 'casa', [4], '12:00'],
-  ['Jogar 50 min', 'f', 'lazer', [2, 3, 5], '12:00'],
-  ['Levar na escola', 'f', 'social', [1, 2, 3, 4, 5], '12:55'],
-  ['Quimera ou programação (1h45)', 'm', 'estudo', [1, 2, 3, 5], '13:15'],
-  ['Jogar 1h30', 'f', 'lazer', [4], '13:30'], ['Jogar 1h30 (segunda)', 'f', 'lazer', [1], '15:00'],
-  ['Noite com a família', 'f', 'social', [1], '18:00'],
-  ['Pedal (fim de semana)', 'd', 'esporte', [0, 6], ''], ['Prancha 5x40s (sábado)', 'm', 'esporte', [6], ''],
-  ['Quimera ou programação (1h a 2h)', 'm', 'estudo', [0, 6], ''], ['Jogar 1h30 (fim de semana)', 'f', 'lazer', [0, 6], ''],
-];
-if (!(S.rotina >= 5)) {
-  const tem = new Set(S.diar.map(d => d.t));
-  const am = new Date(); am.setDate(am.getDate() + 1); const ini = isoDe(am); // começa amanhã, pra não cobrar o que já passou hoje
-  for (const [t, d, cat, dias, hora] of ROTINA) if (!tem.has(t)) S.diar.push({ id: uid(), t, d, ok: false, cat, hora, freq: { t: 'semana', dias }, ini, criado: ini });
-  S.rotina = 5; salva();
-}
-if (!(S.rotina >= 6)) { // 29/10/2026: pesar todo dia (ele ajusta os dias depois); começa hoje
-  if (!S.diar.some(d => d.t === 'Registrar peso no MyFitnessPal')) S.diar.push({ id: uid(), t: 'Registrar peso no MyFitnessPal', d: 'f', ok: false, cat: 'saude', hora: '', freq: { t: 'todo' } });
-  S.rotina = 6; salva();
-}
+const NUVEM = { cfg: window.FIREBASE_CONFIG || null, on: false, user: null, pronta: false, timer: 0, enviando: false, ult: 0, erro: '', email: '' }; // conta (Firebase): veja nuvemInicia
+function salva() { try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} nuvemMudou() }
 const A_ = k => S.attr[k] || 0;
 const hpMax = () => 100 + 8 * (S.nv - 1) + 15 * A_('vid');
 const enMax = () => 40 + 8 * A_('est');
@@ -2221,6 +2200,71 @@ function importaBackup() { const i = document.createElement('input'); i.type = '
   i.onchange = () => { const f = i.files[0]; if (!f) return; f.text().then(t => { let d; try { d = JSON.parse(t) } catch (e) { d = null }
     if (!d || !Array.isArray(d.diar) || !Array.isArray(d.hab)) { aviso('Esse arquivo não é um backup do jogo.'); return }
     if (!confirm('Trocar tudo pelo backup' + (d.backup ? ' de ' + ddmm(d.backup) : '') + '? O que está no celular agora some.')) return; localStorage.setItem(CHAVE, JSON.stringify(d)); location.reload() }) }; i.click() }
+// ---------------- conta e nuvem (Firebase): o jogo continua salvando no aparelho e, com login, manda uma cópia pra conta ----------------
+// Sem js/firebase-config.js preenchido, nada disso liga e o jogo salva só no aparelho.
+// Na conta fica um documento usuarios/{uid} com o jogo inteiro (dados) e quando foi salvo (em). Cada aparelho guarda em CHAVE_N qual versão da conta ele tem:
+// se a conta mudou em outro aparelho, este carrega a da conta; se não, manda a dele.
+const CHAVE_N = 'nga-habitos-nuvem', FB_V = '10.14.1';
+const nuvemLe = () => { try { return JSON.parse(localStorage.getItem(CHAVE_N) || 'null') || {} } catch (e) { return {} } };
+const nuvemGrava = o => { try { localStorage.setItem(CHAVE_N, JSON.stringify(o)) } catch (e) {} };
+const docConta = () => firebase.firestore().collection('usuarios').doc(NUVEM.user.uid);
+const carregaJs = src => new Promise((ok, falha) => { const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = falha; document.head.append(e) });
+async function nuvemInicia() {
+  if (!NUVEM.cfg) return;
+  const js = m => carregaJs('https://www.gstatic.com/firebasejs/' + FB_V + '/firebase-' + m + '-compat.js');
+  try { await js('app'); await Promise.all([js('auth'), js('firestore')]) } catch (e) { NUVEM.erro = 'Sem internet: o jogo está salvando só no aparelho.'; if (aba === 'her') lista(); return }
+  firebase.initializeApp(NUVEM.cfg); NUVEM.on = true;
+  firebase.auth().onAuthStateChanged(u => { NUVEM.user = u; NUVEM.pronta = false; NUVEM.erro = ''; if (u) nuvemConfere(); if (aba === 'her') lista() });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') { if (NUVEM.timer) nuvemEnvia() } else if (NUVEM.pronta) nuvemConfere() }); // saiu: manda já; voltou: vê se mexeram em outro aparelho
+}
+async function nuvemConfere() {
+  const u = NUVEM.user; let snap; if (NUVEM.enviando) return;
+  try { snap = await docConta().get({ source: 'server' }) } catch (e) { NUVEM.erro = 'Não deu pra falar com a nuvem agora. O jogo segue salvando no aparelho.'; if (aba === 'her') lista(); setTimeout(() => { if (NUVEM.user === u && !NUVEM.pronta) nuvemConfere() }, 30000); return }
+  if (NUVEM.user !== u || NUVEM.enviando) return;
+  const loc = nuvemLe(), d = snap.exists ? snap.data() : null;
+  const usaDaConta = () => { clearTimeout(NUVEM.timer); NUVEM.timer = 0; localStorage.setItem(CHAVE, d.dados); nuvemGrava({ uid: u.uid, base: d.em }); location.reload() };
+  if (d && loc.uid === u.uid && loc.base !== d.em) { usaDaConta(); return } // a conta foi salva em outro aparelho depois da última vez que este falou com ela
+  if (d && loc.uid !== u.uid) { // primeira vez desta conta neste aparelho e a conta já tem jogo
+    let c = {}; try { c = JSON.parse(d.dados) } catch (e) {}
+    const resumo = 'nível ' + (c.nv || 1) + ', ' + ((c.hab || []).length + (c.diar || []).length + (c.afz || []).length) + ' tarefas';
+    if (confirm('Sua conta já tem um jogo salvo (' + resumo + ').\n\nOK: abrir o jogo da conta neste aparelho.\nCancelar: ficar com o jogo deste aparelho.')) { usaDaConta(); return }
+    if (!confirm('Trocar o jogo da conta (' + resumo + ') pelo jogo deste aparelho? O da conta some.')) { firebase.auth().signOut(); return }
+  }
+  NUVEM.pronta = true; NUVEM.ult = d ? d.em : 0; if (aba === 'her') lista();
+  if (!d || loc.uid !== u.uid || NUVEM.sujo) nuvemEnvia(); // conta nova leva o jogo deste aparelho; senão manda o que mudou enquanto não estava conectado
+}
+function nuvemMudou() { NUVEM.sujo = true; if (!NUVEM.pronta) return; clearTimeout(NUVEM.timer); NUVEM.timer = setTimeout(nuvemEnvia, 2000) }
+function nuvemEnvia() {
+  clearTimeout(NUVEM.timer); NUVEM.timer = 0; if (!NUVEM.pronta || !NUVEM.user) return;
+  const u = NUVEM.user, em = Date.now(); NUVEM.sujo = false; NUVEM.enviando = true;
+  docConta().set({ dados: JSON.stringify(S), em, nv: S.nv }).then(() => { nuvemGrava({ uid: u.uid, base: em }); NUVEM.ult = em; NUVEM.erro = '' }, () => { NUVEM.sujo = true; NUVEM.erro = 'Não deu pra salvar na nuvem. Tento de novo na próxima mudança.' })
+    .finally(() => { NUVEM.enviando = false; if (aba === 'her') lista() });
+}
+const ERROS_CONTA = { 'auth/invalid-email': 'Esse e-mail não parece certo.', 'auth/missing-password': 'Digite a senha.', 'auth/weak-password': 'A senha precisa de pelo menos 6 letras ou números.',
+  'auth/email-already-in-use': 'Já existe conta com esse e-mail. Toque em Entrar.', 'auth/invalid-credential': 'E-mail ou senha errados.', 'auth/wrong-password': 'E-mail ou senha errados.', 'auth/user-not-found': 'Não achei conta com esse e-mail.',
+  'auth/too-many-requests': 'Muitas tentativas. Espere um pouco e tente de novo.', 'auth/network-request-failed': 'Sem internet.', 'auth/popup-closed-by-user': 'Login cancelado.', 'auth/unauthorized-domain': 'Este site ainda não foi liberado no Firebase (Domínios autorizados).' };
+const erroConta = e => aviso(ERROS_CONTA[e && e.code] || 'Não deu certo: ' + ((e && e.code) || e), 4);
+function contaSec() {
+  const s = el('div', 'sec conta'); s.append(el('h3', null, '☁️ Conta'));
+  if (!NUVEM.on) s.append(el('p', 'dica', NUVEM.erro || 'Conectando…'));
+  else if (NUVEM.user) {
+    s.append(el('p', null, 'Conectado: ' + (NUVEM.user.email || NUVEM.user.displayName || 'sua conta')));
+    const hh = t => new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    s.append(el('p', 'dica', NUVEM.erro || (!NUVEM.pronta ? 'Conferindo a nuvem…' : NUVEM.enviando ? 'Salvando na nuvem…' : NUVEM.ult ? 'Salvo na nuvem às ' + hh(NUVEM.ult) + '. Abra o jogo em qualquer aparelho e entre na mesma conta.' : 'Tudo certo.')));
+    const b = el('button', null, 'Sair da conta'); b.onclick = () => { if (NUVEM.timer) nuvemEnvia(); firebase.auth().signOut() }; s.append(b);
+  } else {
+    s.append(el('p', 'dica', 'Entre pra salvar o jogo na nuvem e abrir em qualquer aparelho (celular, computador). Numa conta nova, o jogo deste aparelho vai junto.'));
+    const g = el('button', 'reset verde', 'Entrar com o Google'); g.onclick = () => { const pv = new firebase.auth.GoogleAuthProvider(); pv.setCustomParameters({ prompt: 'select_account' }); firebase.auth().signInWithPopup(pv).catch(erroConta) };
+    const em = el('input'), se = el('input'), bts = el('div', 'bts'), en = el('button', null, 'Entrar'), cr = el('button', null, 'Criar conta'), es = el('button', 'link', 'Esqueci a senha');
+    em.type = 'email'; em.placeholder = 'E-mail'; em.autocomplete = 'email'; em.value = NUVEM.email; em.oninput = () => NUVEM.email = em.value.trim();
+    se.type = 'password'; se.placeholder = 'Senha (mínimo 6)'; se.autocomplete = 'current-password';
+    en.onclick = () => firebase.auth().signInWithEmailAndPassword(NUVEM.email, se.value).catch(erroConta);
+    cr.onclick = () => firebase.auth().createUserWithEmailAndPassword(NUVEM.email, se.value).catch(erroConta);
+    es.onclick = () => { if (!NUVEM.email) { aviso('Digite o e-mail primeiro.'); em.focus(); return } firebase.auth().sendPasswordResetEmail(NUVEM.email).then(() => aviso('📧 Mandei um e-mail pra trocar a senha.', 4), erroConta) };
+    bts.append(en, cr); s.append(g, el('p', 'dica ou', 'ou com e-mail e senha'), em, se, bts, es);
+  }
+  listaEl.append(s);
+}
 let instalaEv = null; addEventListener('beforeinstallprompt', e => { e.preventDefault(); instalaEv = e; if (aba === 'her') lista() });
 function instalaApp() { if (!instalaEv) return; instalaEv.prompt(); instalaEv.userChoice.finally(() => { instalaEv = null; lista() }) }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw-habitos.js').catch(() => {});
@@ -2367,11 +2411,12 @@ function ferreiro() { // ⚒ ferreiro: cristais + ouro encantam a espada por alg
   listaEl.append(s);
 }
 function heroina() {
+  if (NUVEM.cfg) contaSec();
   { const sr = el('div', 'sec'), b = el('button', 'reset', '🔄 Resetar jogo'); sr.append(el('h3', null, 'Reiniciar'));
     b.onclick = () => { if (confirm('Resetar o jogo? Volta pro nível 1 e pro estágio 1, e zera o histórico e as sequências das tarefas. Os hábitos, diárias e afazeres que você criou ficam.')) { resetaJogo(); salva(); location.reload() } };
     sr.append(b, el('p', 'dica', 'Recomeça a aventura do zero. As tarefas que você criou continuam na lista.')); listaEl.append(sr) }
   { const sb = el('div', 'sec'), ex = el('button', 'reset verde', '💾 Salvar backup'), im = el('button', null, '📂 Restaurar backup'); im.style.marginTop = '8px'; im.style.width = '100%';
-    sb.append(el('h3', null, 'Backup'), el('p', 'dica', 'Tudo fica só neste celular. O backup salva um arquivo nos downloads; se trocar de celular ou limpar os dados, é só restaurar. ' + (S.backup ? 'Último backup: ' + ddmm(S.backup) + '.' : 'Você ainda não fez nenhum.')), ex, im);
+    sb.append(el('h3', null, 'Backup'), el('p', 'dica', (NUVEM.user ? 'O jogo fica neste aparelho e na sua conta. ' : 'Tudo fica só neste celular. ') + 'O backup salva um arquivo nos downloads; se trocar de celular ou limpar os dados, é só restaurar. ' + (S.backup ? 'Último backup: ' + ddmm(S.backup) + '.' : 'Você ainda não fez nenhum.')), ex, im);
     ex.onclick = exportaBackup; im.onclick = importaBackup;
     if (instalaEv) { const ins = el('button', null, '📲 Instalar como app'); ins.style.marginTop = '8px'; ins.style.width = '100%'; ins.onclick = instalaApp; sb.append(ins) }
     listaEl.append(sb) }
@@ -2598,6 +2643,7 @@ function lobbyPasso(dt) {
   LUZL[0].intensity = 1.5; LUZL[1].intensity = 2.2;
   LUZL[0].position.set(LOB.x + Math.sin(LOB.face) * 2.6, LOB.y + 2.4, LOB.z + Math.cos(LOB.face) * 2.6); LUZL[1].position.set(LOB.x - Math.sin(LOB.face) * 1.8, LOB.y + 1.8, LOB.z - Math.cos(LOB.face) * 1.8);
   for (const m of LOB.cris) { const u = m.userData, a = u.a + tempo * 0.15; m.position.set(Math.sin(a) * u.r, u.h + Math.sin(tempo * 1.3 + u.a * 3) * 0.25, Math.cos(a) * u.r); m.rotation.y += dt * 1.2 }
+  if (!R) return; // a heroína ainda está carregando
   if (!P.atk) { const k = Math.min(1, dt * 3); P.x += (LOB.x - P.x) * k; P.z += (LOB.z - P.z) * k; let d = ((LOB.face - P.face + Math.PI * 3) % (Math.PI * 2)) - Math.PI; P.face += d * k }
   P.y = LOB.y;
   if (!R || P.atk || P.comem > 0 || P.hit > 0) return; // sem a heroína carregada ainda, só o palco
@@ -2679,7 +2725,7 @@ function quadro(t) {
 }
 new ResizeObserver(tam).observe(arena);
 { let lw = 0; new ResizeObserver(() => { const w = mapaEl.clientWidth; if (!mapaEl.classList.contains('on') || w === lw) { lw = w; return } lw = w; const e = escolha, y = roloEl.scrollTop / (roloEl.scrollHeight || 1); abreMapa(); escolha = e; roloEl.scrollTop = y * roloEl.scrollHeight; if (e) { folhaEl.querySelectorAll('.no').forEach((b, j) => b.classList.toggle('sel', j === e - 1)); infoMapa() } }).observe(mapaEl) } // o mapa acompanha quando as tarefas escondem ou aparecem (só muda a largura; a altura mexendo não pode puxar o mapa de volta)
-comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); try { trocaAba(aba) } catch (e) { console.error(e) } try { hud() } catch (e) { console.error(e) } carregar(S.pers); requestAnimationFrame(quadro); try { viraDia(); chefeSemana(); lista() } catch (e) { console.error(e) } // abre direto nas tarefas, com a heroína no acampamento do lado (sem janela por cima); um erro na lista nunca pode travar o carregamento
+comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); try { trocaAba(aba) } catch (e) { console.error(e) } try { hud() } catch (e) { console.error(e) } carregar(S.pers); requestAnimationFrame(quadro); try { viraDia(); chefeSemana(); lista() } catch (e) { console.error(e) } nuvemInicia(); // abre direto nas tarefas, com a heroína no acampamento do lado (sem janela por cima); um erro na lista nunca pode travar o carregamento
 // ---------------- tela acesa: o celular não apaga enquanto joga; só depois de uns minutos sem tocar (Screen Wake Lock) ----------------
 const TELA = { trava: null, ult: Date.now() };
 function telaMin() { return S.tela == null ? 8 : S.tela } // (função, não const: a aba Herói usa antes desta linha rodar) minutos sem tocar até deixar o celular apagar (0 = o tempo normal do celular)
@@ -2692,6 +2738,6 @@ for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, () => { TELA.u
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { TELA.ult = Date.now(); prendeTela() } });
 setInterval(() => { if (TELA.trava && Date.now() - TELA.ult > telaMin() * 60000) soltaTela() }, 15000);
 prendeTela();
-window.HAB = { MUS, compoeMusica, painelCheio, abreMapa, joga, montaMapa, TPf: () => TP, sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, viraDia, podeJogar, editor, trocaAba, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
+window.HAB = { MUS, NUVEM, compoeMusica, painelCheio, abreMapa, joga, montaMapa, TPf: () => TP, sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, viraDia, podeJogar, editor, trocaAba, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
 </script>
 </body></html>
