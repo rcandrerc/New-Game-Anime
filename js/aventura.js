@@ -3,7 +3,7 @@
 // fundo escuro, 8 quadros por segundo, e quando o app fica fechado o jogo calcula o que aconteceu (até 12 h).
 // Usa do habitos.html: S, salva, hoje, el, aviso, TELA, prendeTela, somLiga, plim. Sprites: aventura/*.png (tools/sprites_aventura.js).
 (() => {
-  const VER = 7; const EM = 1.8; // a cena ocupa só a metade de baixo da tela (o resto é preto puro): textos e bonecos compensam // sobe quando os sprites mudam (o celular não fica com imagem velha)
+  const VER = 8; const EM = 1.8; // a cena ocupa só a metade de baixo da tela (o resto é preto puro): textos e bonecos compensam // sobe quando os sprites mudam (o celular não fica com imagem velha)
   const DESCANSO_MAX = Infinity; // o André quer ela rodando enquanto não mexe (a tela já fica bem escura no descanso)
   const FPS = 8, MAX_FORA = 12 * 3600, KILLS_CHEFE = 10;
   const ZONAS = [
@@ -220,18 +220,18 @@
     const sk = V.H.skills, r0 = Math.round(Hh * 0.035 * EM), gap = r0 * 2.6, x0 = W / 2 - (sk.length - 1) * gap / 2, y0 = Hh - r0 * 3.1; ctx.save();
     sk.forEach((x, i) => { const cx = x0 + i * gap, cd = V.st ? V.st.cd[i] || 0 : 0, sem = x.mana && V.st && V.st.mana < x.mana;
       ctx.globalAlpha = 0.85; ctx.fillStyle = 'rgba(8,10,20,.8)'; ctx.beginPath(); ctx.arc(cx, y0, r0, 0, 7); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = cd || sem ? 'rgba(255,255,255,.2)' : x.cor; ctx.stroke();
-      ctx.fillStyle = cd || sem ? 'rgba(255,255,255,.35)' : x.cor; ctx.font = '800 ' + Math.round(r0 * 0.9) + 'px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(x.nome[0], cx, y0 + 1);
+      ctx.globalAlpha = cd || sem ? 0.4 : 1; ctx.fillStyle = '#fff'; ctx.font = Math.round(r0 * 1.05) + 'px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(icoSk(x), cx, y0 + 1); ctx.globalAlpha = 0.85;
       if (cd) { ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.beginPath(); ctx.moveTo(cx, y0); ctx.arc(cx, y0, r0, -1.57, -1.57 + 6.283 * cd / x.cd); ctx.fill() } });
     ctx.restore(); ctx.textBaseline = 'alphabetic' }
   function desenhaHud() { const a = A(), H = heroi(), ch = a.z === a.maxZ; hud.innerHTML = '';
     const top = el('div', 'avTopo'), x = el('button', null, '✕'); x.setAttribute('aria-label', 'Fechar a aventura'); x.onclick = fecha;
-    top.append(el('b', null, '🗺 ' + nomeZ(a.z)), el('span', null, '⭐ Nível ' + S.nv + ' (das tarefas)'), el('span', null, '🪙 ' + a.ouro), el('span', null, ch ? '👑 chefe em ' + Math.max(0, KILLS_CHEFE - a.kills) : '↩ treinando'), x); hud.append(top);
-    const eq = el('div', 'avEq'); for (const s of ['arma', 'arm', 'amu']) { const it = a.eq[s], d = el('span', null, (it ? ico(it) : SLOT[s][0]) + ' ' + (it ? it.nome + ' +' + Math.round(it.pct * 100) + '%' : '—')); if (it) d.style.color = RAR[it.r][2]; eq.append(d) }
-    eq.append(el('span', null, '⚒ Forja ' + a.forja + ' (+' + a.forja * 4 + '%)' + (a.forja >= forjaMax() ? ' · máx. no nível' : '')), el('span', null, '⚔ ' + Math.round(H.atk) + '  ❤ ' + H.hp + '  🧪 ' + a.poc + (a.eq.arma && a.eq.arma.tipo === 'cajado' ? '  🔷 ' + a.pm : ''))); hud.append(eq);
-    if (ch && a.kills >= KILLS_CHEFE - 1) { const need = nivelPraChefe(a.z); if (need > S.nv) hud.append(el('div', 'avDica', '💡 O chefe desta zona pede uns nível ' + need + '. Cada tarefa feita deixa a heroína mais forte.')) }
+    top.append(el('b', null, '🗺 ' + nomeZ(a.z)), el('span', null, '⭐ ' + S.nv), el('span', null, '🪙 ' + a.ouro), el('span', null, ch ? '👑 ' + Math.max(0, KILLS_CHEFE - a.kills) : '↩'), x); hud.append(top);
+    const eq = el('div', 'avEq'); for (const s of ['arma', 'arm', 'amu']) { const it = a.eq[s], d = el('span', null, (it ? ico(it) : SLOT[s][0]) + ' ' + (it ? '+' + Math.round(it.pct * 100) + '%' : '—')); if (it) d.style.color = RAR[it.r][2]; eq.append(d) }
+    eq.append(el('span', null, '⚒️ ' + a.forja + '/' + forjaMax()), el('span', null, '⚔ ' + Math.round(H.atk) + '  ❤ ' + H.hp + '  🧪 ' + a.poc + (a.eq.arma && a.eq.arma.tipo === 'cajado' ? '  🔷 ' + a.pm : ''))); hud.append(eq);
+    if (ch && a.kills >= KILLS_CHEFE - 1) { const need = nivelPraChefe(a.z); if (need > S.nv) hud.append(el('div', 'avDica', '👑 ⭐' + need + '  ·  ✅ ➜ ⭐')) }
     atalho.innerHTML = ''; const ab = el('button', 'avGrande', '🎒' + (a.novos ? '<i>' + a.novos + '</i>' : '')); ab.innerHTML = '🎒' + (a.novos ? '<i>' + a.novos + '</i>' : ''); ab.setAttribute('aria-label', 'Bolsa'); ab.onclick = e => { e.stopPropagation(); abreBolsa('bolsa') };
-    const al = el('button', 'avGrande', '🏪'); al.setAttribute('aria-label', 'Loja'); al.onclick = e => { e.stopPropagation(); abreBolsa('loja') }; atalho.append(ab, al);
-    const op = el('div', 'avOp'), b = el('button', null, (a.auto ? '🌙 Liga sozinho depois de ' + a.auto + ' min parado' : '🌙 Não liga sozinho')); b.onclick = e => { e.stopPropagation(); a.auto = a.auto === 3 ? 10 : a.auto === 10 ? 0 : 3; salva(); desenhaHud() }; const bb = el('button', null, '🎒 Bolsa ' + a.bolsa.length + '/' + BOLSA_MAX + (a.novos ? ' · ' + a.novos + ' novo' + (a.novos > 1 ? 's' : '') : '')); bb.onclick = e => { e.stopPropagation(); abreBolsa('bolsa') };
+    const al = el('button', 'avGrande', '🏪'); al.setAttribute('aria-label', 'Loja'); al.onclick = e => { e.stopPropagation(); abreBolsa('loja') }; const as = el('button', 'avGrande', '✨'); as.setAttribute('aria-label', 'Habilidades'); as.onclick = e => { e.stopPropagation(); abreBolsa('skills') }; atalho.append(ab, as, al);
+    const op = el('div', 'avOp'), b = el('button', null, (a.auto ? '🌙 ' + a.auto + ' min' : '🌙 ✕')); b.onclick = e => { e.stopPropagation(); a.auto = a.auto === 3 ? 10 : a.auto === 10 ? 0 : 3; salva(); desenhaHud() }; const bb = el('button', null, '🎒 Bolsa ' + a.bolsa.length + '/' + BOLSA_MAX + (a.novos ? ' · ' + a.novos + ' novo' + (a.novos > 1 ? 's' : '') : '')); bb.onclick = e => { e.stopPropagation(); abreBolsa('bolsa') };
     const lj = el('button', null, '🏪 Loja'); lj.onclick = e => { e.stopPropagation(); abreBolsa('loja') }; op.append(b); hud.append(op);
   }
   // ---------------- bolsa e loja (a única parte que o André mexe) ----------------
@@ -240,33 +240,54 @@
   function fechaBolsa() { painel.remove(); salva(); desenhaHud() }
   function equipa(it) { const a = A(), i = a.bolsa.indexOf(it); if (i < 0) return; a.bolsa.splice(i, 1); if (a.eq[it.s]) a.bolsa.push(a.eq[it.s]); a.eq[it.s] = it; const hp0 = V.H ? V.H.hp : 0; V.H = heroi(); if (V.H.hp > hp0) V.hhp += V.H.hp - hp0; salva() }
   function vende(it) { const a = A(), i = a.bolsa.indexOf(it); if (i < 0) return; a.bolsa.splice(i, 1); a.ouro += precoVenda(it); salva() }
-  function linhaItem(it, eqd) { const a = A(), cur = a.eq[it.s], d = el('div', 'avItem'), dif = eqd ? 0 : Math.round((it.pct - (cur ? cur.pct : 0)) * 100);
-    const t = el('span', 'avNome', ico(it) + ' ' + it.nome); t.style.color = RAR[it.r][2];
-    const info = el('span', 'avInfo', RAR[it.r][0] + ' · +' + Math.round(it.pct * 100) + '% ' + { arma: 'ataque', arm: 'vida', amu: 'crítico e ouro' }[it.s] + (eqd ? ' · em uso' : dif > 0 ? ' · ▲ ' + dif + '%' : dif < 0 ? ' · ▼ ' + -dif + '%' : ' · igual'));
-    if (!eqd && dif > 0) info.style.color = '#7dffa0'; d.append(t, info);
-    if (!eqd) { const b1 = el('button', 'avEquipa', 'Equipar'), b2 = el('button', null, 'Vender 🪙' + precoVenda(it)); b1.onclick = () => { equipa(it); desenhaBolsa() }; b2.onclick = () => { vende(it); desenhaBolsa() }; d.append(b1, b2) }
+  // Bolsa, habilidades e loja só com símbolos (pedido do André: nada de lista de texto)
+  const ST = { arma: '⚔️', arm: '❤️', amu: '🍀' }, SKI = { corte: '🗡️', giro: '🌀', chao: '💥', raio: '⚡', fogo: '🔥', meteoro: '☄️' };
+  const icoSk = x => ({ 'Investida': '💨', 'Lança de Gelo': '❄️', 'Onda Arcana': '🔮', 'Fúria': '😤', 'Vórtice': '🌪️', 'Fenda de Fogo': '🌋', 'Círculo de Chamas': '🔥' })[x.nome] || SKI[x.fx] || '✨';
+  let sel = null, dica = '';
+  function slotItem(it, eqd) { const a = A(), cur = a.eq[it.s], b = el('button', 'avSlot r' + it.r + (sel === it ? ' sel' : ''));
+    b.append(el('span', 'avIc', ico(it)), el('span', 'avPct', '+' + Math.round(it.pct * 100) + '%'));
+    if (!eqd && (!cur || it.pct > cur.pct)) b.append(el('span', 'avMelhor', '▲'));
+    b.onclick = () => { sel = sel === it ? null : it; desenhaBolsa() }; return b }
+  function detalhe(it) { const a = A(), eqd = a.eq[it.s] === it, cur = a.eq[it.s], d = el('div', 'avDet'), dif = Math.round((it.pct - (cur ? cur.pct : 0)) * 100);
+    const g = el('span', 'avDetIc r' + it.r, ico(it)); d.append(g, el('span', 'avDetSt', ST[it.s] + ' +' + Math.round(it.pct * 100) + '%'));
+    if (!eqd) { const c = el('span', 'avDetDif', dif > 0 ? '▲' + dif + '%' : dif < 0 ? '▼' + -dif + '%' : '='); c.style.color = dif > 0 ? '#7dffa0' : dif < 0 ? '#ff8a8a' : '#9aa6bd'; d.append(c);
+      const e = el('button', 'avBig avEquipa', '✔'); e.title = 'Equipar'; e.onclick = () => { equipa(it); sel = null; desenhaBolsa() };
+      const v = el('button', 'avBig', '🪙' + precoVenda(it)); v.title = 'Vender'; v.onclick = () => { vende(it); sel = null; desenhaBolsa() }; d.append(e, v) }
+    else d.append(el('span', 'avDetSt', '✔'));
     return d }
-  function desenhaBolsa() { const a = A(); painel.innerHTML = '';
-    const top = el('div', 'avBTopo'), t1 = el('button', aba === 'bolsa' ? 'on' : null, '🎒 Bolsa ' + a.bolsa.length + '/' + BOLSA_MAX), t2 = el('button', aba === 'loja' ? 'on' : null, '🏪 Loja'), x = el('button', null, '✕');
-    t1.onclick = () => abreBolsa('bolsa'); t2.onclick = () => abreBolsa('loja'); x.onclick = fechaBolsa; top.append(t1, t2, el('span', 'avOuro', '🪙 ' + a.ouro), x); painel.append(top);
-    const lista = el('div', 'avLista'); painel.append(lista);
+  function desenhaBolsa() { const a = A(); painel.innerHTML = ''; const tipo = tipoArma();
+    if (sel && !a.bolsa.includes(sel) && !Object.values(a.eq).includes(sel)) sel = null;
+    const top = el('div', 'avBTopo'), tab = (q, txt) => { const b = el('button', 'avTab' + (aba === q ? ' on' : ''), txt); b.onclick = () => { sel = null; dica = ''; abreBolsa(q) }; return b }, x = el('button', 'avTab', '✕');
+    x.onclick = fechaBolsa; top.append(tab('bolsa', '🎒 ' + a.bolsa.length + '/' + BOLSA_MAX), tab('skills', '✨ ' + (tipo === 'nu' ? 0 : ativas(tipo).length) + '/' + BARRA), tab('loja', '🏪'), el('span', 'avOuro', '🪙 ' + a.ouro), x); painel.append(top);
+    const corpo = el('div', 'avCorpo'); painel.append(corpo);
     if (aba === 'bolsa') {
-      lista.append(el('div', 'avSub', 'Em uso (a roupa segue a arma: espada = guerreira, cajado = maga)'));
-      for (const s of ['arma', 'arm', 'amu']) lista.append(a.eq[s] ? linhaItem(a.eq[s], true) : el('div', 'avItem avVazio', SLOT[s][0] + ' nada equipado'));
-      const tipo = tipoArma(); lista.append(el('div', 'avSub', 'Habilidades (do Age of Embers) · ' + (tipo === 'nu' ? 'equipe uma arma pra ter habilidades' : tipo === 'cajado' ? 'de magia, gastam mana' : 'de espada')));
-      if (tipo !== 'nu') { const em = ativas(tipo).map(x => x.nome); lista.append(el('div', 'avSub', 'Em uso: ' + em.length + ' de ' + BARRA + '. Toque em Usar ou Tirar pra montar a sua barra.'));
-        SKILLS[tipo].forEach(x => { const ok = S.nv >= x.nv, usa = em.includes(x.nome), d = el('div', 'avItem' + (ok ? '' : ' avVazio')); const t = el('span', 'avNome', (ok ? (usa ? '⭐ ' : '✨ ') : '🔒 ') + x.nome); if (ok) t.style.color = x.cor; d.append(t, el('span', 'avInfo', ok ? 'dano x' + x.m + (x.mana ? ' · ' + x.mana + ' de mana' : '') + (usa ? ' · na barra' : '') : 'libera no nível ' + x.nv + ' das tarefas'));
-          if (ok) { const b = el('button', usa ? null : 'avEquipa', usa ? 'Tirar' : 'Usar'); b.disabled = !usa && em.length >= BARRA; b.onclick = () => { a.build = a.build || {}; const cur = ativas(tipo).map(z => z.nome); a.build[tipo] = usa ? cur.filter(n => n !== x.nome) : cur.concat(x.nome); V.H = heroi(); salva(); desenhaBolsa() }; d.append(b) } lista.append(d) }) }
-      lista.append(el('div', 'avSub', 'Na bolsa'));
-      if (!a.bolsa.length) lista.append(el('div', 'avItem avVazio', 'Vazia. Tudo que cair dos monstros vem pra cá.'));
-      const ord = a.bolsa.slice().sort((p, q) => (p.s > q.s ? 1 : p.s < q.s ? -1 : 0) || q.pct - p.pct); for (const it of ord) lista.append(linhaItem(it, false));
+      const eq = el('div', 'avEqB'); for (const s of ['arma', 'arm', 'amu']) eq.append(a.eq[s] ? slotItem(a.eq[s], true) : el('div', 'avSlot vazio', SLOT[s][0])); eq.firstChild.classList.add('emUso');
+      const gr = el('div', 'avGrade'), ord = a.bolsa.slice().sort((p, q) => (p.s > q.s ? 1 : p.s < q.s ? -1 : 0) || q.pct - p.pct);
+      ord.forEach(it => gr.append(slotItem(it, false))); for (let i = ord.length; i < BOLSA_MAX; i++) gr.append(el('div', 'avSlot vazio'));
+      const linha = el('div', 'avBag'); linha.append(eq, gr); corpo.append(linha);
       const piores = a.bolsa.filter(it => a.eq[it.s] && it.pct <= a.eq[it.s].pct);
-      if (piores.length) { const b = el('button', 'avTudo', 'Vender os ' + piores.length + ' piores que o que está em uso (🪙 ' + piores.reduce((t, it) => t + precoVenda(it), 0) + ')'); b.onclick = () => { piores.forEach(vende); desenhaBolsa() }; lista.append(b) }
+      const rod = el('div', 'avRod'); if (sel) rod.append(detalhe(sel));
+      else if (piores.length) { const b = el('button', 'avBig', '🧹 ×' + piores.length + '  🪙' + piores.reduce((t, it) => t + precoVenda(it), 0)); b.title = 'Vender tudo que é pior que o que está em uso'; b.onclick = () => { piores.forEach(vende); desenhaBolsa() }; rod.append(b) }
+      corpo.append(rod);
+    } else if (aba === 'skills') {
+      if (tipo === 'nu') { corpo.append(el('div', 'avVazioG', '🗡️ / 🪄  ➜  ✨')); return }
+      const em = ativas(tipo), barra = el('div', 'avBarraSk');
+      for (let i = 0; i < BARRA; i++) { const x = em[i], c = el('span', 'avSkC' + (x ? '' : ' vazio'), x ? icoSk(x) : ''); if (x) c.style.borderColor = x.cor; barra.append(c) }
+      const gr = el('div', 'avSkGrade');
+      SKILLS[tipo].forEach(x => { const ok = S.nv >= x.nv, usa = em.includes(x), b = el('button', 'avSk' + (usa ? ' on' : '') + (ok ? '' : ' preso'));
+        b.append(el('span', 'avSkIc', ok ? icoSk(x) : '🔒')); if (!ok) b.append(el('span', 'avSkNv', '⭐' + x.nv)); else if (x.mana) b.append(el('span', 'avSkNv', '🔷' + x.mana));
+        b.style.borderColor = ok ? x.cor : '#333a4a'; if (usa) b.style.boxShadow = '0 0 10px ' + x.cor;
+        b.onclick = () => { dica = (ok ? icoSk(x) + ' ' + x.nome + '  ·  💥×' + x.m : '🔒 ⭐' + x.nv); if (ok && (usa || em.length < BARRA)) { a.build = a.build || {}; const cur = em.map(z => z.nome); a.build[tipo] = usa ? cur.filter(n => n !== x.nome) : cur.concat(x.nome); V.H = heroi(); salva() } desenhaBolsa() };
+        gr.append(b) });
+      corpo.append(barra, gr, el('div', 'avDicaSk', dica));
     } else {
-      const loja = (nome, desc, preco, pode, fn) => { const d = el('div', 'avItem'); d.append(el('span', 'avNome', nome), el('span', 'avInfo', desc)); const b = el('button', 'avEquipa', preco == null ? 'No máximo' : 'Comprar 🪙' + preco); b.disabled = !pode; b.onclick = () => { fn(); salva(); desenhaBolsa() }; d.append(b); lista.append(d) };
-      const pp = precoPocao(a.z); loja('🧪 Poção de vida', 'Ela bebe sozinha quando a vida cai abaixo de 35% e recupera 60%. Você tem ' + a.poc + '.', pp, a.ouro >= pp, () => { a.ouro -= pp; a.poc++ });
-      loja('🔷 Poção de mana', 'Pra maga (cajado): bebe sozinha quando a mana acaba e enche tudo. Você tem ' + a.pm + '.', pp, a.ouro >= pp, () => { a.ouro -= pp; a.pm++ });
-      const fm = a.forja >= forjaMax(), cf = custoForja(a.forja); loja('⚒ Forja: +4% de ataque', 'Nível da forja: ' + a.forja + ' de ' + forjaMax() + (fm ? '. Pra subir mais, faça tarefas (o limite é 2x o seu nível).' : '.'), fm ? null : cf, !fm && a.ouro >= cf, () => forja());
+      const gr = el('div', 'avLojaG'), tile = (ic, qtd, preco, pode, fn, nome) => { const b = el('button', 'avTile'); b.title = nome; b.disabled = !pode;
+        b.append(el('span', 'avTileIc', ic), el('span', 'avTileQ', qtd), el('span', 'avTileP', preco == null ? '✔' : '🪙' + preco)); b.onclick = () => { fn(); salva(); desenhaBolsa() }; gr.append(b) };
+      const pp = precoPocao(a.z), fm = a.forja >= forjaMax(), cf = custoForja(a.forja);
+      tile('🧪', '×' + a.poc, pp, a.ouro >= pp, () => { a.ouro -= pp; a.poc++ }, 'Poção de vida');
+      tile('🔷', '×' + a.pm, pp, a.ouro >= pp, () => { a.ouro -= pp; a.pm++ }, 'Poção de mana');
+      tile('⚒️', a.forja + '/' + forjaMax(), fm ? null : cf, !fm && a.ouro >= cf, () => forja(), 'Forja: +4% de ataque');
+      corpo.append(gr);
     } }
   // ---------------- abrir e fechar ----------------
   function abre(desc) {
