@@ -13,11 +13,15 @@ import android.provider.MediaStore
 import android.view.View
 import android.webkit.*
 import java.io.File
+import androidx.credentials.*
+import androidx.credentials.exceptions.*
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 
 // O app: o jogo de hábitos inteiro (o mesmo do site) dentro do app, com uma ponte pro papel de parede.
 // O jogo manda o estado da heroína pelo Nativo.estado(); o papel de parede lê daqui (SharedPreferences "aventura").
 class MainActivity : Activity() {
-    companion object { const val URL = "https://rcandrerc.github.io/New-Game-Anime/habitos.html" }
+    companion object { const val URL = "https://rcandrerc.github.io/New-Game-Anime/habitos.html"; const val WEB_CLIENT = "87888091200-qjjplhjue9iml6onoq41o81961738dk6.apps.googleusercontent.com" }
     private lateinit var web: WebView
     private var escolha: ValueCallback<Array<Uri>>? = null
     private var abrirAventura = false
@@ -34,7 +38,10 @@ class MainActivity : Activity() {
             } else File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), nome).writeText(conteudo)
             true
         } catch (e: Exception) { false }
-        @JavascriptInterface fun versao(): String = "0.3"
+        @JavascriptInterface fun versao(): String = BuildConfig.VERSION_NAME
+        // login com Google: o WebView não pode fazer (o Google bloqueia), então o app faz e entrega o token pro jogo (js/nuvem.js → window.nuvemToken)
+        @JavascriptInterface fun loginGoogle() { runOnUiThread { entraGoogle() } }
+        @JavascriptInterface fun sairGoogle() { runOnUiThread { try { CredentialManager.create(this@MainActivity).clearCredentialStateAsync(ClearCredentialStateRequest(), null, mainExecutor, object : CredentialManagerCallback<Void?, ClearCredentialException> { override fun onResult(r: Void?) {}; override fun onError(e: ClearCredentialException) {} }) } catch (e: Throwable) {} } }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -66,6 +73,28 @@ class MainActivity : Activity() {
         abrirAventura = intent?.getBooleanExtra("aventura", false) == true
         try { TelaService.inicia(this) } catch (e: Exception) {}
         if (b != null) web.restoreState(b) else web.loadUrl(intent?.getStringExtra("url")?.takeIf { it.startsWith("http://localhost") } ?: (if (BuildConfig.DEBUG) "http://localhost:8000/habitos.html" else URL))
+    }
+
+    private fun devolveToken(tok: String?, msg: String?) {
+        val q = { v: String? -> if (v == null) "null" else org.json.JSONObject.quote(v) }
+        web.evaluateJavascript("window.nuvemToken&&nuvemToken(${q(tok)},${q(msg)})", null)
+    }
+    private fun entraGoogle(soContas: Boolean = false) {
+        val op = GetGoogleIdOption.Builder().setServerClientId(WEB_CLIENT).setFilterByAuthorizedAccounts(soContas).setAutoSelectEnabled(false).build()
+        val req = GetCredentialRequest.Builder().addCredentialOption(op).build()
+        try {
+            CredentialManager.create(this).getCredentialAsync(this, req, null, mainExecutor, object : CredentialManagerCallback<GetCredentialResponse, GetCredentialException> {
+                override fun onResult(r: GetCredentialResponse) {
+                    val c = r.credential
+                    if (c is CustomCredential && c.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) devolveToken(GoogleIdTokenCredential.createFrom(c.data).idToken, null)
+                    else devolveToken(null, "Resposta inesperada do Google.")
+                }
+                override fun onError(e: GetCredentialException) {
+                    android.util.Log.w("AventuraJS", "login google: ${e.type} ${e.message}")
+                    devolveToken(null, if (e is GetCredentialCancellationException) "Login cancelado." else if (e is NoCredentialException) "Nenhuma conta Google neste celular." else "Login falhou: ${e.message}")
+                }
+            })
+        } catch (e: Throwable) { devolveToken(null, "Login falhou: ${e.message}") }
     }
 
     private fun abreAventura() { abrirAventura = false
