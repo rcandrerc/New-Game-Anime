@@ -2971,6 +2971,7 @@ function abreConta() {
   } else {
     p('Entre com sua conta Google pra salvar tudo na nuvem (tarefas, peso, nível, heroína e bolsa) e abrir o jogo em qualquer lugar: celular, app ou computador.');
     const g = el('button', 'contaG'); if (N.entrando) g.textContent = '⏳ Entrando…'; else g.append(el('b', null, 'G'), 'Entrar com o Google'); g.disabled = !!N.entrando; g.onclick = () => NUVEM.entra(); c.append(g);
+    if (window.Nativo && Nativo.loginChrome) { const gc = el('button', 'hNovo', '🌐 Entrar pelo Chrome (se o de cima não abrir)'); gc.onclick = () => NUVEM.entraChrome(); c.append(gc) }
     if (N.erro) p('⚠️ ' + N.erro);
     p('O jogo continua salvando neste aparelho também. O backup em arquivo segue funcionando como reserva.');
   }
@@ -3142,6 +3143,6 @@ prendeTela();
 window.HAB = { MUS, compoeMusica, painelCheio, abreMapa, joga, montaMapa, TPf: () => TP, sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, viraDia, podeJogar, editor, trocaAba, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
 </script>
 <script src="js/aventura.js?v=10"></script>
-<script src="js/nuvem.js?v=1"></script>
+<script src="js/nuvem.js?v=2"></script>
 <script>try { NUVEM.inicia() } catch (e) { console.error(e) }</script>
 </body></html>

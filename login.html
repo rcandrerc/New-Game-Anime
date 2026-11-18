@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Entrar - Jogo de Hábitos</title>
+<style>
+  :root{color-scheme:dark} body{margin:0;min-height:100dvh;display:flex;align-items:center;justify-content:center;background:#0b0f1a;color:#e6ebf5;font:16px system-ui,sans-serif}
+  main{max-width:360px;padding:24px;text-align:center} h1{font-size:22px;margin:0 0 8px} p{color:#aab3c5;line-height:1.45}
+  button,a.bt{display:block;width:100%;box-sizing:border-box;margin:14px 0 0;padding:14px;font:800 17px system-ui;border-radius:12px;border:0;text-decoration:none}
+  button{background:#fff;color:#222} button b{color:#4285f4;margin-right:6px} a.bt{background:#2fae66;color:#fff} .err{color:#ff9a8a}
+</style></head>
+<body><main>
+  <h1>🗡 Jogo de Hábitos</h1>
+  <p id="txt">Entre com sua conta Google. Depois é só voltar pro app.</p>
+  <button id="g"><b>G</b>Entrar com o Google</button>
+  <a class="bt" id="volta" hidden>✅ Voltar pro app</a>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script>
+// Login pelo Chrome pro app Aventura: o WebView do app não pode fazer login com Google, então o app abre esta página,
+// o Chrome faz o login e o botão "Voltar pro app" entrega o token do Google pro app (aventura://login). Nada fica salvo aqui.
+firebase.initializeApp({ apiKey: 'AIzaSyDWjglPs1UX1zqLiB3U8b9Gxdq3G80V4Ns', authDomain: 'habitos-andre.firebaseapp.com', projectId: 'habitos-andre', appId: '1:87888091200:web:168175f0cefe696bbee7a5' });
+const txt = document.getElementById('txt'), g = document.getElementById('g'), volta = document.getElementById('volta');
+g.onclick = () => { g.disabled = true; g.textContent = '⏳ Entrando…'; const pv = new firebase.auth.GoogleAuthProvider(); pv.setCustomParameters({ prompt: 'select_account' });
+  firebase.auth().signInWithPopup(pv).then(r => { const tok = firebase.auth.GoogleAuthProvider.credentialFromResult(r).idToken;
+    volta.href = 'intent://login?t=' + encodeURIComponent(tok) + '#Intent;scheme=aventura;package=br.rcandrerc.aventura;end'; volta.hidden = false; g.hidden = true;
+    txt.textContent = 'Pronto, ' + (r.user.displayName || 'conta conectada') + '! Toque em Voltar pro app.'; firebase.auth().signOut() })
+  .catch(e => { g.disabled = false; g.innerHTML = '<b>G</b>Tentar de novo'; txt.className = 'err'; txt.textContent = 'Não deu: ' + (e.code || e.message) }) };
+</script></body></html>
