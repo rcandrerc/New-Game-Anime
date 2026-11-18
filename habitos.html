@@ -319,6 +319,38 @@
   .grupo{font-size:11.5px;font-weight:800;color:var(--fg2);margin:12px 4px 6px;text-transform:uppercase;letter-spacing:.4px}
   .filtro{display:flex;gap:5px;overflow-x:auto;padding:0 0 6px;scrollbar-width:none} .filtro::-webkit-scrollbar{display:none} .filtro button{flex:none;padding:5px 10px;font-size:12.5px;border-radius:999px}
   #mapa .jogar:disabled{filter:grayscale(1);opacity:.6}
+
+  /* ---------- tela Hoje: abre nela; o jogo e o resto ficam no Menu ---------- */
+  #hoje{position:fixed;inset:0;z-index:31;display:none;flex-direction:column;background:var(--bg);color:var(--fg);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}
+  body.hojeOn #hoje{display:flex}
+  #hoje .hCab{flex:none;display:flex;align-items:center;gap:10px;padding:10px 16px 6px;max-width:680px;width:100%;margin:0 auto}
+  #hoje .hDia{flex:1;min-width:0} #hoje .hDia b{font-size:20px;color:#ffe7a8} #hoje .hDia small{margin-left:6px;color:var(--fg2);font-size:14px}
+  #hoje .hNv{font-size:13px;color:var(--fg2);white-space:nowrap}
+  #hoje .hMenu{padding:8px 12px;font-weight:800;font-size:14px}
+  #hoje .hProg{flex:none;display:flex;align-items:center;gap:10px;padding:0 16px 8px;max-width:680px;width:100%;margin:0 auto;font-size:13px;color:var(--fg2)}
+  #hoje .hProg .pbar{flex:1;margin:0}
+  #hoje .hLista{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:2px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+  #hoje .hLista > *{max-width:648px;margin-left:auto;margin-right:auto}
+  .hItem{display:flex;align-items:center;gap:10px;min-height:54px;padding:6px 10px;margin:6px auto;background:var(--card);border:1px solid var(--line);border-radius:14px}
+  .hItem .hora{flex:none;width:44px;font-size:13px;font-weight:800;color:var(--fg2);text-align:center}
+  .hItem .ok{flex:none;width:40px;height:40px;border-radius:50%;padding:0;border:2px solid #5d6b8a;background:transparent;font-size:20px;font-weight:900;color:var(--ink)}
+  .hItem .nome{flex:1;min-width:0;font-size:16px;line-height:1.25;cursor:pointer}
+  .hItem .nome small{display:block;font-size:11.5px;color:var(--fg2);margin-top:2px}
+  .hItem.feito{opacity:.55} .hItem.feito .ok{background:#4cc27a;border-color:#4cc27a}
+  .hItem.prox{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+  .hItem.fixo{background:transparent;border-style:dashed;min-height:40px} .hItem.fixo .nome{font-size:14px;color:var(--fg2)}
+  .hItem.fixo .pin{flex:none;width:40px;text-align:center;font-size:16px}
+  .hSec{font-size:12px;font-weight:800;color:var(--fg2);text-transform:uppercase;letter-spacing:.4px;margin:16px auto 4px}
+  .hFim{text-align:center;margin:14px auto;font-weight:800;color:#ffe7a8}
+  .hFim button{margin-top:8px;padding:10px 16px;background:var(--accent);color:var(--ink);border-color:var(--accent);font-weight:800}
+  .hNovo{display:block;width:100%;margin:14px auto 0;padding:11px;border-style:dashed;background:transparent;color:var(--fg2);font-weight:700}
+  #menuTela{position:fixed;inset:0;z-index:34;display:none;background:rgba(5,8,14,.62);align-items:flex-end;justify-content:center}
+  #menuTela.on{display:flex}
+  #menuTela .folhaM{width:100%;max-width:560px;max-height:92dvh;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px))}
+  #menuTela .grade{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+  #menuTela .grade button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;font-size:12.5px;font-weight:700}
+  #menuTela .grade button span{font-size:24px}
+  #abas .voltaHoje{flex:0 0 auto;background:var(--accent);color:var(--ink);font-weight:800}
 </style></head>
 <body class="lobby">
 <div id="arena">
@@ -347,7 +379,7 @@
 <div id="painel">
   <button id="puxa" aria-label="Esconder ou mostrar as tarefas"></button>
   <div id="abas">
-    <button data-aba="hab">💪 Hábitos</button><button data-aba="diar">✅ Diárias</button><button data-aba="afz">📝 Afazeres</button><button data-aba="cal">📅 Agenda</button><button data-aba="her">🦸 Herói</button><button data-aba="inv">🎒 Itens</button><button data-aba="prog">🏆 Progresso</button>
+    <button class="voltaHoje" aria-label="Voltar pra tela Hoje">🏠 Hoje</button><button data-aba="hab">💪 Hábitos</button><button data-aba="diar">✅ Diárias</button><button data-aba="afz">📝 Afazeres</button><button data-aba="cal">📅 Agenda</button><button data-aba="her">🦸 Herói</button><button data-aba="inv">🎒 Itens</button><button data-aba="prog">🏆 Progresso</button>
   </div>
   <div id="lista"></div>
   <div id="novo">
@@ -357,6 +389,8 @@
     <button id="nAdd" aria-label="Adicionar">+</button>
   </div>
 </div>
+<div id="hoje" role="main" aria-label="Hoje"></div>
+<div id="menuTela" role="dialog" aria-label="Menu"></div>
 <div id="aviso"></div>
 <div id="ed" role="dialog" aria-label="Configurar tarefa"></div>
 <div id="calTela" role="dialog" aria-label="Calendário"></div>
@@ -459,6 +493,50 @@ if (!(S.rotina >= 6)) { // 29/10/2026: pesar todo dia (ele ajusta os dias depois
   if (!S.diar.some(d => d.t === 'Registrar peso no MyFitnessPal')) S.diar.push({ id: uid(), t: 'Registrar peso no MyFitnessPal', d: 'f', ok: false, cat: 'saude', hora: '', freq: { t: 'todo' } });
   S.rotina = 6; salva();
 }
+// rotina enxuta (v7, 18/11/2026): menos coisa pra marcar. Pra trocar a rotina: mude a lista e suba o número em ROTINA_V.
+// [nome, dificuldade, categoria, dias da semana (0 = domingo) ou {mes: dia (-1 = último)}, horário, tipo ('' tarefa, 'extra' bônus que não cobra, 'fixo' compromisso só com horário)]
+const ROTINA_V = 7, ROTINA_NOVA = [
+  ['Registrar peso no MyFitnessPal', 'f', 'saude', [0, 1, 2, 3, 4, 5, 6], '08:00', ''],
+  ['Pedal', 'd', 'esporte', 'plano', '08:30', ''], // os dias e o treino vêm do calendário do app GPS Ciclismo (PLANO_URL)
+  ['Barra 5x6', 'm', 'esporte', [1], '09:30', ''], ['Flexão 5x10', 'm', 'esporte', [2, 5], '09:30', ''], ['Prancha 5x40s', 'm', 'esporte', [3], '09:30', ''],
+  ['Barra 5x6 (quinta)', 'm', 'esporte', [4], '08:15', ''], ['Prancha 5x40s (sábado)', 'm', 'esporte', [6], '', ''],
+  ['Levar no desenho', 'f', 'social', [4], '09:45', 'fixo'], ['Programação (quinta)', 'm', 'estudo', [4], '10:15', ''], ['Buscar no desenho', 'f', 'social', [4], '11:45', 'fixo'],
+  ['Almoço da filha', 'f', 'casa', [1, 2, 3, 5], '11:00', 'fixo'], ['Almoço rápido da filha', 'f', 'casa', [4], '12:00', 'fixo'],
+  ['Levar na escola', 'f', 'social', [1, 2, 3, 4, 5], '12:55', 'fixo'],
+  ['Quimera ou programação (1h30)', 'm', 'estudo', [1, 2, 3, 5], '13:30', ''],
+  ['Trabalho', 'f', 'trabalho', [0, 2, 3, 4, 5, 6], '16:00', 'fixo'],
+  ['Noite com a família', 'f', 'social', [1], '18:00', 'fixo'],
+  ['Quimera ou programação (1h a 2h)', 'm', 'estudo', [0, 6], '', ''],
+  ['Buscar a filha no bombeiro', 'f', 'social', [0, 6], '', 'fixo'],
+  ['Aporte de R$ 200 na Rico', 'm', 'grana', { mes: 16 }, '', ''],
+  ['Mandar print da Rico pro Claude', 'f', 'grana', { mes: -1 }, '', ''],
+];
+const ROTINA_NOMES = { 'Almoço da filha e louça': 'Almoço da filha', 'Quimera ou programação (1h45)': 'Quimera ou programação (1h30)', 'Pedal (1h40 a 2h)': 'Pedal' }; // nome antigo → novo (mantém o histórico)
+const ROTINA_SAI = ['Pedal (fim de semana)', 'Acordar e café leve', 'Jogar 50 min', 'Jogar 1h30', 'Jogar 1h30 (segunda)', 'Jogar 1h30 (fim de semana)'];
+if (!(S.rotina >= ROTINA_V)) {
+  const h = hoje(); S.rotinaAntiga = JSON.parse(JSON.stringify(S.diar)); // cópia de segurança antes de trocar
+  for (const d of S.diar) if (ROTINA_NOMES[d.t]) d.t = ROTINA_NOMES[d.t];
+  const usou = d => d.hist && Object.values(d.hist).some(v => v === 1);
+  S.diar = S.diar.filter(d => !ROTINA_SAI.includes(d.t) && !(['Arrumar a cama', 'Ler 10 páginas', 'Estudar 30 minutos'].includes(d.t) && !usou(d))); // os exemplos que nunca foram usados saem
+  for (const [t, dif, cat, dias, hora, tipo] of ROTINA_NOVA) {
+    let d = S.diar.find(x => x.t === t); if (!d) { d = { id: uid(), t, ok: false, ini: h, criado: h }; S.diar.push(d) }
+    Object.assign(d, { d: dif, cat, hora, freq: dias === 'plano' ? { t: 'plano' } : Array.isArray(dias) ? (dias.length === 7 ? { t: 'todo' } : { t: 'semana', dias }) : { t: 'mes', n: dias.mes }, fixo: tipo === 'fixo', extra: tipo === 'extra' });
+  }
+  S.rotina = ROTINA_V; salva();
+}
+// ---------------- pedal pelo plano do treinador: o calendário do app GPS Ciclismo (o treinador atualiza lá) ----------------
+const PLANO_URL = 'https://raw.githubusercontent.com/rcandrerc/Gps-ciclismo/main/plano/calendario.json';
+function puxaPlano() { // guarda os dias com treino; sem internet fica com a última cópia
+  fetch(PLANO_URL, { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).then(j => {
+    if (!j || !Array.isArray(j.days)) return; const dias = {};
+    for (const x of j.days) { if (!x || !/^\d{4}-\d\d-\d\d$/.test(x.date || '') || !x.workout || !Array.isArray(x.workout.blocks)) continue;
+      const min = Math.round(x.workout.blocks.reduce((a, b) => a + (+b.durationSec || 0), 0) / 60);
+      dias[x.date] = { t: String(x.title || x.workout.name || 'Treino').slice(0, 80), min, onde: x.where === 'rua' ? 'rua' : x.where === 'rolo' ? 'rolo' : '', notas: String(x.notes || '').slice(0, 300) } }
+    const novo = JSON.stringify(dias); if (S.plano && JSON.stringify(S.plano.dias) === novo) return;
+    S.plano = { nome: String(j.name || ''), upd: String(j.updated || ''), dias }; salva(); if (typeof hojeOn === 'function' && hojeOn()) desenhaHoje();
+  }).catch(() => {});
+}
+function treinoDe(dt) { return S.plano && S.plano.dias[dt] }
 const A_ = k => S.attr[k] || 0;
 const hpMax = () => 100 + 8 * (S.nv - 1) + 15 * A_('vid');
 const enMax = () => 40 + 8 * A_('est');
@@ -1611,7 +1689,10 @@ function prep(d) { // diária com os campos novos (as antigas eram só sim ou n�
   for (const k of ['v', 'racha', 'melhor', 'sem']) d[k] = d[k] || 0; if (!d.ini) d.ini = hoje(); if (!d.criado) d.criado = d.ini; if (d.pago == null) d.pago = d.ok ? 1 : 0; return d;
 }
 const ehMax = d => d.tipo === 'num' && d.meta.op === 'max';
-function agendada(d, dt) { const f = d.freq; if (d.pausa || (d.criado && dt < d.criado)) return false; if (f.t === 'semana') return (f.dias || []).includes(dData(dt).getDay());
+function agendada(d, dt) { return !d.fixo && !d.extra && naAgenda(d, dt) } // compromisso (só horário) e bônus (opcional) aparecem no Hoje mas não contam nem cobram
+function naAgenda(d, dt) { const f = d.freq; if (d.pausa || (d.criado && dt < d.criado)) return false; if (f.t === 'semana') return (f.dias || []).includes(dData(dt).getDay());
+  if (f.t === 'plano') return !!(S.plano && S.plano.dias[dt]);
+  if (f.t === 'mes') { const x = dData(dt), ult = new Date(x.getFullYear(), x.getMonth() + 1, 0).getDate(), n = f.n === -1 ? ult : Math.min(ult, f.n || 1); return x.getDate() === n }
   if (f.t === 'cada') { const k = difDias(d.ini, dt); return k >= 0 && k % Math.max(2, f.n || 2) === 0 } return true } // antes de a diária existir (criado) ela não conta
 function feito(d) { if (d.tipo === 'num') return d.meta.op === 'max' ? d.v <= d.meta.n : d.v >= d.meta.n; if (d.tipo === 'lista') return d.itens.length > 0 && d.itens.every(i => i.ok); return !!d.ok }
 const semFeita = d => d.freq.t === 'vezes' && d.sem >= (d.freq.n || 3) && !d.pago; // já bateu a meta da semana
@@ -1654,8 +1735,8 @@ function viraDia() { // fecha o(s) dia(s) que passaram: racha, histórico e vida
   for (const t of S.hab) { if (t.c || t.cn) { t.hist = t.hist || {}; t.hist[S.dia] = [t.c || 0, t.cn || 0]; for (const k in t.hist) if (difDias(k, h) > 400) delete t.hist[k] } t.c = 0; t.cn = 0 } S.dia = h; salva();
   for (const d of S.diar) if (d.alvo && h > d.alvo.fim) fechaMetaDe(d);
   if (xp) setTimeout(() => { ganha(xp, ouro); if (marco) faixa('🔥 ' + marco[0] + ' dias seguidos!', marco[1], 2.6) }, 900);
-  if (dano) setTimeout(() => machuca(dano, falt === 1 ? 'Ficou 1 diária sem fazer: −' + dano + ' de vida.' : 'Ficaram ' + falt + ' diárias sem fazer: −' + dano + ' de vida.'), 1500);
-  else setTimeout(() => aviso('Dia novo! As diárias voltaram.' + (xp ? ' Limites respeitados: +' + xp + ' XP.' : '')), 1500);
+  if (dano && S.castigo) setTimeout(() => machuca(dano, falt === 1 ? 'Ficou 1 diária sem fazer: −' + dano + ' de vida.' : 'Ficaram ' + falt + ' diárias sem fazer: −' + dano + ' de vida.'), 1500);
+  else setTimeout(() => aviso('Dia novo!' + (xp ? ' Limites respeitados: +' + xp + ' XP.' : '')), 1500);
 }
 viraDia(); setInterval(() => { viraDia(); if (aba === 'diar') lista() }, 60000);
 
@@ -1898,15 +1979,15 @@ let aba = S.aba || 'diar', novoPos = true, novoNeg = false;
 const listaEl = document.getElementById('lista');
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e };
 function trocaAba(a) { if (a === 'cal' && document.readyState === 'complete' && !calEl.classList.contains('on')) setTimeout(abreCal, 0); const igual = aba === a; aba = a; S.aba = a; salva(); for (const b of document.querySelectorAll('#abas button')) { b.classList.toggle('on', b.dataset.aba === a); if (b.dataset.aba === a && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' }) } if (!igual) listaEl.scrollTop = 0; lista() }
-for (const b of document.querySelectorAll('#abas button')) b.onclick = () => trocaAba(b.dataset.aba);
+for (const b of document.querySelectorAll('#abas button[data-aba]')) b.onclick = () => trocaAba(b.dataset.aba);
 const mini = (txt, cls) => el('span', 'mini' + (cls ? ' ' + cls : ''), txt);
 function fazHabito(t) { t.c = (t.c || 0) + 1; t.tot = (t.tot || 0) + 1; S.cont.h++; ganha(DIF[t.d].xp * (ehFoco(t) ? 2 : 1), DIF[t.d].ouro, curaDe(t.d)); lista() }
 function texto(t, kind, extra) { const d = el('div', 'txt'); if (t.cat) d.append(el('span', 'cat', catDe(t)[1])); d.append(t.t);
   const s = el('small'); s.append(el('span', 'tag ' + t.d, DIF[t.d].n)); if (ehFoco(t)) s.append(el('span', 'tag foco', '⭐ 2× XP')); for (const x of extra || []) if (x) s.append(x); d.append(s);
   d.onclick = () => editor(kind, t); return d }
 function freqTxt(d) { const f = d.freq; if (f.t === 'semana') return (f.dias || []).length === 7 ? '' : (f.dias || []).map(i => SEM_N[i].slice(0, 3)).join(' ');
-  if (f.t === 'vezes') return (d.sem + (d.pago ? 1 : 0)) + '/' + (f.n || 3) + ' na semana'; if (f.t === 'cada') return 'a cada ' + (f.n || 2) + ' dias'; return '' }
-function proxima(d) { const h = hoje(); for (let i = 1; i < 400; i++) { const dt = somaDia(h, i); if (agendada(d, dt)) return 'próxima: ' + (i === 1 ? 'amanhã' : i < 7 ? SEM_N[dData(dt).getDay()] : ddmm(dt)) } return '' }
+  if (f.t === 'vezes') return (d.sem + (d.pago ? 1 : 0)) + '/' + (f.n || 3) + ' na semana'; if (f.t === 'cada') return 'a cada ' + (f.n || 2) + ' dias'; if (f.t === 'plano') return 'plano do treinador'; if (f.t === 'mes') return f.n === -1 ? 'último dia do mês' : 'todo dia ' + (f.n || 1); return '' }
+function proxima(d) { const h = hoje(); for (let i = 1; i < 400; i++) { const dt = somaDia(h, i); if (naAgenda(d, dt)) return 'próxima: ' + (i === 1 ? 'amanhã' : i < 7 ? SEM_N[dData(dt).getDay()] : ddmm(dt)) } return '' }
 function pontos(d) { const s = el('span', 'dias'), h = hoje(); s.title = 'últimos 6 dias'; for (let i = 6; i >= 1; i--) { const v = d.hist[somaDia(h, -i)]; s.append(el('i', v === 1 ? 'b' : v === 0 ? 'r' : null)) } return s }
 const unid = d => d.meta.n + (d.meta.un ? ' ' + d.meta.un : '');
 function registra(t) { // diária com número: soma 1 (ou pede o valor quando a meta é grande)
@@ -2482,7 +2563,7 @@ function progresso() { // tudo por hábito: a meta de cada um e o % de cada um
 const edEl = document.getElementById('ed'); let ED = null;
 edEl.addEventListener('click', e => { if (e.target === edEl) fechaEd() });
 function editor(kind, t, novo) { const D = JSON.parse(JSON.stringify(t)); if (kind === 'diar') prep(D); ED = { kind, t, D, novo }; edEl.classList.add('on'); desenhaEd(true); if (novo) setTimeout(() => edEl.querySelector('input').focus(), 60) }
-function fechaEd() { edEl.classList.remove('on'); edEl.innerHTML = ''; ED = null }
+function fechaEd() { edEl.classList.remove('on'); edEl.innerHTML = ''; ED = null; if (typeof hojeOn === 'function' && hojeOn()) desenhaHoje() }
 function calendario(D) { // as últimas 5 semanas: verde feito, vermelho faltou
   const h = hoje(), g = el('div', 'cal'); for (const s of SEM) g.append(el('b', null, s)); const ini = somaDia(somaDia(h, -dData(h).getDay()), -28);
   for (let i = 0; i < 35; i++) { const dt = somaDia(ini, i), v = dt === h ? (D.pago ? 1 : null) : D.hist[dt]; g.append(el('span', (v === 1 ? 'b' : v === 0 ? 'r' : '') + (dt === h ? ' hj' : '') + (dt > h ? ' fut' : ''), String(+dt.slice(8)))) }
@@ -2499,16 +2580,21 @@ function desenhaEd(doTopo) {
   const linha = (...xs) => { const l = el('div', 'linha'); l.append(...xs); return l };
   { const s = campo('Nome'), i = el('input'); i.value = D.t; i.maxLength = 80; i.placeholder = kind === 'hab' ? 'ex.: Beber um copo de água' : kind === 'diar' ? 'ex.: Ir pra academia' : 'ex.: Marcar o dentista'; i.oninput = () => D.t = i.value; s.append(i) }
   { const s = campo('Categoria'), g = el('div', 'cats'); for (const c of CATS) { const b = el('button', (D.cat || '') === c[0] ? 'on' : null); b.append(el('span', null, c[1]), el('small', null, c[2])); b.onclick = () => { D.cat = c[0]; desenhaEd() }; g.append(b) } s.append(g) }
-  seg(campo(kind === 'hab' ? 'Dificuldade (XP e ouro; no ruim, quanta vida tira)' : 'Dificuldade (XP e ouro; esquecer tira vida)'), [['f', 'Fácil'], ['m', 'Médio'], ['d', 'Difícil']], D.d, v => D.d = v);
+  seg(campo(kind === 'hab' ? 'Dificuldade (XP e ouro; no ruim, quanta vida tira)' : 'Dificuldade (quanto XP e ouro dá)'), [['f', 'Fácil'], ['m', 'Médio'], ['d', 'Difícil']], D.d, v => D.d = v);
   if (kind === 'hab') seg(campo('Tipo'), [['pos', '+ Bom'], ['neg', '− Ruim'], ['ambos', '+ e −']], D.pos && D.neg ? 'ambos' : D.neg ? 'neg' : 'pos', v => { D.pos = v !== 'neg'; D.neg = v !== 'pos' });
   if (kind === 'diar') {
     const s = campo('Frequência');
-    seg(s, [['todo', 'Todo dia'], ['semana', 'Dias da semana'], ['vezes', 'X por semana'], ['cada', 'A cada N dias']], D.freq.t, v => {
-      D.freq.t = v; if (v === 'semana' && !(D.freq.dias || []).length) D.freq.dias = [1, 2, 3, 4, 5]; if (v === 'vezes') D.freq.n = Math.min(7, D.freq.n || 3); if (v === 'cada') D.freq.n = Math.max(2, D.freq.n || 2) });
+    seg(s, [['todo', 'Todo dia'], ['semana', 'Dias da semana'], ['vezes', 'X por semana'], ['cada', 'A cada N dias'], ['mes', '1 vez por mês'], ['plano', 'Plano do treinador']], D.freq.t, v => {
+      D.freq.t = v; if (v === 'mes') D.freq.n = D.freq.n === -1 ? -1 : Math.min(31, Math.max(1, D.freq.n || 1)); if (v === 'semana' && !(D.freq.dias || []).length) D.freq.dias = [1, 2, 3, 4, 5]; if (v === 'vezes') D.freq.n = Math.min(7, D.freq.n || 3); if (v === 'cada') D.freq.n = Math.max(2, D.freq.n || 2) });
     if (D.freq.t === 'semana') { const g = el('div', 'dsem'); for (let i = 0; i < 7; i++) { const b = el('button', D.freq.dias.includes(i) ? 'on' : null, SEM[i]); b.setAttribute('aria-label', SEM_N[i]);
       b.onclick = () => { const ds = new Set(D.freq.dias); ds.has(i) ? ds.delete(i) : ds.add(i); if (!ds.size) { aviso('Deixe pelo menos um dia.'); return } D.freq.dias = [...ds].sort(); desenhaEd() }; g.append(b) } s.append(g) }
     if (D.freq.t === 'vezes') s.append(linha(num(D.freq.n, 1, 7, v => D.freq.n = v), el('span', null, 'vezes por semana. A semana fecha no domingo; se faltar, tira vida.')));
     if (D.freq.t === 'cada') s.append(linha(el('span', null, 'A cada'), num(D.freq.n, 2, 365, v => D.freq.n = v), el('span', null, 'dias, a partir de hoje')));
+    if (D.freq.t === 'mes') { seg(s, [['dia', 'Num dia do mês'], ['ult', 'Último dia do mês']], D.freq.n === -1 ? 'ult' : 'dia', v => D.freq.n = v === 'ult' ? -1 : 1);
+      if (D.freq.n !== -1) s.append(linha(el('span', null, 'Dia'), num(D.freq.n, 1, 31, v => D.freq.n = v), el('span', null, 'de cada mês'))) }
+    if (D.freq.t === 'plano') s.append(el('p', 'dica', 'Aparece só nos dias com treino no calendário do app GPS Ciclismo (o treinador atualiza lá).'));
+    seg(campo('Como conta'), [['tarefa', 'Tarefa'], ['extra', 'Bônus (se der)'], ['fixo', 'Compromisso']], D.fixo ? 'fixo' : D.extra ? 'extra' : 'tarefa', v => { D.fixo = v === 'fixo'; D.extra = v === 'extra' });
+    if (D.fixo || D.extra) fic.lastChild.append(el('p', 'dica', D.fixo ? 'Só aparece no Hoje com o horário, sem marcar (ex.: levar na escola, trabalho).' : 'Dá XP se fizer, mas não conta como falta se não der.'));
     const m = campo('Como medir');
     seg(m, [['sn', 'Sim ou não'], ['num', 'Número'], ['lista', 'Checklist']], D.tipo, v => D.tipo = v);
     if (D.tipo === 'num') {
@@ -2647,7 +2733,7 @@ function passo(dt) {
   heroiPasso(dt); lobbyPasso(dt); auraPasso(dt); enfeitesPasso(dt); bichosPasso(dt); orbesPasso(dt); faiscasPasso(dt); aneisPasso(dt); fxPasso(dt); fx2Passo(dt); laminaPasso(dt);
 }
 function quadro(t) {
-  requestAnimationFrame(quadro); const dt = Math.min(0.05, (t - t0) / 1000); t0 = t; tempo += dt; VENTO.value = tempo;
+  requestAnimationFrame(quadro); if (document.body.classList.contains('hojeOn')) { t0 = t; return } const dt = Math.min(0.05, (t - t0) / 1000); t0 = t; tempo += dt; VENTO.value = tempo;
   if (R) { passo(dt); player.position.set(P.x, P.y, P.z); player.rotation.y = P.face; mix.update(pausa > 0 && P.atk ? 0 : dt); player.updateMatrixWorld(true); VRMC.tick(R, dt) } else lobbyPasso(dt); // carregando a heroína: o palco do acampamento já aparece
   // câmera atrás da heroína; no automático vira devagar pra olhar pra onde a trilha vai
   camAlvo.x += (P.x - camAlvo.x) * Math.min(1, dt * 4); camAlvo.z += (P.z - camAlvo.z) * Math.min(1, dt * 4); camAlvo.y += (P.y - camAlvo.y) * Math.min(1, dt * 4);
@@ -2679,7 +2765,78 @@ function quadro(t) {
 }
 new ResizeObserver(tam).observe(arena);
 { let lw = 0; new ResizeObserver(() => { const w = mapaEl.clientWidth; if (!mapaEl.classList.contains('on') || w === lw) { lw = w; return } lw = w; const e = escolha, y = roloEl.scrollTop / (roloEl.scrollHeight || 1); abreMapa(); escolha = e; roloEl.scrollTop = y * roloEl.scrollHeight; if (e) { folhaEl.querySelectorAll('.no').forEach((b, j) => b.classList.toggle('sel', j === e - 1)); infoMapa() } }).observe(mapaEl) } // o mapa acompanha quando as tarefas escondem ou aparecem (só muda a largura; a altura mexendo não pode puxar o mapa de volta)
-comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); try { trocaAba(aba) } catch (e) { console.error(e) } try { hud() } catch (e) { console.error(e) } carregar(S.pers); requestAnimationFrame(quadro); try { viraDia(); chefeSemana(); lista() } catch (e) { console.error(e) } // abre direto nas tarefas, com a heroína no acampamento do lado (sem janela por cima); um erro na lista nunca pode travar o carregamento
+
+// ---------------- tela Hoje (18/11/2026): o app abre só com a lista do dia; o jogo, os hábitos e o resto ficam no ☰ Menu ----------------
+const hojeEl = document.getElementById('hoje'), menuEl = document.getElementById('menuTela');
+let jogoCarregado = false;
+const hojeOn = () => document.body.classList.contains('hojeOn');
+function mostraHoje() { menuEl.classList.remove('on'); document.body.classList.add('hojeOn'); try { viraDia() } catch (e) {} desenhaHoje() }
+function abreJogo(a) { // sai do Hoje pro jogo (com a aba pedida embaixo); a heroína só carrega na primeira vez
+  menuEl.classList.remove('on'); document.body.classList.remove('hojeOn'); t0 = performance.now();
+  if (!jogoCarregado) { jogoCarregado = true; carregar(S.pers) }
+  if (a) { if (S.cheio) painelCheio(false); trocaAba(a) } else painelCheio(true);
+}
+document.querySelector('#abas .voltaHoje').onclick = mostraHoje;
+const DIA_N = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+function doDia(dt) { // tudo do dia: tarefas, bônus e compromissos; sem horário primeiro (na ordem da lista), depois pelo relógio
+  return S.diar.map(prep).filter(d => naAgenda(d, dt)).map((d, i) => [d, i]).sort((a, b) => (a[0].hora || '') < (b[0].hora || '') ? -1 : (a[0].hora || '') > (b[0].hora || '') ? 1 : a[1] - b[1]).map(x => x[0]);
+}
+function marcaHoje(t) {
+  somLiga(); if (t.tipo === 'num') { registra(t); desenhaHoje(); return } if (t.tipo === 'lista') { abreJogo('diar'); return }
+  t.nao = false; t.ok = !t.ok; confere(t); salva(); hud(); desenhaHoje();
+  if (t.ok && t.dado) aviso('✓ ' + t.t + '  ·  +' + t.dado.xp + ' XP', 1.6);
+}
+function fazAfz(t, it) {
+  somLiga(); if (it.classList.contains('feito')) return; it.classList.add('feito');
+  ganha(Math.round(DIF[t.d].xp * AFZ_X), Math.round(DIF[t.d].ouro * AFZ_X), curaDe(t.d)); S.feitos++; S.cont.t++; S.hafz = S.hafz || {}; S.hafz[hoje()] = (S.hafz[hoje()] || 0) + 1;
+  setTimeout(() => { S.afz.splice(S.afz.indexOf(t), 1); salva(); desenhaHoje() }, 600);
+}
+function desenhaHoje() {
+  if (!hojeOn()) return; const h = hoje(), dt = dData(h), L = doDia(h), r = statusHoje(), top = hojeEl.querySelector('.hLista') ? hojeEl.querySelector('.hLista').scrollTop : 0;
+  hojeEl.innerHTML = '';
+  const cab = el('div', 'hCab'), dia = el('div', 'hDia'), mb = el('button', 'hMenu', '☰ Menu');
+  dia.append(el('b', null, DIA_N[dt.getDay()]), el('small', null, ddmm(h)));
+  mb.onclick = abreMenu; cab.append(dia, el('div', 'hNv', '⭐ Nível ' + S.nv + '  ·  🪙 ' + S.ouro), mb); hojeEl.append(cab);
+  const pr = el('div', 'hProg'), pb = el('div', 'pbar'), pi = el('i'); pi.style.width = (r.tot ? r.ok / r.tot * 100 : 0) + '%'; pb.append(pi);
+  pr.append(pb, el('span', null, r.tot ? r.ok + ' de ' + r.tot + ' feitas' : 'Nada pra marcar hoje')); hojeEl.append(pr);
+  const lst = el('div', 'hLista'); hojeEl.append(lst);
+  let prox = false;
+  for (const t of L) {
+    const it = el('div', 'hItem'), hora = el('div', 'hora', t.hora || ''), nome = el('div', 'nome');
+    nome.append(t.t); nome.onclick = () => editor('diar', t); nome.title = 'Toque pra mudar a tarefa';
+    if (t.fixo) { it.classList.add('fixo'); it.append(hora, el('div', 'pin', '📌'), nome); lst.append(it); continue }
+    const f = feito(t) || semFeita(t), b = el('button', 'ok', f ? '✓' : t.tipo === 'num' ? t.v + '/' + t.meta.n : '');
+    if (t.tipo === 'num') b.style.fontSize = '12px';
+    b.setAttribute('aria-label', f ? 'Desmarcar ' + t.t : 'Marcar ' + t.t + ' como feita'); b.onclick = () => marcaHoje(t);
+    const ex = []; if (t.freq.t === 'plano') { const w = treinoDe(h); if (w) ex.push(w.t + ' · ' + w.min + ' min' + (w.onde ? ' · ' + w.onde : '')) } if (t.det) ex.push(t.det); if (t.extra) ex.push('bônus, se der'); const rc = rachaVista(t); if (rc > 1) ex.push('🔥 ' + rc + ' dias seguidos'); const ft = t.freq.t === 'mes' ? freqTxt(t) : ''; if (ft) ex.push(ft);
+    if (ex.length) nome.append(el('small', null, ex.join('  ·  ')));
+    if (f) it.classList.add('feito'); else if (!prox && !t.extra) { prox = true; it.classList.add('prox') }
+    it.append(hora, b, nome); lst.append(it);
+  }
+  if (!L.length) lst.append(el('div', 'hFim', 'Nada marcado pra hoje. Aproveite! 😊'));
+  else if (r.tot && r.ok === r.tot) { const fim = el('div', 'hFim', '✨ Dia completo!'); if (S.bauDia !== h) { const bb = el('button', null, '🎁 Abrir o baú do dia'); bb.onclick = () => { abreBau(); desenhaHoje() }; fim.append(el('br'), bb) } lst.append(fim) }
+  const afz = S.afz.filter(t => !t.prazo || difDias(h, t.prazo) <= 7);
+  if (afz.length) { lst.append(el('div', 'hSec', '📝 Afazeres'));
+    for (const t of afz) { const it = el('div', 'hItem'), k = t.prazo ? difDias(h, t.prazo) : null, b = el('button', 'ok', ''), nome = el('div', 'nome', t.t);
+      if (k != null) nome.append(el('small', null, k < 0 ? 'atrasado (' + ddmm(t.prazo) + ')' : k === 0 ? 'hoje' : k === 1 ? 'amanhã' : 'até ' + ddmm(t.prazo)));
+      b.setAttribute('aria-label', 'Concluir ' + t.t); b.onclick = () => { b.textContent = '✓'; fazAfz(t, it) }; nome.onclick = () => editor('afz', t);
+      it.append(el('div', 'hora', ''), b, nome); lst.append(it) } }
+  const nv = el('button', 'hNovo', '+ Nova tarefa'); nv.onclick = () => { const base = prep({ id: uid(), t: '', d: 'm', ok: false }); editor('diar', base, true) }; lst.append(nv);
+  lst.scrollTop = top;
+}
+function abreMenu() {
+  menuEl.innerHTML = ''; const f = el('div', 'folhaM'), cab = el('div', 'cab'), x = el('button', null, '✕'); menuEl.append(f);
+  cab.style.cssText = 'display:flex;justify-content:space-between;align-items:center'; cab.append(el('b', null, 'Menu'), x); x.onclick = () => menuEl.classList.remove('on'); f.append(cab);
+  const g = el('div', 'grade'); f.append(g);
+  for (const [ic, txt, fn] of [['🎮', 'Jogo', () => abreJogo()], ['✅', 'Todas as tarefas', () => abreJogo('diar')], ['💪', 'Hábitos', () => abreJogo('hab')], ['📝', 'Afazeres', () => abreJogo('afz')],
+    ['📅', 'Agenda', () => abreJogo('cal')], ['🏆', 'Progresso', () => abreJogo('prog')], ['🦸', 'Herói', () => abreJogo('her')], ['🎒', 'Itens', () => abreJogo('inv')]]) {
+    const b = el('button'); b.append(el('span', null, ic), txt); b.onclick = fn; g.append(b) }
+  f.append(el('p', 'dica', 'No jogo, o botão 🏠 Hoje (nas abas) volta pra cá.')); f.lastChild.style.marginTop = '10px';
+  menuEl.onclick = e => { if (e.target === menuEl) menuEl.classList.remove('on') }; menuEl.classList.add('on');
+}
+setInterval(() => { if (hojeOn() && !edEl.classList.contains('on')) desenhaHoje() }, 60000); // vira o dia e anda o "próximo" sozinho
+document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') return; puxaPlano(); if (hojeOn()) { try { viraDia() } catch (e) {} desenhaHoje() } });
+comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); try { trocaAba(aba) } catch (e) { console.error(e) } try { hud() } catch (e) { console.error(e) } requestAnimationFrame(quadro); mostraHoje(); puxaPlano(); try { viraDia(); chefeSemana(); lista() } catch (e) { console.error(e) } // abre direto nas tarefas, com a heroína no acampamento do lado (sem janela por cima); um erro na lista nunca pode travar o carregamento
 // ---------------- tela acesa: o celular não apaga enquanto joga; só depois de uns minutos sem tocar (Screen Wake Lock) ----------------
 const TELA = { trava: null, ult: Date.now() };
 function telaMin() { return S.tela == null ? 8 : S.tela } // (função, não const: a aba Herói usa antes desta linha rodar) minutos sem tocar até deixar o celular apagar (0 = o tempo normal do celular)

@@ -1,5 +1,5 @@
 // app do jogo de hábitos: busca sempre a versão nova na internet e guarda uma cópia pra abrir sem internet
-const CACHE = 'habitos-v1';
+const CACHE = 'habitos-v2';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
