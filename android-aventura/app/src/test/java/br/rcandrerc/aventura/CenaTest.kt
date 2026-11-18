@@ -31,6 +31,7 @@ class CenaTest {
         roda("espada", 0, """{"nv":12,"z":1,"kills":5,"ouro":40,"arma":"espada","build":null,"novos":2}""", 200, tiros)
         roda("cajado", 0, """{"nv":20,"z":5,"kills":50,"ouro":400,"arma":"cajado","build":{"cajado":["Raio Celeste","Chuva de Meteoros","Onda Arcana"]}}""", 200, tiros)
         roda("nu", 0, """{"nv":1,"z":3,"arma":"nu"}""", 120, setOf(40, 60))
+        roda("morte", 0, """{"nv":1,"z":5,"arma":"nu","h":[9,75]}""", 360, (40..360 step 20).toSet())
         roda("deitado1", 1, """{"nv":6,"z":2,"arma":"espada"}""", 120, setOf(60, 90))
         roda("deitado2", 2, """{"nv":6,"z":4,"arma":"cajado"}""", 120, setOf(60, 90))
     }

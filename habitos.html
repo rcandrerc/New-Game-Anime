@@ -346,6 +346,8 @@
   .hNovo{display:block;width:100%;margin:14px auto 0;padding:11px;border-style:dashed;background:transparent;color:var(--fg2);font-weight:700}
   #menuTela{position:fixed;top:0;right:0;bottom:0;left:0;z-index:34;display:none;background:rgba(5,8,14,.62);align-items:flex-end;justify-content:center}
   #menuTela.on{display:flex}
+  #menuTela .contaC{margin-top:10px} #menuTela .contaU{display:flex;gap:10px;align-items:center;margin:4px 0 10px} #menuTela .contaU img{width:44px;height:44px;border-radius:50%}
+  #menuTela .contaG{display:block;width:100%;margin:12px 0 6px;padding:13px;font-size:16px;font-weight:800;background:#fff;color:#222;border-color:#fff;border-radius:12px} #menuTela .contaG b{color:#4285f4;margin-right:6px}
   #menuTela .folhaM{width:100%;max-width:560px;max-height:92dvh;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px))}
   #menuTela .grade{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
   #menuTela .grade button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;font-size:12.5px;font-weight:700}
@@ -398,6 +400,11 @@
   #aventura .avHud.some{opacity:0}
   #aventura .avHud button{pointer-events:auto}
   #aventura .avTopo{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:12px;right:12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;text-shadow:0 1px 3px #000}
+  #aventura .avMapaB{font:800 16px system-ui;color:#ffe7a8;background:rgba(5,8,18,.6);border:1px solid rgba(255,231,168,.35);border-radius:10px;padding:4px 10px}
+  #aventura .avMapa{position:absolute;left:50%;top:calc(52px + env(safe-area-inset-top,0px));transform:translateX(-50%);max-width:94%;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;background:rgba(5,8,18,.88);padding:10px;border-radius:14px;z-index:5}
+  #aventura .avZ{position:relative;width:54px;height:54px;font-size:26px;border-radius:12px;background:#141a2c;border:2px solid #2a3350;color:#fff;padding:0}
+  #aventura .avZ.on{border-color:#ffe066} #aventura .avZ:disabled{opacity:.45}
+  #aventura .avZ i{position:absolute;right:3px;bottom:1px;font:800 12px system-ui;font-style:normal;color:#ffe7a8} #aventura .avZ u{position:absolute;left:2px;top:0;font-size:12px;text-decoration:none}
   #aventura .avTopo b{font-size:15px;color:#ffe7a8} #aventura .avTopo button{margin-left:auto;padding:6px 12px}
   #aventura .avEq{position:absolute;left:12px;right:12px;bottom:calc(8px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;text-shadow:0 1px 3px #000}
   #aventura .avDica{position:absolute;left:50%;top:22%;transform:translateX(-50%);max-width:88%;text-align:center;background:rgba(5,8,18,.75);padding:7px 12px;border-radius:10px;font-size:12.5px;color:#ffe7a8}
@@ -555,10 +562,10 @@ function resetaJogo() { // o jogo volta pro começo e o histórico das tarefas z
   for (const d of S.diar) { d.hist = {}; d.racha = d.melhor = d.sem = d.v = 0; d.ok = false; d.nao = false; d.pago = 0; d.dado = null; d.metas = []; for (const i of d.itens || []) i.ok = false; }
 }
 if (S.zerado !== 1) { zeraProgresso(); try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} } // o André pediu pra recomeçar do zero (uma vez só)
-function salva() { try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} paraNativo() }
+function salva() { try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} paraNativo(); if (window.NUVEM) NUVEM.mudou() }
 // App Android (Aventura): manda pro papel de parede o que ele precisa pra desenhar a heroína igual ao jogo
 let nativoUlt = ''; function paraNativo() { if (!window.Nativo) return; try { const a = S.av || {}, w = a.eq && a.eq.arma;
-  const j = JSON.stringify({ nv: S.nv || 1, z: a.z || 1, kills: a.kills || 0, ouro: a.ouro || 0, arma: w ? (w.tipo === 'cajado' ? 'cajado' : 'espada') : 'nu', build: a.build || null, bolsa: (a.bolsa || []).length, novos: a.novos || 0 });
+  const j = JSON.stringify({ nv: S.nv || 1, z: a.z || 1, kills: a.kills || 0, ouro: a.ouro || 0, arma: w ? (w.tipo === 'cajado' ? 'cajado' : 'espada') : 'nu', build: a.build || null, bolsa: (a.bolsa || []).length, novos: a.novos || 0, h: window.AV && a.eq ? (H => [Math.round(H.atk), H.hp])(AV.heroi()) : null });
   if (j !== nativoUlt) { nativoUlt = j; Nativo.estado(j) } } catch (e) {} }
 // rotina do André (v5, 28/10/2026): entra uma vez só como diárias; o que ele já tiver com o mesmo nome fica como está
 const ROTINA = [ // nome, dificuldade, categoria, dias da semana (0 = domingo), horário ('' = fim de semana, sem hora, na ordem da lista)
@@ -2941,11 +2948,35 @@ function abreMenu() {
   cab.style.cssText = 'display:flex;justify-content:space-between;align-items:center'; cab.append(el('b', null, 'Menu'), x); x.onclick = () => menuEl.classList.remove('on'); f.append(cab);
   const g = el('div', 'grade'); f.append(g);
   for (const [ic, txt, fn] of [['🗡', 'Aventura', () => { menuEl.classList.remove('on'); window.AV && AV.abre(false) }], ...(window.Nativo ? [['📱', 'Papel de parede', () => { menuEl.classList.remove('on'); Nativo.config() }]] : []), ['✅', 'Todas as tarefas', () => abreJogo('diar')], ['💪', 'Hábitos', () => abreJogo('hab')], ['📝', 'Afazeres', () => abreJogo('afz')],
-    ['📅', 'Agenda', () => abreJogo('cal')], ['🏆', 'Progresso', () => abreJogo('prog')], ['⚖️', 'Peso', () => { menuEl.classList.remove('on'); abrePeso() }]]) {
+    ['📅', 'Agenda', () => abreJogo('cal')], ['🏆', 'Progresso', () => abreJogo('prog')], ['⚖️', 'Peso', () => { menuEl.classList.remove('on'); abrePeso() }], [window.NUVEM && NUVEM.N.user ? '☁️' : '👤', window.NUVEM && NUVEM.N.user ? 'Conta ✓' : 'Entrar', () => abreConta()]]) {
     const b = el('button'); b.append(el('span', null, ic), txt); b.onclick = fn; g.append(b) }
   f.append(el('p', 'dica', 'Nas abas, o botão 🏠 Hoje volta pra cá. A Aventura se joga sozinha: a heroína fica mais forte com as tarefas feitas.')); f.lastChild.style.marginTop = '10px';
   menuEl.onclick = e => { if (e.target === menuEl) menuEl.classList.remove('on') }; menuEl.classList.add('on');
 }
+
+// ---------------- conta Google (js/nuvem.js): entrar, ver se salvou, sair ----------------
+let contaAberta = false;
+function abreConta() {
+  contaAberta = true; menuEl.innerHTML = ''; const f = el('div', 'folhaM'), cab = el('div', 'cab'), x = el('button', null, '✕'), v = el('button', null, '‹ Menu'); menuEl.append(f);
+  cab.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px'; cab.append(v, el('b', null, '☁️ Conta'), x); x.onclick = () => { contaAberta = false; menuEl.classList.remove('on') }; v.onclick = () => { contaAberta = false; abreMenu() }; f.append(cab);
+  const c = el('div', 'contaC'); f.append(c); const N = window.NUVEM ? NUVEM.N : null;
+  const p = (t, cl) => { const e = el('p', cl || 'dica', t); c.append(e); return e };
+  if (!N || !N.on) p(N && N.erro || 'Conectando…');
+  else if (N.carregando) p('⏳ Trazendo o jogo da sua conta…');
+  else if (N.user) {
+    const u = N.user, top = el('div', 'contaU'); if (u.photoURL) { const im = el('img'); im.src = u.photoURL; im.alt = ''; im.referrerPolicy = 'no-referrer'; top.append(im) } const nm = el('div'); nm.append(el('b', null, u.displayName || 'Conectado'), el('div', 'dica', u.email || '')); top.append(nm); c.append(top);
+    const hh = t => new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    p(N.erro ? '⚠️ ' + N.erro : !N.pronta ? '⏳ Conferindo a nuvem…' : N.enviando ? '⏳ Salvando na nuvem…' : N.ult ? '✅ Salvo na nuvem às ' + hh(N.ult) + '. Entre com a mesma conta em outro celular ou no computador e o jogo aparece lá.' : '✅ Tudo certo.');
+    const b = el('button', 'hNovo', 'Sair da conta'); b.onclick = () => { if (confirm('Sair da conta? O jogo continua neste aparelho; só para de salvar na nuvem.')) NUVEM.sai() }; c.append(b);
+  } else {
+    p('Entre com sua conta Google pra salvar tudo na nuvem (tarefas, peso, nível, heroína e bolsa) e abrir o jogo em qualquer lugar: celular, app ou computador.');
+    const g = el('button', 'contaG'); if (N.entrando) g.textContent = '⏳ Entrando…'; else g.append(el('b', null, 'G'), 'Entrar com o Google'); g.disabled = !!N.entrando; g.onclick = () => NUVEM.entra(); c.append(g);
+    if (N.erro) p('⚠️ ' + N.erro);
+    p('O jogo continua salvando neste aparelho também. O backup em arquivo segue funcionando como reserva.');
+  }
+  menuEl.onclick = e => { if (e.target === menuEl) { contaAberta = false; menuEl.classList.remove('on') } }; menuEl.classList.add('on');
+}
+function contaMudou() { if (contaAberta && menuEl.classList.contains('on')) abreConta() }
 
 // ---------------- cronômetro (18/11/2026): conta pelo relógio (hora de terminar salva), então continua certo mesmo saindo do app ----------------
 const cronEl = document.getElementById('cron'); let cronT = null, cronMin = false;
@@ -3083,7 +3114,7 @@ function desenhaPeso() {
     const dfe = el('span', 'df', df == null || !df ? '' : sinal(df)); dfe.style.color = df > 0 ? '#ff9a8a' : '#7be0a0';
     ln.append(el('span', 'd', ddmm(d) + '/' + d.slice(2, 4)), el('span', 'v', kg(v) + ' kg'), dfe, im, xb); corpo.append(ln) });
   const bk = el('button', 'hNovo', '💾 Fazer backup (tarefas, peso e fotos)'); bk.onclick = exportaBackup; corpo.append(bk);
-  corpo.append(el('p', 'dica', 'Tudo fica só neste celular. Se limpar os dados do Chrome ou trocar de celular, perde. Faça um backup de vez em quando (Herói → Backup também tem).')); corpo.lastChild.style.marginTop = '8px';
+  corpo.append(el('p', 'dica', window.NUVEM && NUVEM.N.user ? 'Está salvando na sua conta (nuvem) e neste celular. O backup em arquivo é uma reserva extra.' : 'Sem entrar na conta, tudo fica só neste celular. Entre em Menu → 👤 Entrar pra salvar na nuvem, ou faça um backup de vez em quando.')); corpo.lastChild.style.marginTop = '8px';
 }
 fotoEl.onclick = () => fotoEl.classList.remove('on');
 setInterval(() => { if (hojeOn() && !edEl.classList.contains('on')) desenhaHoje() }, 60000);
@@ -3110,5 +3141,7 @@ setInterval(() => { if (TELA.trava && Date.now() - TELA.ult > telaMin() * 60000)
 prendeTela();
 window.HAB = { MUS, compoeMusica, painelCheio, abreMapa, joga, montaMapa, TPf: () => TP, sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, viraDia, podeJogar, editor, trocaAba, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
 </script>
-<script src="js/aventura.js?v=8"></script>
+<script src="js/aventura.js?v=10"></script>
+<script src="js/nuvem.js?v=1"></script>
+<script>try { NUVEM.inicia() } catch (e) { console.error(e) }</script>
 </body></html>

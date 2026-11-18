@@ -33,11 +33,13 @@ async function folha(obj, mix, acts, lista, bb, vrm) { // lista: [nome da anima�
   }
   return out;
 }
-window.gera = async () => {
+// lista: nomes dos monstros; pasta: de onde ler (padrão ../monstros/X.glb). Os 12 novos (18/11) vêm do pacote Ultimate Monsters
+// (Quaternius, CC0) copiado do New-Game-Anime-fontes pra tmp_kk/um/ (X.gltf + Atlas_Monsters.png).
+window.gera = async (lista = ['MushroomKing', 'Orc', 'Yeti', 'Demon'], pasta = null) => {
   const R = {};
   // a heroína agora é KayKit: veja tools/sprites_kaykit.js
-  for (const nome of ['MushroomKing', 'Orc', 'Yeti', 'Demon']) {
-    const gl = await carrega('../monstros/' + nome + '.glb'), root = gl.scene; sc.add(root); root.rotation.y = -Math.PI / 2 * 0.72; // olhando pra esquerda
+  for (const nome of lista) {
+    const gl = await carrega(pasta ? pasta + nome + '.gltf' : '../monstros/' + nome + '.glb'), root = gl.scene; sc.add(root); root.rotation.y = -Math.PI / 2 * 0.72; // olhando pra esquerda
     const mix = new THREE.AnimationMixer(root), acts = {}; for (const c of gl.animations) acts[c.name] = mix.clipAction(c);
     acts.Idle.play(); mix.update(0.01); root.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(root);
     R[nome] = await folha(root, mix, acts, [['Walk', 6, 'anda'], ['Punch', 6, 'ataca'], ['Idle', 4, 'parada'], ['HitReact', 4, 'apanha'], ['Death', 6, 'cai']], bb);
