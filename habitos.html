@@ -39,7 +39,7 @@
   #ctl{position:absolute;inset:0;pointer-events:none;display:none}
   body.manual #ctl{display:block}
   body.lobby #ctl,body.lobby #bModo{display:none!important} /* acampamento limpo: só a heroína e o Mapa */
-  body.lobby #bEst{animation:pulsa 1.6s ease-in-out infinite}
+  body.lobby:not(.hojeOn):not(.soPainel) #bEst{animation:pulsa 1.6s ease-in-out infinite} /* escondido não pulsa (gastava CPU no Hoje) */
   #stick{position:absolute;left:16px;bottom:16px;width:104px;height:104px;border-radius:50%;background:var(--glass);border:1px solid var(--line)}
   #knob{position:absolute;left:31px;top:31px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.8)}
   #ctl button{position:absolute;pointer-events:auto;border-radius:50%;padding:0;display:grid;place-items:center;font-weight:800;line-height:1.05;text-align:center;backdrop-filter:blur(4px)}
@@ -402,6 +402,9 @@
   #aventura .avEq{position:absolute;left:12px;right:12px;bottom:calc(8px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;text-shadow:0 1px 3px #000}
   #aventura .avDica{position:absolute;left:50%;top:22%;transform:translateX(-50%);max-width:88%;text-align:center;background:rgba(5,8,18,.75);padding:7px 12px;border-radius:10px;font-size:12.5px;color:#ffe7a8}
   #aventura .avOp{position:absolute;right:12px;display:flex;gap:6px;bottom:calc(30px + env(safe-area-inset-bottom,0px))} #aventura .avOp button{font-size:12px;padding:6px 10px;background:rgba(20,26,40,.8)}
+  #aventura .avAtalho{position:absolute;right:12px;top:calc(56px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px;z-index:1}
+  #aventura .avGrande{position:relative;width:46px;height:46px;border-radius:50%;font-size:22px;padding:0;background:rgba(20,26,40,.75);border:1px solid rgba(255,231,168,.5)}
+  #aventura .avGrande i{position:absolute;top:-4px;right:-4px;background:#ff5a5a;color:#fff;font:800 11px system-ui;font-style:normal;border-radius:9px;padding:1px 5px}
   #aventura .avBolsa{position:absolute;inset:calc(6px + env(safe-area-inset-top,0px)) 6px calc(6px + env(safe-area-inset-bottom,0px));background:rgba(10,14,26,.96);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;font:600 13px system-ui;color:#e6ebf5;z-index:2}
   #aventura .avBTopo{display:flex;gap:6px;align-items:center;padding:8px;border-bottom:1px solid var(--line)} #aventura .avBTopo button{padding:6px 12px} #aventura .avBTopo button.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
   #aventura .avOuro{margin-left:auto;color:#ffd86b} #aventura .avLista{overflow-y:auto;padding:6px 10px;display:flex;flex-direction:column;gap:5px}
@@ -2814,8 +2817,10 @@ function passo(dt) {
   if (pausa > 0) pausa -= dt;
   heroiPasso(dt); lobbyPasso(dt); auraPasso(dt); enfeitesPasso(dt); bichosPasso(dt); orbesPasso(dt); faiscasPasso(dt); aneisPasso(dt); fxPasso(dt); fx2Passo(dt); laminaPasso(dt);
 }
+let quadroParado = false;
+new MutationObserver(() => { if (quadroParado && !document.body.classList.contains('hojeOn') && !document.body.classList.contains('soPainel')) { quadroParado = false; requestAnimationFrame(t => { t0 = t; quadro(t) }) } }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 function quadro(t) {
-  requestAnimationFrame(quadro); if (document.body.classList.contains('hojeOn') || document.body.classList.contains('soPainel')) { t0 = t; return } const dt = Math.min(0.05, (t - t0) / 1000); t0 = t; tempo += dt; VENTO.value = tempo;
+  if (document.body.classList.contains('hojeOn') || document.body.classList.contains('soPainel')) { quadroParado = true; return } requestAnimationFrame(quadro); // 3D escondido: o laço para de vez (economiza bateria) const dt = Math.min(0.05, (t - t0) / 1000); t0 = t; tempo += dt; VENTO.value = tempo;
   if (R) { passo(dt); player.position.set(P.x, P.y, P.z); player.rotation.y = P.face; mix.update(pausa > 0 && P.atk ? 0 : dt); player.updateMatrixWorld(true); VRMC.tick(R, dt) } else lobbyPasso(dt); // carregando a heroína: o palco do acampamento já aparece
   // câmera atrás da heroína; no automático vira devagar pra olhar pra onde a trilha vai
   camAlvo.x += (P.x - camAlvo.x) * Math.min(1, dt * 4); camAlvo.z += (P.z - camAlvo.z) * Math.min(1, dt * 4); camAlvo.y += (P.y - camAlvo.y) * Math.min(1, dt * 4);
@@ -3079,5 +3084,5 @@ setInterval(() => { if (TELA.trava && Date.now() - TELA.ult > telaMin() * 60000)
 prendeTela();
 window.HAB = { MUS, compoeMusica, painelCheio, abreMapa, joga, montaMapa, TPf: () => TP, sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, viraDia, podeJogar, editor, trocaAba, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
 </script>
-<script src="js/aventura.js?v=4"></script>
+<script src="js/aventura.js?v=5"></script>
 </body></html>
