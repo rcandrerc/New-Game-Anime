@@ -13,6 +13,7 @@
   ];
   const MONS = ['MushroomKing', 'Orc', 'Yeti', 'Demon'], NOME_M = { MushroomKing: 'Cogumelo', Orc: 'Orc', Yeti: 'Yeti', Demon: 'Diabrete' };
   const RAR = [['comum', 1, '#c9d2e0'], ['raro', 1.4, '#6fb8ff'], ['épico', 2, '#c98bff']];
+  const CAJADOS = ['Varinha', 'Cajado de carvalho', 'Cajado de cristal', 'Cajado rúnico', 'Cajado estelar'];
   const SLOT = { arma: ['🗡', ['Espada curta', 'Sabre', 'Lâmina de aço', 'Espada rúnica', 'Lâmina estelar']], arm: ['🛡', ['Gibão', 'Cota de malha', 'Armadura leve', 'Armadura rúnica', 'Manto estelar']], amu: ['📿', ['Pingente', 'Amuleto', 'Talismã', 'Colar rúnico', 'Joia estelar']] };
 
   // ---------------- estado (S.av) e contas ----------------
@@ -30,8 +31,8 @@
   function nivelPraChefe(z) { const nv0 = S.nv; let v = nv0; for (; v < nv0 + 60; v++) { S.nv = v; const H = heroi(), M = monstro(z, true, () => 0.5); H.crit = 0; if (luta(H, M, () => 1).ganhou) break } S.nv = nv0; return v }
   function dropa(z, chefe, rnd = Math.random) { // item novo: equipa se for melhor; se não, vira ouro
     if (!chefe && rnd() > 0.06) return null; const a = A(), x = rnd(), r = chefe ? (x < 0.25 ? 2 : 1) : x < 0.04 ? 2 : x < 0.25 ? 1 : 0, slots = Object.keys(SLOT), s = slots[Math.floor(rnd() * 3)];
-    const ip = z + (chefe ? 1 : 0), pct = Math.round(ip * 0.045 * RAR[r][1] * 100) / 100, nome = SLOT[s][1][Math.min(4, Math.floor((ip - 1) / 2))];
-    const it = { s, nome, r, pct, z: ip }, cur = a.eq[s];
+    const ip = z + (chefe ? 1 : 0), pct = Math.round(ip * 0.045 * RAR[r][1] * 100) / 100, tier = Math.min(4, Math.floor((ip - 1) / 2)), cajado = s === 'arma' && rnd() < 0.5, nome = cajado ? CAJADOS[tier] : SLOT[s][1][tier];
+    const it = { s, nome, r, pct, z: ip }, cur = a.eq[s]; if (s === 'arma') it.tipo = cajado ? 'cajado' : 'espada';
     if (!cur || pct > cur.pct) { a.eq[s] = it; return Object.assign({ equipou: true }, it) } a.ouro += ip * 5; return Object.assign({ vendeu: ip * 5 }, it)
   }
   const custoForja = n => Math.round(40 * Math.pow(1.45, n));
@@ -58,8 +59,9 @@
   const cv = document.createElement('canvas'), ctx = cv.getContext('2d'), hud = document.createElement('div'), escuro = document.createElement('div');
   hud.className = 'avHud'; escuro.className = 'avEscuro'; tela.append(cv, escuro, hud); document.body.append(tela);
   const IMG = {}, TINT = {}, QUADROS = { anda: 8, ataca: 6, parada: 6, apanha: 4, cai: 6, comemora: 6 }, QM = { anda: 6, ataca: 6, parada: 4, apanha: 4, cai: 6 };
-  const VISUAIS = [['kai', 'Ruiva fofinha'], ['maga', 'Maguinha']]; // kai e maga: KayKit Adventurers (Rogue e Mage), CC0
-  function visual() { const v = A().vis; return VISUAIS.some(x => x[0] === v) ? v : 'kai' }
+  // a roupa segue a arma (KayKit Adventurers, CC0): sem arma = aventureira, espada = guerreira de armadura, cajado = maga de chapéu
+  function tipoArma() { const w = A().eq.arma; return !w ? 'nu' : w.tipo === 'cajado' ? 'cajado' : 'espada' }
+  function visual() { return 'kai_' + tipoArma() }
   function img(quem, an) { const k = quem + '_' + an; if (!IMG[k]) { const i = new Image(); i.src = 'aventura/' + k.toLowerCase() + '.png'; IMG[k] = i } return IMG[k] }
   function tingida(quem, an, rd) { if (!rd) return img(quem, an); const k = quem + an + rd; if (TINT[k]) return TINT[k]; const i = img(quem, an); if (!i.complete || !i.naturalWidth) return i;
     const c = document.createElement('canvas'); c.width = i.naturalWidth; c.height = i.naturalHeight; const x = c.getContext('2d'); x.filter = 'hue-rotate(' + (rd * 75) + 'deg) saturate(1.2)'; x.drawImage(i, 0, 0); TINT[k] = c; return c }
@@ -93,7 +95,7 @@
       V.troca += dt; if (V.troca >= 0.8) { V.troca = 0; const H = V.H, M = V.M;
         if (V.vez === 'h') { const c = Math.random() < H.crit, d = Math.round(H.atk * (c ? 2 : 1)); V.mhp -= d; num((c ? '💥' : '') + d, V.mx, chaoY() - tamH() * 0.9, c ? '#ffd23a' : '#fff'); V.vez = 'm'; V.golpeH = 0.75; V.ferM = 0.5;
           if (V.mhp <= 0) { V.est = 'mmorre'; V.t = 0; const v = venceu(M); num('+' + Math.round(M.ouro * H.ouro) + ' 🪙', V.mx, chaoY() - tamH() * 1.1, '#ffd86b'); try { plim(0, 0.15) } catch (e) {}
-            if (v.it) V.faixa = { txt: v.it.equipou ? SLOT[v.it.s][0] + ' ' + v.it.nome + ' (' + RAR[v.it.r][0] + ')' : '🪙 ' + v.it.nome + ' vendido', cor: RAR[v.it.r][2], t: 0 };
+            if (v.it) V.faixa = { txt: v.it.equipou ? (v.it.tipo === 'cajado' ? '🪄' : SLOT[v.it.s][0]) + ' ' + v.it.nome + ' (' + RAR[v.it.r][0] + ')' : '🪙 ' + v.it.nome + ' vendido', cor: RAR[v.it.r][2], t: 0 };
             if (v.fj) V.faixa = { txt: '⚒ Espada na forja: +' + A().forja, cor: '#ffd86b', t: 0 };
             if (v.novaZ) { V.faixa = { txt: '👑 Chefe vencido! Zona ' + A().z + ': ' + nomeZ(A().z), cor: '#ffe066', t: 0, longo: true }; V.comemora = 2 } salva() } }
         else { V.hhp -= M.atk; num('-' + Math.round(M.atk), hx(), chaoY() - tamH() * 0.95, '#ff8a8a'); V.vez = 'h'; V.golpeM = 0.75; V.ferH = 0.5;
@@ -117,6 +119,8 @@
     // sombra
     ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(hx(), y - 2, tamH() * 0.2, tamH() * 0.04, 0, 0, 7); ctx.fill();
     const vis = visual(); sprite(vis, an, QUADROS[an], i, hx() - (an === 'cai' ? F * 0.3 : 0), y, F, 0, V.ferH > 0.3);
+    if (an === 'ataca' && vis === 'kai_cajado' && V.M) { const p = Math.min(1, (0.75 - V.golpeH) / 0.6), ox = hx() + F * 0.25, oy = y - F * 0.45, bx = ox + (V.mx - ox) * p; // bolinha de magia
+      ctx.fillStyle = 'rgba(150,255,140,.35)'; ctx.beginPath(); ctx.arc(bx, oy, F * 0.09, 0, 7); ctx.fill(); ctx.fillStyle = '#eaffb0'; ctx.beginPath(); ctx.arc(bx, oy, F * 0.045, 0, 7); ctx.fill() }
     if (V.M) { const M = V.M, k = M.chefe ? 1.4 : 1, rd = rodada(a.z); let am = 'anda', j = q;
       if (V.est === 'luta') { if (V.golpeM > 0) { am = 'ataca'; j = Math.min(5, Math.floor((0.75 - V.golpeM) * 8)) } else if (V.ferM > 0) am = 'apanha'; else am = 'parada' } else if (V.est === 'mmorre') { am = 'cai'; j = Math.min(5, Math.floor(V.t * 7)) }
       ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(V.mx, y - 2, tamH() * 0.22 * k, tamH() * 0.045, 0, 0, 7); ctx.fill();
@@ -133,15 +137,15 @@
   function desenhaHud() { const a = A(), H = heroi(), ch = a.z === a.maxZ; hud.innerHTML = '';
     const top = el('div', 'avTopo'), x = el('button', null, '✕'); x.setAttribute('aria-label', 'Fechar a aventura'); x.onclick = fecha;
     top.append(el('b', null, '🗺 ' + nomeZ(a.z)), el('span', null, '⭐ Nível ' + S.nv + ' (das tarefas)'), el('span', null, '🪙 ' + a.ouro), el('span', null, ch ? '👑 chefe em ' + Math.max(0, KILLS_CHEFE - a.kills) : '↩ treinando'), x); hud.append(top);
-    const eq = el('div', 'avEq'); for (const s of ['arma', 'arm', 'amu']) { const it = a.eq[s], d = el('span', null, SLOT[s][0] + ' ' + (it ? it.nome + ' +' + Math.round(it.pct * 100) + '%' : '—')); if (it) d.style.color = RAR[it.r][2]; eq.append(d) }
+    const eq = el('div', 'avEq'); for (const s of ['arma', 'arm', 'amu']) { const it = a.eq[s], d = el('span', null, (it && it.tipo === 'cajado' ? '🪄' : SLOT[s][0]) + ' ' + (it ? it.nome + ' +' + Math.round(it.pct * 100) + '%' : '—')); if (it) d.style.color = RAR[it.r][2]; eq.append(d) }
     eq.append(el('span', null, '⚒ Forja ' + a.forja + ' (+' + a.forja * 4 + '%)' + (a.forja >= 2 * S.nv ? ' · máx. no nível' : '')), el('span', null, '⚔ ' + Math.round(H.atk) + '  ❤ ' + H.hp)); hud.append(eq);
     if (ch && a.kills >= KILLS_CHEFE - 1) { const need = nivelPraChefe(a.z); if (need > S.nv) hud.append(el('div', 'avDica', '💡 O chefe desta zona pede uns nível ' + need + '. Cada tarefa feita deixa a heroína mais forte.')) }
-    const op = el('div', 'avOp'), b = el('button', null, (a.auto ? '🌙 Liga sozinho depois de ' + a.auto + ' min parado' : '🌙 Não liga sozinho')); b.onclick = e => { e.stopPropagation(); a.auto = a.auto === 3 ? 10 : a.auto === 10 ? 0 : 3; salva(); desenhaHud() }; const vb = el('button', null, '👤 ' + VISUAIS.find(x => x[0] === visual())[1]); vb.onclick = e => { e.stopPropagation(); const i = VISUAIS.findIndex(x => x[0] === visual()); A().vis = VISUAIS[(i + 1) % VISUAIS.length][0]; salva(); Object.keys(QUADROS).forEach(an => img(visual(), an)); desenhaHud() }; op.append(vb, b); hud.append(op);
+    const op = el('div', 'avOp'), b = el('button', null, (a.auto ? '🌙 Liga sozinho depois de ' + a.auto + ' min parado' : '🌙 Não liga sozinho')); b.onclick = e => { e.stopPropagation(); a.auto = a.auto === 3 ? 10 : a.auto === 10 ? 0 : 3; salva(); desenhaHud() }; op.append(b); hud.append(op);
   }
   // ---------------- abrir e fechar ----------------
   function abre(desc) {
     if (V.on) return; V.on = true; V.desc = !!desc; tela.classList.add('on'); tamanho(); const r = atualiza(); V.H = heroi(); V.hhp = V.H.hp; V.est = 'anda'; V.t = 0; V.M = null; V.nums = []; V.faixa = null; V.toque = Date.now(); escuro.style.opacity = 0; hud.classList.remove('some');
-    [visual(), ...MONS].forEach(q => Object.keys(MONS.includes(q) ? QM : QUADROS).forEach(an => img(q, an)));
+    ['kai_nu', 'kai_espada', 'kai_cajado', ...MONS].forEach(q => Object.keys(MONS.includes(q) ? QM : QUADROS).forEach(an => img(q, an)));
     desenhaHud(); if (r && r.kills + r.mortes > 0) mostraFora(r);
     try { prendeTela() } catch (e) {} clearInterval(V.timer); V.timer = setInterval(passo, 1000 / FPS);
   }
