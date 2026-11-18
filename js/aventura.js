@@ -1,11 +1,11 @@
 // Aventura 2D (18/11/2026): RPG que se joga sozinho. A heroína anda, luta, pega itens e passa de zona sozinha;
 // a força dela vem do nível (S.nv), que só sobe com as tarefas. Feito pra rodar como "descanso de tela":
-// fundo escuro, 8 quadros por segundo, e quando o app fica fechado o jogo calcula o que aconteceu (até 12 h).
+// fundo escuro, 20 passos por segundo (quadros dos bonecos a 10), e quando o app fica fechado o jogo calcula o que aconteceu (até 12 h).
 // Usa do habitos.html: S, salva, hoje, el, aviso, TELA, prendeTela, somLiga, plim. Sprites: aventura/*.png (tools/sprites_aventura.js).
 (() => {
   const VER = 10; const EM = 1.8; // a cena ocupa só a metade de baixo da tela (o resto é preto puro): textos e bonecos compensam // sobe quando os sprites mudam (o celular não fica com imagem velha)
   const DESCANSO_MAX = Infinity; // o André quer ela rodando enquanto não mexe (a tela já fica bem escura no descanso)
-  const FPS = 8, MAX_FORA = 12 * 3600, KILLS_CHEFE = 10;
+  const FPS = 20, MAX_FORA = 12 * 3600, KILLS_CHEFE = 10;
   const ZONAS = [
     { nome: 'Campina', ceu: ['#05081a', '#16234a'], morro: '#121d36', arv: '#0f2a1d', chao: '#183222', chao2: '#25492e', mon: 'Javali', mons: ['Javali', 'Porco', 'Pinto', 'Coelho', 'Vaca'] },
     { nome: 'Bosque', ceu: ['#04130e', '#0f2c22'], morro: '#0c241c', arv: '#0a2016', chao: '#16321d', chao2: '#22502a', mon: 'Lobo', mons: ['Lobo', 'Raposa', 'Castor', 'Cervo', 'Macaco'] },
@@ -164,7 +164,7 @@
     const dorme = V.desc && Date.now() - V.toque > 20000; if (dorme) escuro.style.opacity = 0.6; // descanso: escurece sozinho (gasta menos)
     if (dorme && Date.now() - V.toque > DESCANSO_MAX) { fecha(); return } // depois de um tempo, solta a tela pro celular apagar (o jogo continua contando com o app fechado)
     if (Date.now() - V.toque > 6000) hud.classList.add('some');
-    if (!dorme || V.quadro % 2 === 0) desenha(); // escurecida: desenha 4 vezes por segundo em vez de 8
+    if (!dorme || V.quadro % 4 === 0) desenha(); // escurecida: desenha 4 vezes por segundo em vez de 8
     if (V.quadro % FPS === 0 && !hud.classList.contains('some') && Date.now() - V.toque > 700) desenhaHud();
   }
   function sprite(quem, an, n, i, x, y, alt, rd, flash) { const im = tingida(quem, an, rd); if (!im || !(im.naturalWidth || im.width)) return; const fw = (im.naturalWidth || im.width) / n, fh = im.naturalHeight || im.height, s = alt / fh;
@@ -174,7 +174,7 @@
     const a = A(); if (zDesenhada !== a.z || !fundo) montaFundo(a.z); ctx.drawImage(fundo, 0, 0);
     const tr = V.treme > 0 ? V.treme * Hh * 0.02 : 0; ctx.save(); if (tr) ctx.translate((Math.random() - 0.5) * tr, (Math.random() - 0.5) * tr);
     for (const L of camadas) { const off = Math.round(V.rolagem * L.v * (W / 400)) % (W * 2); ctx.drawImage(L.c, -off, 0); if (off > W) ctx.drawImage(L.c, W * 2 - off, 0) }
-    const y = chaoY() + Hh * 0.03, F = tamH() / 0.85, q = V.quadro;
+    const y = chaoY() + Hh * 0.03, F = tamH() / 0.85, q = Math.floor(V.quadro * 10 / FPS); // bonecos trocam de quadro 10x por segundo; o movimento anda a cada passo
     let an = 'parada', i = q; if (V.est === 'anda' || V.est === 'chega') an = 'corre'; else if (V.est === 'hmorre') { an = 'cai'; i = Math.min(5, Math.floor(V.t * 6)) } else if (V.est === 'festa') an = 'comemora'; else if (V.golpeH > 0) { an = 'ataca'; i = Math.min(5, Math.floor((0.75 - V.golpeH) * 8)) } else if (V.ferH > 0) an = 'apanha';
     // sombra
     ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(hx(), y - 2, tamH() * 0.2, tamH() * 0.04, 0, 0, 7); ctx.fill();
@@ -219,7 +219,7 @@
       if (f.sk.fx === 'fogo' && t0 < 0.3 && f.t >= 0.3) { solta(26, mx, my, f.sk.cor, F * 3, 0.6, F * 0.045, F * 0.8); solta(10, mx, my, '#ffe9a0', F * 2, 0.4, F * 0.04); V.treme = 0.8 }
       if (f.sk.fx === 'meteoro') for (let i = 0; i < 4; i++) { const tb = 0.25 + i * 0.15; if (t0 < tb && f.t >= tb) { solta(10, mx + (i - 1.5) * F * 0.14, y - 6, f.sk.cor, F * 2, 0.45, F * 0.04, F * 1.2); V.treme = 0.6 } }
       if (f.t > f.dur) V.fx = null }
-    for (const q of PARTS) { q.t += dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vy += F * 4 * dt; q.vx *= 0.92 } for (let i = PARTS.length - 1; i >= 0; i--) if (PARTS[i].t > PARTS[i].vida || PARTS[i].y > y + 4) PARTS.splice(i, 1);
+    for (const q of PARTS) { q.t += dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vy += F * 4 * dt; q.vx *= Math.pow(0.92, dt * 8) } for (let i = PARTS.length - 1; i >= 0; i--) if (PARTS[i].t > PARTS[i].vida || PARTS[i].y > y + 4) PARTS.splice(i, 1);
     if (V.dash > 0) V.dash = Math.max(0, V.dash - dt * 2.5); if (V.treme > 0) V.treme = Math.max(0, V.treme - dt * 3); if (V.flash > 0) V.flash = Math.max(0, V.flash - dt * 4); if (V.skNome) V.skNome.t += 0 }
   function desenhaParts() { if (!PARTS.length) return; ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (const q of PARTS) { const a = 1 - q.t / q.vida; ctx.globalAlpha = Math.max(0, a); ctx.fillStyle = q.cor; ctx.beginPath(); ctx.arc(q.x, q.y, q.tam * (0.5 + a * 0.5), 0, 7); ctx.fill() } ctx.restore() }
   function brilho(x, y, r, cor, a) { const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(255,255,240,' + a + ')'); g.addColorStop(0.35, cor); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.globalAlpha = a; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill() }

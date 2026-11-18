@@ -47,7 +47,7 @@ class Cena(private val abrir: (String) -> Bitmap?) {
     private var kills = 0; private var ouro = 0; private var estadoTxt = ""
     private var zonaFundo = -1
 
-    private var quadro = 0; private var rolagem = 0f
+    private var quadro = 0; private var relogio = 0f; private var rolagem = 0f
     private var est = "corre"; private var t = 0f
     private var golpeH = 0f; private var ferH = 0f; private var vez = 0
     private var ataques = 0
@@ -153,7 +153,7 @@ class Cena(private val abrir: (String) -> Bitmap?) {
     }
 
     fun tick(dt: Float) {
-        t += dt; quadro++
+        t += dt; relogio = (relogio + dt) % 3600f; quadro = (relogio * 10).toInt() // bonecos trocam de quadro 10x por segundo, seja qual for o passo
         val y = chao() + H * 0.01f; val F = tam() / 0.85f
         when (est) {
             "corre" -> { rolagem += dt * 1.8f; hhp = minOf(hMax, hhp + hMax * 0.25f * dt); if (t > 1.5f && hhp > hMax * 0.6f) novoMonstro() }
