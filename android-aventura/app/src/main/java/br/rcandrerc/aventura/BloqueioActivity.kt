@@ -23,7 +23,7 @@ class BloqueioActivity : Activity() {
     private lateinit var tela: View
     private var rodando = false
     private val passo = object : Runnable { override fun run() {
-        val ms = if (cena.ocupado()) 83L else 125L
+        val ms = if (cena.ocupado()) 50L else 66L // 20 passos/s na luta, 15 andando (liso sem gastar muita bateria)
         cena.tick(ms / 1000f); tela.invalidate(); if (rodando) h.postDelayed(this, ms) } }
     private val desbloqueou = object : BroadcastReceiver() { override fun onReceive(c: Context, i: Intent) { finish() } }
 
