@@ -64,6 +64,7 @@ class MainActivity : Activity() {
         web.overScrollMode = View.OVER_SCROLL_NEVER
         setContentView(web)
         abrirAventura = intent?.getBooleanExtra("aventura", false) == true
+        try { TelaService.inicia(this) } catch (e: Exception) {}
         if (b != null) web.restoreState(b) else web.loadUrl(intent?.getStringExtra("url")?.takeIf { it.startsWith("http://localhost") } ?: (if (BuildConfig.DEBUG) "http://localhost:8000/habitos.html" else URL))
     }
 

@@ -5,7 +5,9 @@ import android.app.WallpaperManager
 import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
@@ -30,6 +32,12 @@ class ConfigActivity : Activity() {
             botoes.add(bt); l.addView(bt)
         }
         texto("\nSe a cena ficar de cabeça pra baixo, escolha o outro lado.\n", 14f, Color.LTGRAY)
+        texto("Tela de bloqueio", 16f)
+        texto("Quando a tela acende, a Aventura aparece por cima do bloqueio (em pé). Um toque fecha e o bloqueio normal aparece.", 14f, Color.LTGRAY)
+        bloq = Button(this).apply { isAllCaps = false; setOnClickListener { liga(!TelaService.ligado(this@ConfigActivity)) } }; l.addView(bloq)
+        l.addView(Button(this).apply { isAllCaps = false; text = "Permissões do app (Xiaomi: \"Mostrar na tela de bloqueio\")"; setOnClickListener {
+            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))) } })
+        texto("", 8f)
         l.addView(Button(this).apply {
             isAllCaps = false; text = "Usar como papel de parede"
             setOnClickListener {
@@ -40,8 +48,21 @@ class ConfigActivity : Activity() {
         })
         l.addView(Button(this).apply { isAllCaps = false; text = "Voltar pro jogo"; setOnClickListener { finish() } })
         setContentView(ScrollView(this).apply { setBackgroundColor(Color.BLACK); isFillViewport = true; addView(l) })
-        marca(pref.getInt("modo", 0))
+        marca(pref.getInt("modo", 0)); mostraBloq()
     }
+
+    private var bloq: Button? = null
+    private fun mostraBloq() { bloq?.text = if (TelaService.ligado(this)) "✓ Aventura ao acender a tela: LIGADA" else "Aventura ao acender a tela: desligada" }
+    private fun liga(on: Boolean) {
+        getSharedPreferences("aventura", MODE_PRIVATE).edit().putBoolean("bloqueio", on).apply()
+        if (on) {
+            if (android.os.Build.VERSION.SDK_INT >= 33) requestPermissions(arrayOf("android.permission.POST_NOTIFICATIONS"), 3)
+            if (!Settings.canDrawOverlays(this)) startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+            TelaService.inicia(this)
+        } else stopService(Intent(this, TelaService::class.java))
+        mostraBloq()
+    }
+    override fun onResume() { super.onResume(); mostraBloq() }
 
     private fun marca(i: Int) = botoes.forEachIndexed { k, bt -> bt.text = (if (k == i) "✓ " else "") + modos[k] }
 }
