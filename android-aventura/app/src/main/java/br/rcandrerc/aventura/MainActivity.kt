@@ -83,6 +83,8 @@ class MainActivity : Activity() {
 
     @Deprecated("back") override fun onBackPressed() {
         // o jogo fecha os painéis com o voltar? se não tiver histórico, só manda o app pro fundo (não fecha a página)
-        if (web.canGoBack()) web.goBack() else moveTaskToBack(true)
+        // voltar: fecha a bolsa ou a Aventura primeiro; só manda o app pro fundo se já estiver na tela Hoje
+        web.evaluateJavascript("(function(){var p=document.querySelector('#aventura .avBolsa');if(p){var x=p.querySelector('.avBTopo .avTab:last-child');if(x){x.click();return 1}}if(window.AV&&AV.aberta()){AV.fecha();return 1}return 0})()") { r ->
+            if (r != "1") { if (web.canGoBack()) web.goBack() else moveTaskToBack(true) } }
     }
 }
