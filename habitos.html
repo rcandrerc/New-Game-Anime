@@ -392,7 +392,7 @@
   /* ---------- Aventura 2D (js/aventura.js) ---------- */
   #aventura{position:fixed;inset:0;z-index:33;display:none;background:#000;overflow:hidden;touch-action:none}
   #aventura.on{display:block}
-  #aventura canvas{position:absolute;inset:0;width:100%;height:100%}
+  #aventura canvas{position:absolute;left:0;right:0;bottom:0;top:45%;width:100%;height:55%} /* metade de cima fica preto puro (AMOLED quase não gasta) */
   #aventura .avEscuro{position:absolute;inset:0;background:#000;opacity:0;transition:opacity 2s;pointer-events:none}
   #aventura .avHud{position:absolute;inset:0;pointer-events:none;transition:opacity .6s;font:700 13px system-ui,sans-serif;color:#e6ebf5}
   #aventura .avHud.some{opacity:0}
@@ -3084,5 +3084,5 @@ setInterval(() => { if (TELA.trava && Date.now() - TELA.ult > telaMin() * 60000)
 prendeTela();
 window.HAB = { MUS, compoeMusica, painelCheio, abreMapa, joga, montaMapa, TPf: () => TP, sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, viraDia, podeJogar, editor, trocaAba, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
 </script>
-<script src="js/aventura.js?v=5"></script>
+<script src="js/aventura.js?v=6"></script>
 </body></html>
