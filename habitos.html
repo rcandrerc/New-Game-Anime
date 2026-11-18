@@ -548,7 +548,7 @@ const ROTINA_V = 9, ROTINA_NOVA = [
   ['Noite com a família', 'f', 'social', [1], '18:00', 'fixo'],
   ['Quimera ou programação (1h a 2h)', 'm', 'estudo', [0, 6], '', ''],
   ['Buscar a filha no bombeiro', 'f', 'social', [0, 6], '', 'fixo'],
-  ['Aporte de R$ 200 na Rico', 'm', 'grana', { mes: 16 }, '', ''],
+  ['Aporte de R$ 200 na Rico', 'm', 'grana', { mes: 10 }, '', ''], // dia 10: logo depois do pagamento
   ['Mandar print da Rico pro Claude', 'f', 'grana', { mes: -1 }, '', ''],
 ];
 const ROTINA_NOMES = { 'Registrar peso no MyFitnessPal': 'Pesar (número + foto da balança)', 'Almoço da filha e louça': 'Almoço da filha', 'Quimera ou programação (1h45)': 'Quimera ou programação (1h30)', 'Pedal (1h40 a 2h)': 'Pedal' }; // nome antigo → novo (mantém o histórico)
@@ -569,6 +569,7 @@ if (!(S.rotina >= ROTINA_V)) {
 const CRON_PADRAO = { 'Quimera ou programação (1h30)': { t: 'min', min: 90 }, 'Programação (quinta)': { t: 'min', min: 90 }, 'Quimera ou programação (1h a 2h)': { t: 'min', min: 60 },
   'Prancha 5x40s': { t: 'ser', n: 5, trab: 40, desc: 60 }, 'Prancha 5x40s (sábado)': { t: 'ser', n: 5, trab: 40, desc: 60 },
   'Barra 5x6': { t: 'ser', n: 5, trab: 0, desc: 90 }, 'Barra 5x6 (quinta)': { t: 'ser', n: 5, trab: 0, desc: 90 }, 'Flexão 5x10': { t: 'ser', n: 5, trab: 0, desc: 60 } };
+if (!(S.aporteV >= 1)) { for (const d of S.diar) if (d.t === 'Aporte de R$ 200 na Rico' && d.freq && d.freq.t === 'mes' && d.freq.n === 16) d.freq.n = 10; S.aporteV = 1; salva() } // 18/11/2026: ele pediu dia 10
 if (!(S.cronV >= 1)) { for (const d of S.diar) if (CRON_PADRAO[d.t] && !d.cron) d.cron = Object.assign({}, CRON_PADRAO[d.t]); S.cronV = 1; salva() }
 // ---------------- pedal pelo plano do treinador: o calendário do app GPS Ciclismo (o treinador atualiza lá) ----------------
 const PLANO_URL = 'https://raw.githubusercontent.com/rcandrerc/Gps-ciclismo/main/plano/calendario.json';
