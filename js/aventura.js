@@ -3,7 +3,8 @@
 // fundo escuro, 8 quadros por segundo, e quando o app fica fechado o jogo calcula o que aconteceu (até 12 h).
 // Usa do habitos.html: S, salva, hoje, el, aviso, TELA, prendeTela, somLiga, plim. Sprites: aventura/*.png (tools/sprites_aventura.js).
 (() => {
-  const VER = 4; // sobe quando os sprites mudam (o celular não fica com imagem velha)
+  const VER = 5; // sobe quando os sprites mudam (o celular não fica com imagem velha)
+  const DESCANSO_MAX = 20 * 60000; // 20 min sem tocar no modo descanso: fecha e deixa a tela apagar
   const FPS = 8, MAX_FORA = 12 * 3600, KILLS_CHEFE = 10;
   const ZONAS = [
     { nome: 'Campina', ceu: ['#05081a', '#16234a'], morro: '#121d36', arv: '#0f2a1d', chao: '#183222', chao2: '#25492e', mon: 'MushroomKing' },
@@ -17,10 +18,12 @@
   const CAJADOS = ['Varinha', 'Cajado de carvalho', 'Cajado de cristal', 'Cajado rúnico', 'Cajado estelar'];
   // Habilidades: as mesmas do Age of Embers (rpg-realista, shared/dados.js, build padrão), em versão simples pro idle.
   // Espada na mão usa as 4 de espada; cajado usa as 4 de magia (gastam mana). Cada uma libera num nível das tarefas.
-  const LIBERA = [1, 3, 6, 10];
-  const SKILLS = {
-    espada: [{ nome: 'Investida', m: 1.9, cd: 3, fx: 'corte', cor: '#9fe8ff' }, { nome: 'Giro da Lâmina', m: 2.4, cd: 4, fx: 'giro', cor: '#cfe9ff' }, { nome: 'Salto Esmagador', m: 1.7, cd: 4, fx: 'chao', cor: '#ffd27a' }, { nome: 'Combo Relâmpago', m: 2.1, cd: 3, fx: 'raio', cor: '#fff27a' }],
-    cajado: [{ nome: 'Cometa de Fogo', m: 1.6, cd: 2, mana: 10, fx: 'fogo', cor: '#ff7a2a' }, { nome: 'Raio Celeste', m: 1.8, cd: 4, mana: 25, fx: 'raio', cor: '#bfe3ff' }, { nome: 'Explosão', m: 2.0, cd: 4, mana: 25, fx: 'fogo', cor: '#ff5a1a' }, { nome: 'Chuva de Meteoros', m: 2.3, cd: 5, mana: 30, fx: 'meteoro', cor: '#ffa21a' }],
+  const SKILLS = { // nv = nível das tarefas que libera
+    espada: [{ nome: 'Investida', nv: 1, m: 1.9, cd: 3, fx: 'corte', cor: '#9fe8ff' }, { nome: 'Giro da Lâmina', nv: 3, m: 2.4, cd: 4, fx: 'giro', cor: '#cfe9ff' }, { nome: 'Salto Esmagador', nv: 6, m: 1.7, cd: 4, fx: 'chao', cor: '#ffd27a' }, { nome: 'Combo Relâmpago', nv: 10, m: 2.1, cd: 3, fx: 'raio', cor: '#fff27a' },
+      { nome: 'Corte Aéreo', nv: 14, m: 1.6, cd: 2, fx: 'corte', cor: '#7fe3ff' }, { nome: 'Fenda de Fogo', nv: 18, m: 2.2, cd: 4, fx: 'chao', cor: '#ff7a3a' }, { nome: 'Fúria', nv: 24, m: 2.6, cd: 5, fx: 'giro', cor: '#ff9ab0' }],
+    cajado: [{ nome: 'Cometa de Fogo', nv: 1, m: 1.6, cd: 2, mana: 10, fx: 'fogo', cor: '#ff7a2a' }, { nome: 'Raio Celeste', nv: 3, m: 1.8, cd: 4, mana: 25, fx: 'raio', cor: '#bfe3ff' }, { nome: 'Explosão', nv: 6, m: 2.0, cd: 4, mana: 25, fx: 'fogo', cor: '#ff5a1a' }, { nome: 'Chuva de Meteoros', nv: 10, m: 2.3, cd: 5, mana: 30, fx: 'meteoro', cor: '#ffa21a' },
+      { nome: 'Lança de Gelo', nv: 13, m: 1.7, cd: 3, mana: 15, fx: 'corte', cor: '#7fd0ff' }, { nome: 'Onda Arcana', nv: 16, m: 1.6, cd: 4, mana: 25, fx: 'chao', cor: '#a8c8ff' }, { nome: 'Rajada de Cometas', nv: 19, m: 2.2, cd: 4, mana: 25, fx: 'meteoro', cor: '#ffb04a' },
+      { nome: 'Círculo de Chamas', nv: 22, m: 2.4, cd: 5, mana: 30, fx: 'chao', cor: '#ff6a2a' }, { nome: 'Vórtice', nv: 26, m: 2.0, cd: 5, mana: 30, fx: 'giro', cor: '#c49aff' }],
   };
   const MANA = 100, MANA_TURNO = 8;
   function golpe(H, st, rnd) { // um golpe da heroína: usa a habilidade pronta mais forte (se tiver mana), senão o básico
@@ -37,13 +40,13 @@
   const zona = z => ZONAS[(z - 1) % ZONAS.length], rodada = z => Math.floor((z - 1) / ZONAS.length);
   const nomeZ = z => zona(z).nome + (rodada(z) ? ' ' + ['', 'II', 'III', 'IV', 'V', 'VI'][Math.min(5, rodada(z))] : '');
   function heroi() { const a = A(), nv = S.nv || 1, e = a.eq, p = s => (e[s] ? e[s].pct : 0);
-    return { atk: (6 + 3 * nv) * (1 + 0.04 * a.forja + p('arma')), hp: Math.round((60 + 15 * nv) * (1 + p('arm'))), crit: 0.08 + p('amu') * 0.5, ouro: 1 + p('amu'), poc: a.poc, pm: a.pm, skills: (SKILLS[!e.arma ? '' : e.arma.tipo === 'cajado' ? 'cajado' : 'espada'] || []).filter((x, i) => nv >= LIBERA[i]) } }
+    return { atk: (6 + 3 * nv) * (1 + 0.04 * a.forja + p('arma')), hp: Math.round((60 + 15 * nv) * (1 + p('arm'))), crit: 0.08 + p('amu') * 0.5, ouro: 1 + p('amu'), poc: a.poc, pm: a.pm, skills: (SKILLS[!e.arma ? '' : e.arma.tipo === 'cajado' ? 'cajado' : 'espada'] || []).filter(x => nv >= x.nv) } }
   function monstro(z, chefe, rnd = Math.random) { const m = 2 * z - 1 + (chefe ? 2 : rnd() < 0.5 ? 0 : 1), th = zona(z).mon;
     const tipo = chefe ? th : rnd() < 0.7 ? th : MONS[Math.floor(rnd() * MONS.length)];
     return { tipo, chefe, lv: m, hp: Math.round((18 + 14 * m) * (chefe ? 2.5 : 1)), atk: (3 + 2.6 * m) * (chefe ? 1.25 : 1), ouro: Math.round((2 + m) * (chefe ? 8 : 1)) } }
   function luta(H, M, rnd = Math.random) { // troca de golpes (a heroína bate primeiro): quem ganha e quantas trocas
     // poção: quando a vida cai abaixo de 35%, bebe uma (se tiver) e recupera 60%
-    let hp = H.hp, mh = M.hp, n = 0, pu = 0; const tem = H.poc || 0, st = { cd: [0, 0, 0, 0], mana: MANA, pm: H.pm || 0, pmu: 0 }; while (n < 400) { n++; mh -= golpe(H, st, rnd).d; if (mh <= 0) return { ganhou: true, n, hp, pu, pmu: st.pmu }; hp -= M.atk; if (hp < H.hp * 0.35 && hp > 0 && pu < tem) { pu++; hp = Math.min(H.hp, hp + H.hp * 0.6) } if (hp <= 0) return { ganhou: false, n, hp: 0, pu, pmu: st.pmu } } return { ganhou: false, n, hp, pu, pmu: st.pmu }
+    let hp = H.hp, mh = M.hp, n = 0, pu = 0; const tem = H.poc || 0, st = { cd: [0, 0, 0, 0, 0, 0, 0, 0, 0], mana: MANA, pm: H.pm || 0, pmu: 0 }; while (n < 400) { n++; mh -= golpe(H, st, rnd).d; if (mh <= 0) return { ganhou: true, n, hp, pu, pmu: st.pmu }; hp -= M.atk; if (hp < H.hp * 0.35 && hp > 0 && pu < tem) { pu++; hp = Math.min(H.hp, hp + H.hp * 0.6) } if (hp <= 0) return { ganhou: false, n, hp: 0, pu, pmu: st.pmu } } return { ganhou: false, n, hp, pu, pmu: st.pmu }
   }
   function nivelPraChefe(z) { const nv0 = S.nv; let v = nv0; for (; v < nv0 + 60; v++) { S.nv = v; const H = heroi(), M = monstro(z, true, () => 0.5); H.crit = 0; H.poc = 0; H.pm = 0; if (luta(H, M, () => 1).ganhou) break } S.nv = nv0; return v }
   function dropa(z, chefe, rnd = Math.random) { // item novo vai pra bolsa (quem equipa é o André); bolsa cheia: vende sozinho
@@ -76,7 +79,8 @@
   // ---------------- desenho ----------------
   const tela = document.createElement('div'); tela.id = 'aventura'; tela.setAttribute('role', 'dialog'); tela.setAttribute('aria-label', 'Aventura');
   const cv = document.createElement('canvas'), ctx = cv.getContext('2d'), hud = document.createElement('div'), escuro = document.createElement('div');
-  hud.className = 'avHud'; escuro.className = 'avEscuro'; tela.append(cv, escuro, hud); document.body.append(tela);
+  const atalho = document.createElement('div'); atalho.className = 'avAtalho'; // bolsa e loja sempre à mão (não somem com o resto)
+  hud.className = 'avHud'; escuro.className = 'avEscuro'; tela.append(cv, escuro, hud, atalho); document.body.append(tela);
   const IMG = {}, TINT = {}, QUADROS = { anda: 8, ataca: 6, parada: 6, apanha: 4, cai: 6, comemora: 6 }, QM = { anda: 6, ataca: 6, parada: 4, apanha: 4, cai: 6 };
   // a roupa segue a arma (KayKit Adventurers, CC0): sem arma = aventureira, espada = guerreira de armadura, cajado = maga de chapéu
   const ico = it => it.tipo === 'cajado' ? '🪄' : SLOT[it.s][0];
@@ -110,20 +114,20 @@
   }
   // ---------------- cena ao vivo ----------------
   const V = { on: false, desc: false, est: 'anda', t: 0, quadro: 0, rolagem: 0, M: null, mx: 0, mhp: 0, H: null, hhp: 0, nums: [], faixa: null, toque: 0, timer: null, troca: 0, vez: 'h' };
-  const chaoY = () => Math.round(Hh * 0.8), tamH = () => Hh * 0.33, hx = () => W * 0.3;
+  const chaoY = () => Math.round(Hh * 0.8), tamH = () => Hh * 0.26, hx = () => W * 0.3;
   function novoMonstro() { V.M = proximo(); V.mhp = V.M.hp; V.mx = W + tamH() * 0.6; V.est = 'chega'; V.t = 0 }
   function num(txt, x, y, cor) { V.nums.push({ txt, x, y, cor, t: 0 }) }
   function passo() { // 1 passo de 1/8 s
     const dt = 1 / FPS, a = A(); V.t += dt; V.quadro++; a.t = Date.now();
     TELA.ult = Date.now(); // tela acesa enquanto a aventura está aberta
     if (V.est === 'anda') { V.rolagem += dt; V.hhp = Math.min(V.H.hp, V.hhp + V.H.hp * 0.25 * dt); if (V.t > 3) novoMonstro() }
-    else if (V.est === 'chega') { V.rolagem += dt; V.mx -= W * 0.28 * dt; if (V.mx <= hx() + tamH() * 0.62) { V.est = 'luta'; V.t = 0; V.vez = 'h'; V.troca = 0; V.st = { cd: [0, 0, 0, 0], mana: V.st ? V.st.mana : MANA, pm: A().pm, pmu: 0 } } }
+    else if (V.est === 'chega') { V.rolagem += dt; V.mx -= W * 0.28 * dt; if (V.mx <= hx() + tamH() * 0.62) { V.est = 'luta'; V.t = 0; V.vez = 'h'; V.troca = 0; V.st = { cd: [0, 0, 0, 0, 0, 0, 0, 0, 0], mana: V.st ? V.st.mana : MANA, pm: A().pm, pmu: 0 } } }
     else if (V.est === 'luta') {
       V.troca += dt; if (V.troca >= 0.8) { V.troca = 0; const H = V.H, M = V.M;
         if (V.vez === 'h') { V.st.pm = A().pm; const pm0 = V.st.pmu, g = golpe(H, V.st, Math.random), c = g.c, d = Math.round(g.d); if (V.st.pmu > pm0) { A().pm = Math.max(0, A().pm - 1); V.st.pmu = pm0; num('🔷 mana', hx(), chaoY() - tamH() * 1.15, '#8fc8ff') }
           V.mhp -= d; num((c ? '💥' : '') + d, V.mx, chaoY() - tamH() * 0.9, g.sk ? g.sk.cor : c ? '#ffd23a' : '#fff'); if (g.sk) { V.fx = { sk: g.sk, t: 0 }; V.skNome = { txt: g.sk.nome, cor: g.sk.cor, t: 0 } } V.vez = 'm'; V.golpeH = 0.75; V.ferM = 0.5;
           if (V.mhp <= 0) { V.est = 'mmorre'; V.t = 0; const v = venceu(M); num('+' + Math.round(M.ouro * H.ouro) + ' 🪙', V.mx, chaoY() - tamH() * 1.1, '#ffd86b'); try { plim(0, 0.15) } catch (e) {}
-            if (v.it) V.faixa = { txt: v.it.bolsa ? '🎒 ' + ico(v.it) + ' ' + v.it.nome + ' (' + RAR[v.it.r][0] + ') foi pra bolsa' : '🎒 Bolsa cheia: ' + v.it.nome + ' vendido', cor: RAR[v.it.r][2], t: 0 };
+            if (v.it) V.faixa = { txt: v.it.bolsa ? '🎒 ' + ico(v.it) + ' ' + v.it.nome + ' (' + RAR[v.it.r][0] + ') foi pra bolsa' : '🎒 Bolsa cheia: ' + v.it.nome + ' vendido', cor: RAR[v.it.r][2], t: 0 }; desenhaHud();
             if (v.novaZ) { V.faixa = { txt: '👑 Chefe vencido! Zona ' + A().z + ': ' + nomeZ(A().z), cor: '#ffe066', t: 0, longo: true }; V.comemora = 2 } salva() } }
         else { V.hhp -= M.atk; num('-' + Math.round(M.atk), hx(), chaoY() - tamH() * 0.95, '#ff8a8a'); V.vez = 'h'; V.golpeM = 0.75; V.ferH = 0.5;
           if (V.hhp > 0 && V.hhp < H.hp * 0.35 && A().poc > 0) { A().poc--; V.hhp = Math.min(H.hp, V.hhp + H.hp * 0.6); num('🧪 +' + Math.round(H.hp * 0.6), hx(), chaoY() - tamH() * 1.15, '#7dffa0'); salva() }
@@ -135,9 +139,11 @@
     for (const n of V.nums) n.t += dt; V.nums = V.nums.filter(n => n.t < 1.1); if (V.faixa) { V.faixa.t += dt; if (V.faixa.t > (V.faixa.longo ? 4 : 2.2)) V.faixa = null }
     ['golpeH', 'golpeM', 'ferH', 'ferM'].forEach(k => { if (V[k] > 0) V[k] -= dt });
     if (painel.isConnected) V.toque = Date.now(); // com a bolsa aberta não escurece
-    if (V.desc && Date.now() - V.toque > 20000) escuro.style.opacity = 0.55; // descanso: escurece sozinho (gasta menos)
+    const dorme = V.desc && Date.now() - V.toque > 20000; if (dorme) escuro.style.opacity = 0.55; // descanso: escurece sozinho (gasta menos)
+    if (dorme && Date.now() - V.toque > DESCANSO_MAX) { fecha(); return } // depois de um tempo, solta a tela pro celular apagar (o jogo continua contando com o app fechado)
     if (Date.now() - V.toque > 6000) hud.classList.add('some');
-    desenha(); if (V.quadro % FPS === 0 && !hud.classList.contains('some') && Date.now() - V.toque > 700) desenhaHud();
+    if (!dorme || V.quadro % 2 === 0) desenha(); // escurecida: desenha 4 vezes por segundo em vez de 8
+    if (V.quadro % FPS === 0 && !hud.classList.contains('some') && Date.now() - V.toque > 700) desenhaHud();
   }
   function sprite(quem, an, n, i, x, y, alt, rd, flash) { const im = tingida(quem, an, rd); if (!im || !(im.naturalWidth || im.width)) return; const fw = (im.naturalWidth || im.width) / n, fh = im.naturalHeight || im.height, s = alt / fh;
     ctx.drawImage(im, (i % n) * fw, 0, fw, fh, x - fw * s / 2, y - fh * s, fw * s, fh * s); if (flash) { ctx.globalAlpha = 0.35; ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(im, (i % n) * fw, 0, fw, fh, x - fw * s / 2, y - fh * s, fw * s, fh * s); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over' } }
@@ -181,8 +187,10 @@
     const eq = el('div', 'avEq'); for (const s of ['arma', 'arm', 'amu']) { const it = a.eq[s], d = el('span', null, (it ? ico(it) : SLOT[s][0]) + ' ' + (it ? it.nome + ' +' + Math.round(it.pct * 100) + '%' : '—')); if (it) d.style.color = RAR[it.r][2]; eq.append(d) }
     eq.append(el('span', null, '⚒ Forja ' + a.forja + ' (+' + a.forja * 4 + '%)' + (a.forja >= forjaMax() ? ' · máx. no nível' : '')), el('span', null, '⚔ ' + Math.round(H.atk) + '  ❤ ' + H.hp + '  🧪 ' + a.poc + (a.eq.arma && a.eq.arma.tipo === 'cajado' ? '  🔷 ' + a.pm : ''))); hud.append(eq);
     if (ch && a.kills >= KILLS_CHEFE - 1) { const need = nivelPraChefe(a.z); if (need > S.nv) hud.append(el('div', 'avDica', '💡 O chefe desta zona pede uns nível ' + need + '. Cada tarefa feita deixa a heroína mais forte.')) }
+    atalho.innerHTML = ''; const ab = el('button', 'avGrande', '🎒' + (a.novos ? '<i>' + a.novos + '</i>' : '')); ab.innerHTML = '🎒' + (a.novos ? '<i>' + a.novos + '</i>' : ''); ab.setAttribute('aria-label', 'Bolsa'); ab.onclick = e => { e.stopPropagation(); abreBolsa('bolsa') };
+    const al = el('button', 'avGrande', '🏪'); al.setAttribute('aria-label', 'Loja'); al.onclick = e => { e.stopPropagation(); abreBolsa('loja') }; atalho.append(ab, al);
     const op = el('div', 'avOp'), b = el('button', null, (a.auto ? '🌙 Liga sozinho depois de ' + a.auto + ' min parado' : '🌙 Não liga sozinho')); b.onclick = e => { e.stopPropagation(); a.auto = a.auto === 3 ? 10 : a.auto === 10 ? 0 : 3; salva(); desenhaHud() }; const bb = el('button', null, '🎒 Bolsa ' + a.bolsa.length + '/' + BOLSA_MAX + (a.novos ? ' · ' + a.novos + ' novo' + (a.novos > 1 ? 's' : '') : '')); bb.onclick = e => { e.stopPropagation(); abreBolsa('bolsa') };
-    const lj = el('button', null, '🏪 Loja'); lj.onclick = e => { e.stopPropagation(); abreBolsa('loja') }; op.append(bb, lj, b); hud.append(op);
+    const lj = el('button', null, '🏪 Loja'); lj.onclick = e => { e.stopPropagation(); abreBolsa('loja') }; op.append(b); hud.append(op);
   }
   // ---------------- bolsa e loja (a única parte que o André mexe) ----------------
   const painel = el('div', 'avBolsa'); painel.addEventListener('pointerdown', e => { e.stopPropagation(); V.toque = Date.now(); escuro.style.opacity = 0 }); let aba = 'bolsa';
@@ -204,7 +212,7 @@
       lista.append(el('div', 'avSub', 'Em uso (a roupa segue a arma: espada = guerreira, cajado = maga)'));
       for (const s of ['arma', 'arm', 'amu']) lista.append(a.eq[s] ? linhaItem(a.eq[s], true) : el('div', 'avItem avVazio', SLOT[s][0] + ' nada equipado'));
       const tipo = tipoArma(); lista.append(el('div', 'avSub', 'Habilidades (do Age of Embers) · ' + (tipo === 'nu' ? 'equipe uma arma pra ter habilidades' : tipo === 'cajado' ? 'de magia, gastam mana' : 'de espada')));
-      if (tipo !== 'nu') SKILLS[tipo].forEach((x, i) => { const ok = S.nv >= LIBERA[i], d = el('div', 'avItem' + (ok ? '' : ' avVazio')); const t = el('span', 'avNome', (ok ? '✨ ' : '🔒 ') + x.nome); if (ok) t.style.color = x.cor; d.append(t, el('span', 'avInfo', ok ? 'dano x' + x.m + (x.mana ? ' · ' + x.mana + ' de mana' : '') : 'libera no nível ' + LIBERA[i] + ' das tarefas')); lista.append(d) });
+      if (tipo !== 'nu') SKILLS[tipo].forEach(x => { const ok = S.nv >= x.nv, d = el('div', 'avItem' + (ok ? '' : ' avVazio')); const t = el('span', 'avNome', (ok ? '✨ ' : '🔒 ') + x.nome); if (ok) t.style.color = x.cor; d.append(t, el('span', 'avInfo', ok ? 'dano x' + x.m + (x.mana ? ' · ' + x.mana + ' de mana' : '') : 'libera no nível ' + x.nv + ' das tarefas')); lista.append(d) });
       lista.append(el('div', 'avSub', 'Na bolsa'));
       if (!a.bolsa.length) lista.append(el('div', 'avItem avVazio', 'Vazia. Tudo que cair dos monstros vem pra cá.'));
       const ord = a.bolsa.slice().sort((p, q) => (p.s > q.s ? 1 : p.s < q.s ? -1 : 0) || q.pct - p.pct); for (const it of ord) lista.append(linhaItem(it, false));
