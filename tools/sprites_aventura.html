@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Gerar sprites da Aventura 2D</title></head>
+<body style="background:#222;color:#eee;font:14px system-ui">
+<p>Gera as folhas de sprites da Aventura 2D (heroína e monstros) a partir dos .glb do jogo. Rodar com <code>node tools/sprites_aventura.js</code>.</p>
+<div id="saida"></div>
+<script src="../js/three.min.js"></script>
+<script src="../js/GLTFLoader.js"></script>
+<script src="../js/vrm_char.js"></script>
+<script>
+// Cada animação vira uma tira de quadros (W x H cada), fundo transparente, vista de lado (3/4).
+const W = 128, H = 128, r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+r.setSize(W, H); r.setClearColor(0, 0); r.outputEncoding = THREE.sRGBEncoding;
+const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xfff2e0, 0x404860, 0.95));
+const sol = new THREE.DirectionalLight(0xfff0dc, 1.05); sol.position.set(3, 6, 6); sc.add(sol);
+const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 50); const L = new THREE.GLTFLoader();
+const carrega = u => new Promise((ok, erro) => L.load(u, ok, null, erro));
+function espada(mao) { // a mesma espada do jogo, simplificada
+  const g = new THREE.Group(), aco = new THREE.MeshStandardMaterial({ color: 0xe8eef6, metalness: 0.5, roughness: 0.3, emissive: 0x334455 }), ouro = new THREE.MeshStandardMaterial({ color: 0xd4a640 });
+  const Lm = 0.5, add = (geo, m, y) => { const o = new THREE.Mesh(geo, m); o.position.y = y; g.add(o) };
+  add(new THREE.BoxGeometry(0.07, Lm, 0.02), aco, 0.12 + Lm / 2); add(new THREE.BoxGeometry(0.24, 0.045, 0.06), ouro, 0.1); add(new THREE.CylinderGeometry(0.025, 0.025, 0.2, 8), new THREE.MeshStandardMaterial({ color: 0x3b2a1e }), 0);
+  const ws = new THREE.Vector3(); mao.parent.updateWorldMatrix(true, false); mao.getWorldScale(ws); g.scale.setScalar(1 / ws.x); mao.add(g);
+}
+async function folha(obj, mix, acts, lista, bb, vrm) { // lista: [nome da animação, quadros, nome na folha]; bb: caixa do modelo parado
+  const out = {}, alt = bb.max.y - bb.min.y, cx = (bb.min.x + bb.max.x) / 2, y0 = bb.min.y - alt * 0.04, lado = alt * 1.18;
+  cam.left = -lado / 2; cam.right = lado / 2; cam.top = lado; cam.bottom = 0; cam.position.set(cx, y0, 20); cam.lookAt(cx, y0, 0); cam.updateProjectionMatrix();
+  for (const [an, n, nome] of lista) {
+    const a = acts[an]; if (!a) { console.warn('sem', an); continue }
+    const uma = nome === 'cai'; mix.stopAllAction(); a.reset(); a.setLoop(uma ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = true; a.play(); const d = a.getClip().duration, cv = document.createElement('canvas'); cv.width = W * n; cv.height = H; const c = cv.getContext('2d');
+    // uma volta inteira antes (a física do cabelo assenta), depois tira os n quadros; a queda é uma vez só, do começo ao fim
+    const passos = 24; if (!uma) for (let i = 0; i < passos; i++) { mix.update(d / passos); obj.updateMatrixWorld(true); if (vrm) VRMC.tick(vrm, d / passos) }
+    for (let i = 0; i < n; i++) { const dt = uma ? (i ? d / (n - 1) : 0.0001) : d / n; for (let k = 0; k < 4; k++) { mix.update(dt / 4); obj.updateMatrixWorld(true); if (vrm) VRMC.tick(vrm, dt / 4) } r.render(sc, cam); c.drawImage(r.domElement, i * W, 0) }
+    out[nome] = cv.toDataURL('image/png');
+  }
+  return out;
+}
+window.gera = async () => {
+  const R = {};
+  { // heroína (Hana)
+    const gl = await carrega('../personagens/sendagaya_shino.glb'), A = VRMC.prep(gl), root = A.gl.scene; sc.add(root); root.rotation.y = Math.PI / 2 * 0.72; // olhando pra direita, um pouco de frente
+    const mix = new THREE.AnimationMixer(root), acts = {}; for (const c of A.an.animations) acts[c.name] = mix.clipAction(c);
+    const vrm = { root, act: acts }; VRMC.fix(vrm);
+    root.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(root); // medida antes da espada
+    let mao = null; root.traverse(o => { if (o.name === 'handslotr' || o.name === 'handslot.r') mao = o }); if (!mao) root.traverse(o => { if (!mao && /^handr$|^hand\.?r$/.test(o.name)) mao = o }); if (mao) espada(mao);
+    bb.min.x -= 0.25; bb.max.x += 0.25;
+    R.heroi = await folha(root, mix, acts, [['Walking_A', 8, 'anda'], ['Melee_1H_Attack_Slice_Diagonal', 6, 'ataca'], ['Idle_A', 6, 'parada'], ['Hit_A', 4, 'apanha'], ['Death_A', 6, 'cai'], ['Ranged_Magic_Raise', 6, 'comemora']], bb, vrm);
+    sc.remove(root);
+  }
+  for (const nome of ['MushroomKing', 'Orc', 'Yeti', 'Demon']) {
+    const gl = await carrega('../monstros/' + nome + '.glb'), root = gl.scene; sc.add(root); root.rotation.y = -Math.PI / 2 * 0.72; // olhando pra esquerda
+    const mix = new THREE.AnimationMixer(root), acts = {}; for (const c of gl.animations) acts[c.name] = mix.clipAction(c);
+    acts.Idle.play(); mix.update(0.01); root.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(root);
+    R[nome] = await folha(root, mix, acts, [['Walk', 6, 'anda'], ['Punch', 6, 'ataca'], ['Idle', 4, 'parada'], ['HitReact', 4, 'apanha'], ['Death', 6, 'cai']], bb);
+    sc.remove(root);
+  }
+  return R;
+};
+</script></body></html>
