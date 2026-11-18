@@ -542,6 +542,7 @@ const ROTINA_V = 9, ROTINA_NOVA = [
   ['Barra 5x6 (quinta)', 'm', 'esporte', [4], '08:15', ''], ['Prancha 5x40s (sábado)', 'm', 'esporte', [6], '', ''],
   ['Levar no desenho', 'f', 'social', [4], '09:45', 'fixo'], ['Programação (quinta)', 'm', 'estudo', [4], '10:15', ''], ['Buscar no desenho', 'f', 'social', [4], '11:45', 'fixo'],
   ['Almoço da filha', 'f', 'casa', [1, 2, 3, 5], '11:00', 'fixo'], ['Almoço rápido da filha', 'f', 'casa', [4], '12:00', 'fixo'],
+  ['Lavar a louça', 'f', 'casa', [1, 2, 3, 4, 5], '12:00', ''], ['Lavar a louça (fim de semana)', 'f', 'casa', [0, 6], '', 'extra'],
   ['Levar na escola', 'f', 'social', [1, 2, 3, 4, 5], '12:55', 'fixo'],
   ['Quimera ou programação (1h30)', 'm', 'estudo', [1, 2, 3, 5], '13:30', ''],
   ['Trabalho', 'f', 'trabalho', [0, 2, 3, 4, 5, 6], '16:00', 'fixo'],
@@ -569,6 +570,10 @@ if (!(S.rotina >= ROTINA_V)) {
 const CRON_PADRAO = { 'Quimera ou programação (1h30)': { t: 'min', min: 90 }, 'Programação (quinta)': { t: 'min', min: 90 }, 'Quimera ou programação (1h a 2h)': { t: 'min', min: 60 },
   'Prancha 5x40s': { t: 'ser', n: 5, trab: 40, desc: 60 }, 'Prancha 5x40s (sábado)': { t: 'ser', n: 5, trab: 40, desc: 60 },
   'Barra 5x6': { t: 'ser', n: 5, trab: 0, desc: 90 }, 'Barra 5x6 (quinta)': { t: 'ser', n: 5, trab: 0, desc: 90 }, 'Flexão 5x10': { t: 'ser', n: 5, trab: 0, desc: 60 } };
+if (!(S.loucaV >= 1)) { const h = hoje(); // 18/11/2026: lavar a louça seg a sex (fim de semana é bônus)
+  for (const [t, d, cat, dias, hora, tipo] of [['Lavar a louça', 'f', 'casa', [1, 2, 3, 4, 5], '12:00', ''], ['Lavar a louça (fim de semana)', 'f', 'casa', [0, 6], '', 'extra']])
+    if (!S.diar.some(x => x.t === t)) S.diar.push({ id: uid(), t, d, cat, hora, ok: false, freq: { t: 'semana', dias }, extra: tipo === 'extra', ini: h, criado: h });
+  S.loucaV = 1; salva() }
 if (!(S.aporteV >= 1)) { for (const d of S.diar) if (d.t === 'Aporte de R$ 200 na Rico' && d.freq && d.freq.t === 'mes' && d.freq.n === 16) d.freq.n = 10; S.aporteV = 1; salva() } // 18/11/2026: ele pediu dia 10
 if (!(S.cronV >= 1)) { for (const d of S.diar) if (CRON_PADRAO[d.t] && !d.cron) d.cron = Object.assign({}, CRON_PADRAO[d.t]); S.cronV = 1; salva() }
 // ---------------- pedal pelo plano do treinador: o calendário do app GPS Ciclismo (o treinador atualiza lá) ----------------
