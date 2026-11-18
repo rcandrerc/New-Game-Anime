@@ -3,7 +3,7 @@
 // fundo escuro, 8 quadros por segundo, e quando o app fica fechado o jogo calcula o que aconteceu (até 12 h).
 // Usa do habitos.html: S, salva, hoje, el, aviso, TELA, prendeTela, somLiga, plim. Sprites: aventura/*.png (tools/sprites_aventura.js).
 (() => {
-  const VER = 6; const EM = 1.8; // a cena ocupa só a metade de baixo da tela (o resto é preto puro): textos e bonecos compensam // sobe quando os sprites mudam (o celular não fica com imagem velha)
+  const VER = 7; const EM = 1.8; // a cena ocupa só a metade de baixo da tela (o resto é preto puro): textos e bonecos compensam // sobe quando os sprites mudam (o celular não fica com imagem velha)
   const DESCANSO_MAX = Infinity; // o André quer ela rodando enquanto não mexe (a tela já fica bem escura no descanso)
   const FPS = 8, MAX_FORA = 12 * 3600, KILLS_CHEFE = 10;
   const ZONAS = [
@@ -156,6 +156,7 @@
   function sprite(quem, an, n, i, x, y, alt, rd, flash) { const im = tingida(quem, an, rd); if (!im || !(im.naturalWidth || im.width)) return; const fw = (im.naturalWidth || im.width) / n, fh = im.naturalHeight || im.height, s = alt / fh;
     ctx.drawImage(im, (i % n) * fw, 0, fw, fh, x - fw * s / 2, y - fh * s, fw * s, fh * s); if (flash) { ctx.globalAlpha = 0.35; ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(im, (i % n) * fw, 0, fw, fh, x - fw * s / 2, y - fh * s, fw * s, fh * s); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over' } }
   function desenha() {
+    if (!W || !Hh) { tamanho(); if (!W || !Hh) return } // a tela ainda sem tamanho (app abrindo): espera
     const a = A(); if (zDesenhada !== a.z || !fundo) montaFundo(a.z); ctx.drawImage(fundo, 0, 0);
     const tr = V.treme > 0 ? V.treme * Hh * 0.02 : 0; ctx.save(); if (tr) ctx.translate((Math.random() - 0.5) * tr, (Math.random() - 0.5) * tr);
     for (const L of camadas) { const off = Math.round(V.rolagem * L.v * (W / 400)) % (W * 2); ctx.drawImage(L.c, -off, 0); if (off > W) ctx.drawImage(L.c, W * 2 - off, 0) }

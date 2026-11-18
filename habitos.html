@@ -23,10 +23,10 @@
   #hud .nome b{display:inline-block;margin-left:6px;padding:0 6px;border-radius:8px;background:var(--accent);color:var(--ink);font-size:11px;vertical-align:2px;pointer-events:auto;cursor:pointer;text-shadow:none}
   #hud .nome b[hidden]{display:none}
   .bar{position:relative;height:14px;border-radius:8px;background:rgba(10,12,20,.65);border:1px solid rgba(255,255,255,.35);overflow:hidden;max-width:220px}
-  .bar i{position:absolute;inset:0;transform-origin:left;transition:transform .2s}
+  .bar i{position:absolute;top:0;right:0;bottom:0;left:0;transform-origin:left;transition:transform .2s}
   #hpB i{background:linear-gradient(90deg,#c9302c,#ff6b5a)} #enB i{background:linear-gradient(90deg,#2d63d6,#5fb2ff)} #xpB i{background:linear-gradient(90deg,#d9a21b,#ffe066)}
   #enB,#xpB{height:12px} #enB span,#xpB span{font-size:9.5px;line-height:12px}
-  .bar span{position:absolute;inset:0;font:700 10px/14px system-ui,sans-serif;padding-left:7px;text-shadow:0 1px 1px #000;white-space:nowrap}
+  .bar span{position:absolute;top:0;right:0;bottom:0;left:0;font:700 10px/14px system-ui,sans-serif;padding-left:7px;text-shadow:0 1px 1px #000;white-space:nowrap}
   #hud .dir{display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:auto}
   #hud .chip{background:var(--glass);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-weight:700;font-size:12.5px;backdrop-filter:blur(4px);white-space:nowrap}
   #bCheia{width:38px;height:38px;padding:0;border-radius:50%;display:grid;place-items:center;background:var(--glass);backdrop-filter:blur(4px)} #bCheia svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
@@ -36,7 +36,7 @@
   #bPocao{font-size:13px;padding:5px 10px;border-radius:999px;background:var(--glass)}
   #bPocao[hidden]{display:none}
   #bMus{font-size:13px;padding:5px 10px;border-radius:999px;background:var(--glass)} #bMus.off{opacity:.55}
-  #ctl{position:absolute;inset:0;pointer-events:none;display:none}
+  #ctl{position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;display:none}
   body.manual #ctl{display:block}
   body.lobby #ctl,body.lobby #bModo{display:none!important} /* acampamento limpo: só a heroína e o Mapa */
   body.lobby:not(.hojeOn):not(.soPainel) #bEst{animation:pulsa 1.6s ease-in-out infinite} /* escondido não pulsa (gastava CPU no Hoje) */
@@ -55,7 +55,7 @@
   .ico.M{background:radial-gradient(circle at 50% 35%,#5a74e8,#1a2370 75%);border-color:rgba(200,215,255,.6)} .ico.R{background:radial-gradient(circle at 50% 35%,#36c49a,#0c5040 75%);border-color:rgba(190,255,230,.6)}
   .ico svg{width:62%;height:62%;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
   #ctl .sk.sem{opacity:.45}
-  #ctl .sk[data-cd]::after{content:attr(data-cd);position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;font-size:15px}
+  #ctl .sk[data-cd]::after{content:attr(data-cd);position:absolute;top:0;right:0;bottom:0;left:0;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;font-size:15px}
   #faixa{position:absolute;left:0;right:0;top:26%;text-align:center;font:900 28px system-ui,sans-serif;color:#ffe066;text-shadow:0 3px 0 #a5560f,0 0 14px #000a;pointer-events:none;opacity:0;transition:opacity .4s,transform .4s;transform:scale(.8)}
   #faixa.on{opacity:1;transform:scale(1)}
   #faixa small{display:block;font-size:14px;color:#fff;text-shadow:0 1px 3px #000;font-weight:700;margin-top:4px}
@@ -68,13 +68,13 @@
   #barras div{position:absolute;left:0;top:0;width:52px;height:6px;margin-left:-26px;border-radius:3px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.5);overflow:hidden;pointer-events:none}
   #barras div i{display:block;height:100%;background:#ff5a4a;transform-origin:left}
   #barras div.chefe{width:80px;margin-left:-40px;height:8px} #barras div.chefe i{background:#c86bff}
-  #dor{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 46px 12px rgba(220,30,20,.45);opacity:0;transition:opacity .35s}
+  #dor{position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;box-shadow:inset 0 0 46px 12px rgba(220,30,20,.45);opacity:0;transition:opacity .35s}
   #bEst{font-weight:800;font-size:12.5px;padding:5px 10px;border-radius:999px;background:linear-gradient(#5b3a8a,#3a2560);border-color:#b98cff;white-space:nowrap}
   #bEst small{font-weight:700;opacity:.85;margin-left:4px}
   .pbar{height:14px;border-radius:8px;background:#2a3350;overflow:hidden;margin:6px 0 4px} .pbar i{display:block;height:100%;background:linear-gradient(90deg,#2f9a64,#7ddc8a);border-radius:8px}
   .pbar.chefe i{background:linear-gradient(90deg,#b0303a,#ff6a5a)}
   /* ---------- prêmio na frente de tudo (baú, chefe, conquistas, nível) ---------- */
-  #premio{position:fixed;inset:0;z-index:45;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 45%,rgba(70,45,10,.95),rgba(4,6,12,.98));padding:10px;overflow:hidden;cursor:pointer}
+  #premio{position:fixed;top:0;right:0;bottom:0;left:0;z-index:45;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 45%,rgba(70,45,10,.95),rgba(4,6,12,.98));padding:10px;overflow:hidden;cursor:pointer}
   #premio.on{display:flex}
   .pCx{display:flex;flex-direction:column;align-items:center;text-align:center;width:100%;max-width:440px;max-height:100%}
   .pCx h2{position:relative;z-index:3;margin:0;font:900 24px system-ui,sans-serif;color:#ffe066;text-shadow:0 3px 0 #a5560f,0 0 14px #000a}
@@ -127,7 +127,7 @@
   .conq{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px} .conq div{background:var(--card2);border-radius:10px;padding:7px 4px;text-align:center;font-size:11px;color:var(--fg2)}
   .conq div b{display:block;font-size:24px} .conq div.off{opacity:.35;filter:grayscale(1)} .conq div span{display:block;color:var(--fg);font-weight:700;font-size:11.5px}
   .graf{width:100%;max-width:480px;height:auto;display:block;margin:0 auto} .tend{display:flex;justify-content:space-between;font-size:13px;padding:4px 2px;border-bottom:1px solid var(--line)} .tend .up{color:#7ddc8a;font-weight:800} .tend .dn{color:#ff8a7a;font-weight:800}
-  #calTela{position:fixed;inset:0;z-index:32;display:none;flex-direction:column;background:var(--bg);color:var(--fg);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}
+  #calTela{position:fixed;top:0;right:0;bottom:0;left:0;z-index:32;display:none;flex-direction:column;background:var(--bg);color:var(--fg);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}
   #calTela.on{display:flex}
   .calCab{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line)} .calCab b{font-size:17px}
   .calCab .fecha{width:42px;height:42px;padding:0;font-size:18px;border-radius:10px}
@@ -143,9 +143,9 @@
     body{flex-direction:row} #arena{flex:1 1 0;min-width:0;min-height:0;height:100%} #painel{flex:0 0 min(46%,440px);min-width:0;border-top:none;border-left:1px solid var(--line)}
     body.cheio #arena{flex:1 1 0} body.cheio #puxa{writing-mode:vertical-rl;height:100%;width:38px;padding:0 0 0 env(safe-area-inset-right,0px)}}
   @media (orientation:portrait){.calCorpo{flex-direction:column;overflow-y:auto}.calEsq,.calDir{overflow:visible;flex:none}}
-  #mapa{position:absolute;inset:0;z-index:30;display:none;background:#1a120b;touch-action:pan-y} /* fica no lugar da heroína: as tarefas continuam do lado */
+  #mapa{position:absolute;top:0;right:0;bottom:0;left:0;z-index:30;display:none;background:#1a120b;touch-action:pan-y} /* fica no lugar da heroína: as tarefas continuam do lado */
   #mapa.on{display:block}
-  #mapa .rolo{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  #mapa .rolo{position:absolute;top:0;right:0;bottom:0;left:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   #mapa .folha{position:relative;width:100%;max-width:560px;margin:0 auto}
   #mapa canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
   #mapa .topo{position:absolute;left:0;right:0;top:0;padding:10px 14px 18px;background:linear-gradient(#1a120bee,#1a120b00);pointer-events:none;text-align:center}
@@ -174,7 +174,7 @@
   #mapa .sair{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#3a2a2a;color:#ffd0c8;border:2px solid #8a4a44}
   #mapa .tarefas{flex:none;padding:10px 10px;border-radius:10px;font:800 13px system-ui,sans-serif;background:#5a3a1e;color:#ffe9b8;border:2px solid #8a5a24}
   @keyframes pulsa{0%,100%{box-shadow:0 3px 0 #0006,0 0 0 3px #ffe06655}50%{box-shadow:0 3px 0 #0006,0 0 0 9px #ffe06633,0 0 18px #ffe066}}
-  #carga{position:absolute;inset:0;display:grid;place-content:center;gap:10px;justify-items:center;background:rgba(10,14,24,.6);font-weight:700;text-shadow:0 1px 3px #000;pointer-events:none;z-index:5}
+  #carga{position:absolute;top:0;right:0;bottom:0;left:0;display:grid;place-content:center;gap:10px;justify-items:center;background:rgba(10,14,24,.6);font-weight:700;text-shadow:0 1px 3px #000;pointer-events:none;z-index:5}
   #carga.fora{display:none} #carga .bar{width:200px} #carga .bar i{background:var(--accent);transform:scaleX(0)}
   /* ---------- painel de tarefas (metade de baixo) ---------- */
   #painel{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg);border-top:1px solid var(--line)}
@@ -281,7 +281,7 @@
   .pdia{padding:7px 0;border-top:1px solid var(--line);cursor:pointer} .pdia .nm{display:flex;justify-content:space-between;gap:8px;font-size:14px} .pdia small{color:var(--fg2);font-size:11.5px}
   .pdia .barra{height:8px;margin:5px 0 3px}
   /* ---------- ficha de configurar tarefa ---------- */
-  #ed{position:fixed;inset:0;z-index:35;display:none;background:rgba(5,8,14,.62);align-items:flex-end;justify-content:center}
+  #ed{position:fixed;top:0;right:0;bottom:0;left:0;z-index:35;display:none;background:rgba(5,8,14,.62);align-items:flex-end;justify-content:center}
   #ed.on{display:flex}
   #ed .ficha{width:100%;max-width:560px;max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;padding:12px 12px 0}
   #ed .cab{display:flex;align-items:center;justify-content:space-between} #ed .cab b{font-size:17px;color:#ffe7a8}
@@ -321,7 +321,7 @@
   #mapa .jogar:disabled{filter:grayscale(1);opacity:.6}
 
   /* ---------- tela Hoje: abre nela; o jogo e o resto ficam no Menu ---------- */
-  #hoje{position:fixed;inset:0;z-index:31;display:none;flex-direction:column;background:var(--bg);color:var(--fg);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}
+  #hoje{position:fixed;top:0;right:0;bottom:0;left:0;z-index:31;display:none;flex-direction:column;background:var(--bg);color:var(--fg);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}
   body.hojeOn #hoje{display:flex}
   #hoje .hCab{flex:none;display:flex;align-items:center;gap:10px;padding:10px 16px 6px;max-width:680px;width:100%;margin:0 auto}
   #hoje .hDia{flex:1;min-width:0} #hoje .hDia b{font-size:20px;color:#ffe7a8} #hoje .hDia small{margin-left:6px;color:var(--fg2);font-size:14px}
@@ -344,7 +344,7 @@
   .hFim{text-align:center;margin:14px auto;font-weight:800;color:#ffe7a8}
   .hFim button{margin-top:8px;padding:10px 16px;background:var(--accent);color:var(--ink);border-color:var(--accent);font-weight:800}
   .hNovo{display:block;width:100%;margin:14px auto 0;padding:11px;border-style:dashed;background:transparent;color:var(--fg2);font-weight:700}
-  #menuTela{position:fixed;inset:0;z-index:34;display:none;background:rgba(5,8,14,.62);align-items:flex-end;justify-content:center}
+  #menuTela{position:fixed;top:0;right:0;bottom:0;left:0;z-index:34;display:none;background:rgba(5,8,14,.62);align-items:flex-end;justify-content:center}
   #menuTela.on{display:flex}
   #menuTela .folhaM{width:100%;max-width:560px;max-height:92dvh;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:16px 16px 0 0;padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px))}
   #menuTela .grade{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
@@ -355,7 +355,7 @@
   /* ---------- cronômetro das tarefas com tempo ---------- */
   .hItem .play{flex:none;padding:6px 10px;border-radius:12px;font-size:13px;font-weight:800;background:var(--card2);white-space:nowrap}
   .hItem .play.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
-  #cron{position:fixed;inset:0;z-index:36;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:radial-gradient(circle at 50% 40%,#22304d,#0b0f19);color:var(--fg);padding:16px;text-align:center}
+  #cron{position:fixed;top:0;right:0;bottom:0;left:0;z-index:36;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:radial-gradient(circle at 50% 40%,#22304d,#0b0f19);color:var(--fg);padding:16px;text-align:center}
   #cron.on{display:flex}
   #cron .cNome{font-size:18px;font-weight:800;color:#ffe7a8}
   #cron .cFase{font-size:15px;color:var(--fg2);font-weight:700;min-height:20px}
@@ -369,7 +369,7 @@
   #cron .cDica{font-size:12px;color:var(--fg2);max-width:420px;margin-top:4px}
 
   /* ---------- peso: registrar (número + foto da balança) e histórico ---------- */
-  #pesoTela{position:fixed;inset:0;z-index:35;display:none;flex-direction:column;background:var(--bg);color:var(--fg);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}
+  #pesoTela{position:fixed;top:0;right:0;bottom:0;left:0;z-index:35;display:none;flex-direction:column;background:var(--bg);color:var(--fg);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}
   #pesoTela.on{display:flex}
   #pesoTela .pCab{flex:none;display:flex;align-items:center;gap:10px;padding:10px 16px 6px;max-width:680px;width:100%;margin:0 auto}
   #pesoTela .pCab b{flex:1;font-size:19px;color:#ffe7a8}
@@ -387,14 +387,14 @@
   .pLin{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line)}
   .pLin .d{width:74px;font-size:13px;color:var(--fg2)} .pLin .v{flex:1;font-size:17px;font-weight:800} .pLin .df{font-size:12.5px;font-weight:800}
   .pLin img{width:44px;height:44px;object-fit:cover;border-radius:6px;cursor:pointer} .pLin .x{background:none;border:none;color:var(--fg2);padding:4px 8px}
-  #fotoGrande{position:fixed;inset:0;z-index:46;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.9)} #fotoGrande.on{display:flex} #fotoGrande img{max-width:96vw;max-height:92vh;border-radius:8px}
+  #fotoGrande{position:fixed;top:0;right:0;bottom:0;left:0;z-index:46;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.9)} #fotoGrande.on{display:flex} #fotoGrande img{max-width:96vw;max-height:92vh;border-radius:8px}
 
   /* ---------- Aventura 2D (js/aventura.js) ---------- */
-  #aventura{position:fixed;inset:0;z-index:33;display:none;background:#000;overflow:hidden;touch-action:none}
+  #aventura{position:fixed;top:0;right:0;bottom:0;left:0;z-index:33;display:none;background:#000;overflow:hidden;touch-action:none}
   #aventura.on{display:block}
   #aventura canvas{position:absolute;left:0;right:0;bottom:0;top:45%;width:100%;height:55%} /* metade de cima fica preto puro (AMOLED quase não gasta) */
-  #aventura .avEscuro{position:absolute;inset:0;background:#000;opacity:0;transition:opacity 2s;pointer-events:none}
-  #aventura .avHud{position:absolute;inset:0;pointer-events:none;transition:opacity .6s;font:700 13px system-ui,sans-serif;color:#e6ebf5}
+  #aventura .avEscuro{position:absolute;top:0;right:0;bottom:0;left:0;background:#000;opacity:0;transition:opacity 2s;pointer-events:none}
+  #aventura .avHud{position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;transition:opacity .6s;font:700 13px system-ui,sans-serif;color:#e6ebf5}
   #aventura .avHud.some{opacity:0}
   #aventura .avHud button{pointer-events:auto}
   #aventura .avTopo{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:12px;right:12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;text-shadow:0 1px 3px #000}
@@ -405,7 +405,7 @@
   #aventura .avAtalho{position:absolute;right:12px;top:calc(56px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px;z-index:1}
   #aventura .avGrande{position:relative;width:46px;height:46px;border-radius:50%;font-size:22px;padding:0;background:rgba(20,26,40,.75);border:1px solid rgba(255,231,168,.5)}
   #aventura .avGrande i{position:absolute;top:-4px;right:-4px;background:#ff5a5a;color:#fff;font:800 11px system-ui;font-style:normal;border-radius:9px;padding:1px 5px}
-  #aventura .avBolsa{position:absolute;inset:calc(6px + env(safe-area-inset-top,0px)) 6px calc(6px + env(safe-area-inset-bottom,0px));background:rgba(10,14,26,.96);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;font:600 13px system-ui;color:#e6ebf5;z-index:2}
+  #aventura .avBolsa{position:absolute;top:calc(6px + env(safe-area-inset-top,0px));right:6px;bottom:calc(6px + env(safe-area-inset-bottom,0px));left:6px;background:rgba(10,14,26,.96);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;font:600 13px system-ui;color:#e6ebf5;z-index:2}
   #aventura .avBTopo{display:flex;gap:6px;align-items:center;padding:8px;border-bottom:1px solid var(--line)} #aventura .avBTopo button{padding:6px 12px} #aventura .avBTopo button.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
   #aventura .avOuro{margin-left:auto;color:#ffd86b} #aventura .avLista{overflow-y:auto;padding:6px 10px;display:flex;flex-direction:column;gap:5px}
   #aventura .avSub{font-size:11.5px;color:#9aa6bd;margin-top:6px} #aventura .avItem{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;background:rgba(255,255,255,.04);border-radius:10px;padding:6px 10px}
@@ -533,7 +533,11 @@ function resetaJogo() { // o jogo volta pro começo e o histórico das tarefas z
   for (const d of S.diar) { d.hist = {}; d.racha = d.melhor = d.sem = d.v = 0; d.ok = false; d.nao = false; d.pago = 0; d.dado = null; d.metas = []; for (const i of d.itens || []) i.ok = false; }
 }
 if (S.zerado !== 1) { zeraProgresso(); try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} } // o André pediu pra recomeçar do zero (uma vez só)
-function salva() { try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} }
+function salva() { try { localStorage.setItem(CHAVE, JSON.stringify(S)) } catch (e) {} paraNativo() }
+// App Android (Aventura): manda pro papel de parede o que ele precisa pra desenhar a heroína igual ao jogo
+let nativoUlt = ''; function paraNativo() { if (!window.Nativo) return; try { const a = S.av || {}, w = a.eq && a.eq.arma;
+  const j = JSON.stringify({ nv: S.nv || 1, z: a.z || 1, kills: a.kills || 0, ouro: a.ouro || 0, arma: w ? (w.tipo === 'cajado' ? 'cajado' : 'espada') : 'nu', build: a.build || null, bolsa: (a.bolsa || []).length, novos: a.novos || 0 });
+  if (j !== nativoUlt) { nativoUlt = j; Nativo.estado(j) } } catch (e) {} }
 // rotina do André (v5, 28/10/2026): entra uma vez só como diárias; o que ele já tiver com o mesmo nome fica como está
 const ROTINA = [ // nome, dificuldade, categoria, dias da semana (0 = domingo), horário ('' = fim de semana, sem hora, na ordem da lista)
   ['Acordar e café leve', 'f', 'saude', [1, 2, 3, 4, 5], '08:00'],
@@ -2375,7 +2379,7 @@ function secGrafico(sec) {
   if (L.length) { s.append(el('div', 'grupo', 'Últimos 7 dias × 7 antes')); for (const [d, a, b] of L) { const r = el('div', 'tend'), v = el('span'); v.textContent = a + '%' + (b == null ? '' : a > b ? ' ▲' + (a - b) : a < b ? ' ▼' + (b - a) : ' ='); if (b != null && a !== b) v.className = a > b ? 'up' : 'dn'; r.append(el('span', null, d.t), v); s.append(r) } }
 }
 // ---------------- backup e app ----------------
-function exportaBackup() { S.backup = hoje(); salva(); (typeof fotoTodas === 'function' ? fotoTodas() : Promise.resolve({})).then(fotos => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(Object.assign({}, S, { _fotosPeso: fotos }))], { type: 'application/json' })); a.download = 'habitos-backup-' + hoje() + '.json';
+function exportaBackup() { S.backup = hoje(); salva(); (typeof fotoTodas === 'function' ? fotoTodas() : Promise.resolve({})).then(fotos => { if (window.Nativo && Nativo.salvaArquivo) { const ok = Nativo.salvaArquivo('habitos-backup-' + hoje() + '.json', JSON.stringify(Object.assign({}, S, { _fotosPeso: fotos }))); aviso(ok ? '💾 Backup salvo nos downloads do celular.' : 'Não consegui salvar o backup.'); lista(); return } const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(Object.assign({}, S, { _fotosPeso: fotos }))], { type: 'application/json' })); a.download = 'habitos-backup-' + hoje() + '.json';
   document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove() }, 2000); aviso('💾 Backup salvo nos downloads do celular.'); lista() }) }
 function importaBackup() { const i = document.createElement('input'); i.type = 'file'; i.accept = '.json,application/json';
   i.onchange = () => { const f = i.files[0]; if (!f) return; f.text().then(t => { let d; try { d = JSON.parse(t) } catch (e) { d = null }
@@ -2914,7 +2918,7 @@ function abreMenu() {
   menuEl.innerHTML = ''; const f = el('div', 'folhaM'), cab = el('div', 'cab'), x = el('button', null, '✕'); menuEl.append(f);
   cab.style.cssText = 'display:flex;justify-content:space-between;align-items:center'; cab.append(el('b', null, 'Menu'), x); x.onclick = () => menuEl.classList.remove('on'); f.append(cab);
   const g = el('div', 'grade'); f.append(g);
-  for (const [ic, txt, fn] of [['🗡', 'Aventura', () => { menuEl.classList.remove('on'); window.AV && AV.abre(false) }], ['✅', 'Todas as tarefas', () => abreJogo('diar')], ['💪', 'Hábitos', () => abreJogo('hab')], ['📝', 'Afazeres', () => abreJogo('afz')],
+  for (const [ic, txt, fn] of [['🗡', 'Aventura', () => { menuEl.classList.remove('on'); window.AV && AV.abre(false) }], ...(window.Nativo ? [['📱', 'Papel de parede', () => { menuEl.classList.remove('on'); Nativo.config() }]] : []), ['✅', 'Todas as tarefas', () => abreJogo('diar')], ['💪', 'Hábitos', () => abreJogo('hab')], ['📝', 'Afazeres', () => abreJogo('afz')],
     ['📅', 'Agenda', () => abreJogo('cal')], ['🏆', 'Progresso', () => abreJogo('prog')], ['⚖️', 'Peso', () => { menuEl.classList.remove('on'); abrePeso() }]]) {
     const b = el('button'); b.append(el('span', null, ic), txt); b.onclick = fn; g.append(b) }
   f.append(el('p', 'dica', 'Nas abas, o botão 🏠 Hoje volta pra cá. A Aventura se joga sozinha: a heroína fica mais forte com as tarefas feitas.')); f.lastChild.style.marginTop = '10px';
@@ -3084,5 +3088,5 @@ setInterval(() => { if (TELA.trava && Date.now() - TELA.ult > telaMin() * 60000)
 prendeTela();
 window.HAB = { MUS, compoeMusica, painelCheio, abreMapa, joga, montaMapa, TPf: () => TP, sc, hemi, sol, F, comecaEstagio, abreMapa, cam, camAlvo, altura, S, P, BICHOS, SKILLS, CD, ganha, machuca, atacar, liberada, botoesSkill, hud, lista, viraDia, podeJogar, editor, trocaAba, sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) passo(dt) } }; // pra testes
 </script>
-<script src="js/aventura.js?v=6"></script>
+<script src="js/aventura.js?v=7"></script>
 </body></html>
