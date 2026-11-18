@@ -14,7 +14,7 @@
   const muda = () => { try { window.contaMudou && contaMudou() } catch (e) {} };
   async function inicia() {
     try { await js('app'); await Promise.all([js('auth'), js('firestore')]) } catch (e) { N.erro = 'Sem internet: o jogo está salvando só no aparelho.'; muda(); setTimeout(inicia, 60000); return }
-    firebase.initializeApp(CFG); N.on = true;
+    firebase.initializeApp(CFG); N.on = true; if (N.tokPend) { const t = N.tokPend; N.tokPend = null; window.nuvemToken(t) }
     firebase.auth().onAuthStateChanged(u => { N.user = u; N.pronta = false; N.erro = ''; N.entrando = false; if (u) confere(); muda() });
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') { if (N.timer) envia() } else if (N.pronta) confere() }); // saiu: manda já; voltou: vê se mexeram em outro aparelho
     muda();
@@ -52,12 +52,16 @@
   const ERROS = { 'auth/popup-closed-by-user': 'Login cancelado.', 'auth/cancelled-popup-request': 'Login cancelado.', 'auth/network-request-failed': 'Sem internet.', 'auth/unauthorized-domain': 'Este site não está liberado no Firebase.', 'auth/popup-blocked': 'O navegador bloqueou a janela de login.' };
   const erro = e => { N.entrando = false; N.erro = ERROS[e && e.code] || ('Não deu certo: ' + ((e && (e.code || e.message)) || e)); muda() };
   function entra() {
-    if (!N.on) return; N.erro = ''; N.entrando = true; muda();
+    if (!N.on) return; N.erro = '';
+    const wv = /; wv\)/.test(navigator.userAgent);
+    if (wv && !(window.Nativo && Nativo.loginGoogle)) { N.erro = 'Este app é antigo e não faz login. Instale o app novo (aventura-teste-v5) ou entre pelo Chrome.'; muda(); return }
+    N.entrando = true; muda(); clearTimeout(N.tEntra); N.tEntra = setTimeout(() => { if (N.entrando && !N.user) { N.entrando = false; N.erro = 'A tela de login do Google não respondeu. Toque de novo; se repetir, me diga se foi no app ou no Chrome.'; muda() } }, 45000); // nunca fica "Entrando…" pra sempre
     if (window.Nativo && Nativo.loginGoogle) { Nativo.loginGoogle(); return } // APK: login nativo, volta em nuvemToken
     const pv = new firebase.auth.GoogleAuthProvider(); pv.setCustomParameters({ prompt: 'select_account' });
     firebase.auth().signInWithPopup(pv).catch(e => { if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment')) firebase.auth().signInWithRedirect(pv).catch(erro); else erro(e) });
   }
-  window.nuvemToken = (tok, msg) => { if (!tok) { erro({ message: msg || 'Login cancelado.' }); return } firebase.auth().signInWithCredential(firebase.auth.GoogleAuthProvider.credential(tok)).catch(erro) };
+  window.nuvemToken = (tok, msg) => { if (!tok) { erro({ message: msg || 'Login cancelado.' }); return } if (!N.on) { N.tokPend = tok; return } N.entrando = true; muda(); firebase.auth().signInWithCredential(firebase.auth.GoogleAuthProvider.credential(tok)).catch(erro) };
+  function entraChrome() { N.erro = ''; N.entrando = false; muda(); Nativo.loginChrome() } // reserva: o Chrome faz o login e devolve pro app
   function sai() { if (N.timer) envia(); if (window.Nativo && Nativo.sairGoogle) try { Nativo.sairGoogle() } catch (e) {} firebase.auth().signOut() }
-  window.NUVEM = { N, inicia, entra, sai, mudou, envia, confere };
+  window.NUVEM = { N, inicia, entra, entraChrome, sai, mudou, envia, confere };
 })();
