@@ -3,8 +3,8 @@
 // fundo escuro, 8 quadros por segundo, e quando o app fica fechado o jogo calcula o que aconteceu (até 12 h).
 // Usa do habitos.html: S, salva, hoje, el, aviso, TELA, prendeTela, somLiga, plim. Sprites: aventura/*.png (tools/sprites_aventura.js).
 (() => {
-  const VER = 5; // sobe quando os sprites mudam (o celular não fica com imagem velha)
-  const DESCANSO_MAX = 20 * 60000; // 20 min sem tocar no modo descanso: fecha e deixa a tela apagar
+  const VER = 6; const EM = 1.8; // a cena ocupa só a metade de baixo da tela (o resto é preto puro): textos e bonecos compensam // sobe quando os sprites mudam (o celular não fica com imagem velha)
+  const DESCANSO_MAX = Infinity; // o André quer ela rodando enquanto não mexe (a tela já fica bem escura no descanso)
   const FPS = 8, MAX_FORA = 12 * 3600, KILLS_CHEFE = 10;
   const ZONAS = [
     { nome: 'Campina', ceu: ['#05081a', '#16234a'], morro: '#121d36', arv: '#0f2a1d', chao: '#183222', chao2: '#25492e', mon: 'MushroomKing' },
@@ -40,7 +40,9 @@
   const zona = z => ZONAS[(z - 1) % ZONAS.length], rodada = z => Math.floor((z - 1) / ZONAS.length);
   const nomeZ = z => zona(z).nome + (rodada(z) ? ' ' + ['', 'II', 'III', 'IV', 'V', 'VI'][Math.min(5, rodada(z))] : '');
   function heroi() { const a = A(), nv = S.nv || 1, e = a.eq, p = s => (e[s] ? e[s].pct : 0);
-    return { atk: (6 + 3 * nv) * (1 + 0.04 * a.forja + p('arma')), hp: Math.round((60 + 15 * nv) * (1 + p('arm'))), crit: 0.08 + p('amu') * 0.5, ouro: 1 + p('amu'), poc: a.poc, pm: a.pm, skills: (SKILLS[!e.arma ? '' : e.arma.tipo === 'cajado' ? 'cajado' : 'espada'] || []).filter(x => nv >= x.nv) } }
+    return { atk: (6 + 3 * nv) * (1 + 0.04 * a.forja + p('arma')), hp: Math.round((60 + 15 * nv) * (1 + p('arm'))), crit: 0.08 + p('amu') * 0.5, ouro: 1 + p('amu'), poc: a.poc, pm: a.pm, skills: ativas(!e.arma ? 'nu' : e.arma.tipo === 'cajado' ? 'cajado' : 'espada') } }
+  const BARRA = 5; // como a barra do Age of Embers: 5 habilidades em uso por arma (o André escolhe na bolsa)
+  function ativas(tipo) { const nv = S.nv || 1, todas = (SKILLS[tipo] || []).filter(x => nv >= x.nv), b = (A().build || {})[tipo]; if (!b) return todas.slice(0, BARRA); return todas.filter(x => b.includes(x.nome)).slice(0, BARRA) }
   function monstro(z, chefe, rnd = Math.random) { const m = 2 * z - 1 + (chefe ? 2 : rnd() < 0.5 ? 0 : 1), th = zona(z).mon;
     const tipo = chefe ? th : rnd() < 0.7 ? th : MONS[Math.floor(rnd() * MONS.length)];
     return { tipo, chefe, lv: m, hp: Math.round((18 + 14 * m) * (chefe ? 2.5 : 1)), atk: (3 + 2.6 * m) * (chefe ? 1.25 : 1), ouro: Math.round((2 + m) * (chefe ? 8 : 1)) } }
@@ -81,7 +83,7 @@
   const cv = document.createElement('canvas'), ctx = cv.getContext('2d'), hud = document.createElement('div'), escuro = document.createElement('div');
   const atalho = document.createElement('div'); atalho.className = 'avAtalho'; // bolsa e loja sempre à mão (não somem com o resto)
   hud.className = 'avHud'; escuro.className = 'avEscuro'; tela.append(cv, escuro, hud, atalho); document.body.append(tela);
-  const IMG = {}, TINT = {}, QUADROS = { anda: 8, ataca: 6, parada: 6, apanha: 4, cai: 6, comemora: 6 }, QM = { anda: 6, ataca: 6, parada: 4, apanha: 4, cai: 6 };
+  const IMG = {}, TINT = {}, QUADROS = { anda: 8, corre: 8, ataca: 6, parada: 6, apanha: 4, cai: 6, comemora: 6 }, QM = { anda: 6, ataca: 6, parada: 4, apanha: 4, cai: 6 };
   // a roupa segue a arma (KayKit Adventurers, CC0): sem arma = aventureira, espada = guerreira de armadura, cajado = maga de chapéu
   const ico = it => it.tipo === 'cajado' ? '🪄' : SLOT[it.s][0];
   function tipoArma() { const w = A().eq.arma; return !w ? 'nu' : w.tipo === 'cajado' ? 'cajado' : 'espada' }
@@ -90,23 +92,29 @@
   function tingida(quem, an, rd) { if (!rd) return img(quem, an); const k = quem + an + rd; if (TINT[k]) return TINT[k]; const i = img(quem, an); if (!i.complete || !i.naturalWidth) return i;
     const c = document.createElement('canvas'); c.width = i.naturalWidth; c.height = i.naturalHeight; const x = c.getContext('2d'); x.filter = 'hue-rotate(' + (rd * 75) + 'deg) saturate(1.2)'; x.drawImage(i, 0, 0); TINT[k] = c; return c }
   let W = 0, Hh = 0, fundo = null, camadas = null, zDesenhada = 0;
-  function tamanho() { const r = tela.getBoundingClientRect(), k = Math.min(1.5, devicePixelRatio || 1); W = Math.round(r.width * k); Hh = Math.round(r.height * k); cv.width = W; cv.height = Hh; zDesenhada = 0 }
+  function tamanho() { const r = cv.getBoundingClientRect(), k = Math.min(1.5, devicePixelRatio || 1); W = Math.round(r.width * k); Hh = Math.round(r.height * k); cv.width = W; cv.height = Hh; zDesenhada = 0 }
   function rng(seed) { let s = seed; return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646 } }
   function montaFundo(z) { // céu (fixo) e 3 faixas que rolam: morros, árvores e chão (cada uma desenhada uma vez numa tela de 2x a largura)
-    const Z = zona(z), r = rng(z * 97 + 13), chaoY = Math.round(Hh * 0.8);
-    fundo = document.createElement('canvas'); fundo.width = W; fundo.height = Hh; let x = fundo.getContext('2d'); const g = x.createLinearGradient(0, 0, 0, chaoY); g.addColorStop(0, Z.ceu[0]); g.addColorStop(1, Z.ceu[1]); x.fillStyle = g; x.fillRect(0, 0, W, Hh);
-    for (let i = 0; i < 70; i++) { x.fillStyle = 'rgba(255,255,255,' + (0.25 + r() * 0.6) + ')'; const s = r() < 0.15 ? 2 : 1; x.fillRect(r() * W | 0, r() * chaoY * 0.7 | 0, s, s) }
-    x.fillStyle = 'rgba(255,244,214,.85)'; x.beginPath(); x.arc(W * 0.82, Hh * 0.17, Hh * 0.06, 0, 7); x.fill(); x.fillStyle = Z.ceu[0]; x.beginPath(); x.arc(W * 0.82 + Hh * 0.025, Hh * 0.155, Hh * 0.055, 0, 7); x.fill();
+    const Z0 = zona(z), r = rng(z * 97 + 13), chaoY = Math.round(Hh * 0.8), esc = h => { const n = parseInt(h.slice(1), 16), f = v => Math.round(v * 0.55); return '#' + [n >> 16, n >> 8 & 255, n & 255].map(v => f(v).toString(16).padStart(2, '0')).join('') };
+    const Z = { ceu: [esc(Z0.ceu[0]), esc(Z0.ceu[1])], morro: esc(Z0.morro), arv: esc(Z0.arv), chao: esc(Z0.chao), chao2: esc(Z0.chao2) }; // tema escuro: tela OLED gasta menos com preto
+    fundo = document.createElement('canvas'); fundo.width = W; fundo.height = Hh; let x = fundo.getContext('2d'); const g = x.createLinearGradient(0, 0, 0, chaoY); g.addColorStop(0, '#000'); g.addColorStop(0.35, Z.ceu[0]); g.addColorStop(1, Z.ceu[1]); x.fillStyle = g; x.fillRect(0, 0, W, Hh);
+    for (let i = 0; i < 70; i++) { const sy = chaoY * (0.15 + r() * 0.6); x.fillStyle = 'rgba(255,255,255,' + ((0.15 + r() * 0.5) * sy / chaoY) + ')'; const s = r() < 0.15 ? 2 : 1; x.fillRect(r() * W | 0, sy | 0, s, s) }
+    x.fillStyle = 'rgba(255,244,214,.85)'; x.beginPath(); x.arc(W * 0.82, Hh * 0.3, Hh * 0.06, 0, 7); x.fill(); x.fillStyle = Z.ceu[0]; x.beginPath(); x.arc(W * 0.82 + Hh * 0.025, Hh * 0.285, Hh * 0.055, 0, 7); x.fill();
     const faixa = (desenha) => { const c = document.createElement('canvas'); c.width = W * 2; c.height = Hh; desenha(c.getContext('2d')); return c };
     const clara = (hex, k) => { const n = parseInt(hex.slice(1), 16), f = v => Math.min(255, Math.round(v + (255 - v) * k)); return 'rgb(' + f(n >> 16) + ',' + f(n >> 8 & 255) + ',' + f(n & 255) + ')' };
     camadas = [ // estilo fofinho: morros redondos, árvores de copa redonda, moitas e florzinhas (tudo desenhado uma vez só)
       { v: 6, c: faixa(x => { x.fillStyle = Z.morro; for (let i = 0; i < 9; i++) { const px = (i + r() * 0.5) / 8 * W * 2, rw = W * (0.16 + r() * 0.12), rh = Hh * (0.14 + r() * 0.12); x.beginPath(); x.ellipse(px, chaoY, rw, rh, 0, Math.PI, 0); x.fill() }
-        x.fillStyle = 'rgba(255,255,255,.05)'; for (let i = 0; i < 5; i++) { const px = r() * W * 2, py = Hh * (0.12 + r() * 0.25), lw = W * (0.06 + r() * 0.06); x.beginPath(); x.ellipse(px, py, lw, lw * 0.28, 0, 0, 7); x.ellipse(px + lw * 0.45, py - lw * 0.12, lw * 0.5, lw * 0.26, 0, 0, 7); x.fill() } }) },
-      { v: 16, c: faixa(x => { for (let i = 0; i < 14; i++) { const px = (i + r() * 0.7) / 14 * W * 2, h = Hh * (0.16 + r() * 0.1), rr = h * 0.32;
-          x.fillStyle = '#2a1d16'; x.beginPath(); x.roundRect ? x.roundRect(px - rr * 0.14, chaoY - h * 0.45, rr * 0.28, h * 0.45, rr * 0.1) : x.rect(px - rr * 0.14, chaoY - h * 0.45, rr * 0.28, h * 0.45); x.fill();
-          x.fillStyle = Z.arv; for (const [dx, dy, k] of [[-0.55, -0.55, 0.7], [0.55, -0.55, 0.7], [0, -0.95, 0.85], [0, -0.5, 0.8]]) { x.beginPath(); x.arc(px + dx * rr, chaoY - h * 0.45 + dy * rr, rr * k, 0, 7); x.fill() }
-          x.fillStyle = clara(Z.arv, 0.12); x.beginPath(); x.arc(px - rr * 0.25, chaoY - h * 0.45 - rr * 1.05, rr * 0.35, 0, 7); x.fill() } }) },
+        x.fillStyle = 'rgba(255,255,255,.02)'; for (let i = 0; i < 0; i++) { const px = r() * W * 2, py = Hh * (0.12 + r() * 0.25), lw = W * (0.06 + r() * 0.06); x.beginPath(); x.ellipse(px, py, lw, lw * 0.28, 0, 0, 7); x.ellipse(px + lw * 0.45, py - lw * 0.12, lw * 0.5, lw * 0.26, 0, 0, 7); x.fill() } }) },
+      { v: 16, c: faixa(x => { const esc2 = (h, k) => { const n = parseInt(h.slice(1), 16), f = v => Math.round(v * k); return 'rgb(' + f(n >> 16) + ',' + f(n >> 8 & 255) + ',' + f(n & 255) + ')' };
+        for (let i = 0; i < 16; i++) { const px = (i + r() * 0.7) / 16 * W * 2, h = Hh * (0.2 + r() * 0.14), rr = h * 0.3, base = chaoY - h * 0.42, pinho = r() < 0.3; // árvores fofinhas: copa em 3 tons (sombra, cor, brilho)
+          x.fillStyle = '#21170f'; x.beginPath(); x.moveTo(px - rr * 0.16, chaoY); x.lineTo(px - rr * 0.1, base); x.lineTo(px + rr * 0.1, base); x.lineTo(px + rr * 0.16, chaoY); x.fill();
+          if (pinho) { for (const [k, cor] of [[0, esc2(Z.arv, 0.8)], [1, Z.arv], [2, clara(Z.arv, 0.08)]]) { const yb = base + rr * 0.6 - k * rr * 0.75, lw = rr * (1.15 - k * 0.25); x.fillStyle = cor; x.beginPath(); x.moveTo(px - lw, yb); x.quadraticCurveTo(px, yb - rr * 1.9, px + lw, yb); x.quadraticCurveTo(px, yb + rr * 0.25, px - lw, yb); x.fill() } continue }
+          const bolas = [[-0.6, -0.35, 0.68], [0.6, -0.35, 0.68], [0, -0.9, 0.85], [0, -0.35, 0.8], [-0.35, -1.3, 0.55], [0.4, -1.25, 0.5]];
+          x.fillStyle = esc2(Z.arv, 0.7); for (const [dx, dy, k] of bolas) { x.beginPath(); x.arc(px + dx * rr, base + dy * rr + rr * 0.12, rr * k, 0, 7); x.fill() }
+          x.fillStyle = Z.arv; for (const [dx, dy, k] of bolas) { x.beginPath(); x.arc(px + dx * rr, base + dy * rr, rr * k * 0.92, 0, 7); x.fill() }
+          x.fillStyle = clara(Z.arv, 0.1); for (const [dx, dy, k] of bolas.slice(2)) { x.beginPath(); x.arc(px + dx * rr - rr * 0.18, base + dy * rr - rr * 0.2, rr * k * 0.42, 0, 7); x.fill() } } }) },
       { v: 34, c: faixa(x => { x.fillStyle = Z.chao; x.fillRect(0, chaoY, W * 2, Hh - chaoY); x.fillStyle = Z.chao2; x.fillRect(0, chaoY, W * 2, 3);
+          x.strokeStyle = Z.chao2; x.lineWidth = 1.5; x.beginPath(); for (let gx = 0; gx < W * 2; gx += 3 + r() * 4) { const gh = 3 + r() * Hh * 0.025; x.moveTo(gx, chaoY + 2); x.quadraticCurveTo(gx + 1, chaoY - gh * 0.5, gx + (r() - 0.5) * 4, chaoY - gh) } x.stroke(); // capim na beira
           for (let i = 0; i < 16; i++) { const px = r() * W * 2, rr = Hh * (0.02 + r() * 0.02); x.fillStyle = clara(Z.arv, 0.05); x.beginPath(); x.arc(px, chaoY, rr, Math.PI, 0); x.arc(px + rr, chaoY, rr * 0.8, Math.PI, 0); x.fill() }
           const flor = ['#ff9ec7', '#ffe07a', '#c9a7ff', '#ffffff']; for (let i = 0; i < 60; i++) { const px = r() * W * 2, py = chaoY + 8 + r() * (Hh - chaoY - 12); x.fillStyle = Z.chao2; x.fillRect(px, py, 3, 2); if (r() < 0.35) { x.fillStyle = flor[Math.floor(r() * 4)]; x.beginPath(); x.arc(px, py - 2, 2, 0, 7); x.fill() } } }) },
     ];
@@ -114,18 +122,18 @@
   }
   // ---------------- cena ao vivo ----------------
   const V = { on: false, desc: false, est: 'anda', t: 0, quadro: 0, rolagem: 0, M: null, mx: 0, mhp: 0, H: null, hhp: 0, nums: [], faixa: null, toque: 0, timer: null, troca: 0, vez: 'h' };
-  const chaoY = () => Math.round(Hh * 0.8), tamH = () => Hh * 0.26, hx = () => W * 0.3;
+  const chaoY = () => Math.round(Hh * 0.8), tamH = () => Hh * 0.13 * EM, hx = () => W * 0.3;
   function novoMonstro() { V.M = proximo(); V.mhp = V.M.hp; V.mx = W + tamH() * 0.6; V.est = 'chega'; V.t = 0 }
   function num(txt, x, y, cor) { V.nums.push({ txt, x, y, cor, t: 0 }) }
   function passo() { // 1 passo de 1/8 s
     const dt = 1 / FPS, a = A(); V.t += dt; V.quadro++; a.t = Date.now();
     TELA.ult = Date.now(); // tela acesa enquanto a aventura está aberta
-    if (V.est === 'anda') { V.rolagem += dt; V.hhp = Math.min(V.H.hp, V.hhp + V.H.hp * 0.25 * dt); if (V.t > 3) novoMonstro() }
-    else if (V.est === 'chega') { V.rolagem += dt; V.mx -= W * 0.28 * dt; if (V.mx <= hx() + tamH() * 0.62) { V.est = 'luta'; V.t = 0; V.vez = 'h'; V.troca = 0; V.st = { cd: [0, 0, 0, 0, 0, 0, 0, 0, 0], mana: V.st ? V.st.mana : MANA, pm: A().pm, pmu: 0 } } }
+    if (V.est === 'anda') { V.rolagem += dt * 1.8; V.hhp = Math.min(V.H.hp, V.hhp + V.H.hp * 0.25 * dt); if (V.t > 2) novoMonstro() }
+    else if (V.est === 'chega') { V.rolagem += dt * 1.8; V.mx -= W * 0.45 * dt; if (V.mx <= hx() + tamH() * 0.62) { V.est = 'luta'; V.t = 0; V.vez = 'h'; V.troca = 0; V.st = { cd: [0, 0, 0, 0, 0, 0, 0, 0, 0], mana: V.st ? V.st.mana : MANA, pm: A().pm, pmu: 0 } } }
     else if (V.est === 'luta') {
       V.troca += dt; if (V.troca >= 0.8) { V.troca = 0; const H = V.H, M = V.M;
         if (V.vez === 'h') { V.st.pm = A().pm; const pm0 = V.st.pmu, g = golpe(H, V.st, Math.random), c = g.c, d = Math.round(g.d); if (V.st.pmu > pm0) { A().pm = Math.max(0, A().pm - 1); V.st.pmu = pm0; num('🔷 mana', hx(), chaoY() - tamH() * 1.15, '#8fc8ff') }
-          V.mhp -= d; num((c ? '💥' : '') + d, V.mx, chaoY() - tamH() * 0.9, g.sk ? g.sk.cor : c ? '#ffd23a' : '#fff'); if (g.sk) { V.fx = { sk: g.sk, t: 0 }; V.skNome = { txt: g.sk.nome, cor: g.sk.cor, t: 0 } } V.vez = 'm'; V.golpeH = 0.75; V.ferM = 0.5;
+          V.mhp -= d; num((c ? '💥' : '') + d, V.mx, chaoY() - tamH() * 0.9, g.sk ? g.sk.cor : c ? '#ffd23a' : '#fff'); if (g.sk) comecaFx(g.sk); V.vez = 'm'; V.golpeH = 0.75; V.ferM = 0.5;
           if (V.mhp <= 0) { V.est = 'mmorre'; V.t = 0; const v = venceu(M); num('+' + Math.round(M.ouro * H.ouro) + ' 🪙', V.mx, chaoY() - tamH() * 1.1, '#ffd86b'); try { plim(0, 0.15) } catch (e) {}
             if (v.it) V.faixa = { txt: v.it.bolsa ? '🎒 ' + ico(v.it) + ' ' + v.it.nome + ' (' + RAR[v.it.r][0] + ') foi pra bolsa' : '🎒 Bolsa cheia: ' + v.it.nome + ' vendido', cor: RAR[v.it.r][2], t: 0 }; desenhaHud();
             if (v.novaZ) { V.faixa = { txt: '👑 Chefe vencido! Zona ' + A().z + ': ' + nomeZ(A().z), cor: '#ffe066', t: 0, longo: true }; V.comemora = 2 } salva() } }
@@ -135,11 +143,11 @@
     else if (V.est === 'mmorre') { if (V.t > 0.9) { V.M = null; V.H = heroi(); V.est = V.comemora ? 'festa' : 'anda'; V.t = 0 } }
     else if (V.est === 'festa') { if (V.t > 1.6) { V.comemora = 0; V.est = 'anda'; V.t = 0; zDesenhada = 0 } }
     else if (V.est === 'hmorre') { if (V.t > 4) { V.M = null; V.H = heroi(); V.hhp = V.H.hp; V.est = 'anda'; V.t = 0; zDesenhada = 0 } }
-    if (V.fx) { V.fx.t += dt; if (V.fx.t > 0.7) V.fx = null } if (V.skNome) { V.skNome.t += dt; if (V.skNome.t > 1.2) V.skNome = null }
+    if (V.skNome) { V.skNome.t += dt; if (V.skNome.t > 1.2) V.skNome = null }
     for (const n of V.nums) n.t += dt; V.nums = V.nums.filter(n => n.t < 1.1); if (V.faixa) { V.faixa.t += dt; if (V.faixa.t > (V.faixa.longo ? 4 : 2.2)) V.faixa = null }
     ['golpeH', 'golpeM', 'ferH', 'ferM'].forEach(k => { if (V[k] > 0) V[k] -= dt });
     if (painel.isConnected) V.toque = Date.now(); // com a bolsa aberta não escurece
-    const dorme = V.desc && Date.now() - V.toque > 20000; if (dorme) escuro.style.opacity = 0.55; // descanso: escurece sozinho (gasta menos)
+    const dorme = V.desc && Date.now() - V.toque > 20000; if (dorme) escuro.style.opacity = 0.6; // descanso: escurece sozinho (gasta menos)
     if (dorme && Date.now() - V.toque > DESCANSO_MAX) { fecha(); return } // depois de um tempo, solta a tela pro celular apagar (o jogo continua contando com o app fechado)
     if (Date.now() - V.toque > 6000) hud.classList.add('some');
     if (!dorme || V.quadro % 2 === 0) desenha(); // escurecida: desenha 4 vezes por segundo em vez de 8
@@ -149,12 +157,13 @@
     ctx.drawImage(im, (i % n) * fw, 0, fw, fh, x - fw * s / 2, y - fh * s, fw * s, fh * s); if (flash) { ctx.globalAlpha = 0.35; ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(im, (i % n) * fw, 0, fw, fh, x - fw * s / 2, y - fh * s, fw * s, fh * s); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over' } }
   function desenha() {
     const a = A(); if (zDesenhada !== a.z || !fundo) montaFundo(a.z); ctx.drawImage(fundo, 0, 0);
+    const tr = V.treme > 0 ? V.treme * Hh * 0.02 : 0; ctx.save(); if (tr) ctx.translate((Math.random() - 0.5) * tr, (Math.random() - 0.5) * tr);
     for (const L of camadas) { const off = Math.round(V.rolagem * L.v * (W / 400)) % (W * 2); ctx.drawImage(L.c, -off, 0); if (off > W) ctx.drawImage(L.c, W * 2 - off, 0) }
     const y = chaoY() + Hh * 0.03, F = tamH() / 0.85, q = V.quadro;
-    let an = 'parada', i = q; if (V.est === 'anda' || V.est === 'chega') an = 'anda'; else if (V.est === 'hmorre') { an = 'cai'; i = Math.min(5, Math.floor(V.t * 6)) } else if (V.est === 'festa') an = 'comemora'; else if (V.golpeH > 0) { an = 'ataca'; i = Math.min(5, Math.floor((0.75 - V.golpeH) * 8)) } else if (V.ferH > 0) an = 'apanha';
+    let an = 'parada', i = q; if (V.est === 'anda' || V.est === 'chega') an = 'corre'; else if (V.est === 'hmorre') { an = 'cai'; i = Math.min(5, Math.floor(V.t * 6)) } else if (V.est === 'festa') an = 'comemora'; else if (V.golpeH > 0) { an = 'ataca'; i = Math.min(5, Math.floor((0.75 - V.golpeH) * 8)) } else if (V.ferH > 0) an = 'apanha';
     // sombra
     ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(hx(), y - 2, tamH() * 0.2, tamH() * 0.04, 0, 0, 7); ctx.fill();
-    const vis = visual(); sprite(vis, an, QUADROS[an], i, hx() - (an === 'cai' ? F * 0.3 : 0), y, F, 0, V.ferH > 0.3);
+    const vis = visual(); sprite(vis, an, QUADROS[an], i, hx() - (an === 'cai' ? F * 0.3 : 0) + (V.dash || 0) * F * 0.5, y, F, 0, V.ferH > 0.3);
     if (an === 'ataca' && vis === 'kai_cajado' && V.M) { const p = Math.min(1, (0.75 - V.golpeH) / 0.6), ox = hx() + F * 0.25, oy = y - F * 0.45, bx = ox + (V.mx - ox) * p; // bolinha de magia
       ctx.fillStyle = 'rgba(150,255,140,.35)'; ctx.beginPath(); ctx.arc(bx, oy, F * 0.09, 0, 7); ctx.fill(); ctx.fillStyle = '#eaffb0'; ctx.beginPath(); ctx.arc(bx, oy, F * 0.045, 0, 7); ctx.fill() }
     if (V.M) { const M = V.M, k = M.chefe ? 1.4 : 1, rd = rodada(a.z); let am = 'anda', j = q;
@@ -162,25 +171,57 @@
       ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(V.mx, y - 2, tamH() * 0.22 * k, tamH() * 0.045, 0, 0, 7); ctx.fill();
       if (V.est === 'mmorre') ctx.globalAlpha = Math.max(0, 1 - V.t * 0.9); sprite(M.tipo, am, QM[am], j, V.mx, y, F * 0.85 * k, rd, V.ferM > 0.3); ctx.globalAlpha = 1;
       if (V.est === 'luta' || V.est === 'chega') { const bw = tamH() * 0.5 * k, bx = V.mx - bw / 2, by = y - F * 0.85 * k * 0.93; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(bx, by, bw, 6); ctx.fillStyle = M.chefe ? '#ff6a3d' : '#e04848'; ctx.fillRect(bx, by, bw * Math.max(0, V.mhp / M.hp), 6);
-        ctx.font = 'bold ' + Math.round(Hh * 0.032) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = M.chefe ? '#ffe066' : '#d6dcea'; ctx.fillText((M.chefe ? '👑 ' : '') + NOME_M[M.tipo] + ' nv ' + M.lv, V.mx, by - 5) } }
-    if (V.fx && V.M) desenhaFx(V.fx, y, F);
-    if (V.skNome) { ctx.globalAlpha = Math.max(0, 1 - V.skNome.t / 1.2); ctx.font = '900 ' + Math.round(Hh * 0.04) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#000'; ctx.fillText(V.skNome.txt, hx() + 2, y - F * 1.08 + 2); ctx.fillStyle = V.skNome.cor; ctx.fillText(V.skNome.txt, hx(), y - F * 1.08); ctx.globalAlpha = 1 }
+        ctx.font = 'bold ' + Math.round(Hh * 0.032 * EM) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = M.chefe ? '#ffe066' : '#d6dcea'; ctx.fillText((M.chefe ? '👑 ' : '') + NOME_M[M.tipo] + ' nv ' + M.lv, V.mx, by - 5) } }
+    if (V.fx) desenhaFx(V.fx, y, F); desenhaParts(); ctx.restore(); if (V.flash > 0) { ctx.fillStyle = 'rgba(255,255,240,' + V.flash * 0.35 + ')'; ctx.fillRect(0, 0, W, Hh) }
+    if (V.H && V.H.skills.length) desenhaBarra();
+    if (V.skNome) { ctx.globalAlpha = Math.max(0, 1 - V.skNome.t / 1.2); ctx.font = '900 ' + Math.round(Hh * 0.04 * EM) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#000'; ctx.fillText(V.skNome.txt, hx() + 2, y - F * 1.08 + 2); ctx.fillStyle = V.skNome.cor; ctx.fillText(V.skNome.txt, hx(), y - F * 1.08); ctx.globalAlpha = 1 }
     // vida e mana da heroína
     if (V.H && V.H.skills.some(x => x.mana) && V.st) { const bw = tamH() * 0.45, bx = hx() - bw / 2, by = y - F * 0.98 + 7; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(bx, by, bw, 4); ctx.fillStyle = '#5aa8ff'; ctx.fillRect(bx, by, bw * V.st.mana / MANA, 4) }
     if (V.H) { const bw = tamH() * 0.45, bx = hx() - bw / 2, by = y - F * 0.98; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(bx, by, bw, 5); ctx.fillStyle = '#5fd47a'; ctx.fillRect(bx, by, bw * Math.max(0, V.hhp / V.H.hp), 5) }
-    ctx.textAlign = 'center'; ctx.font = '900 ' + Math.round(Hh * 0.045) + 'px system-ui';
+    ctx.textAlign = 'center'; ctx.font = '900 ' + Math.round(Hh * 0.045 * EM) + 'px system-ui';
     for (const n of V.nums) { ctx.globalAlpha = Math.max(0, 1 - n.t); ctx.fillStyle = '#000'; ctx.fillText(n.txt, n.x + 2, n.y - n.t * Hh * 0.08 + 2); ctx.fillStyle = n.cor; ctx.fillText(n.txt, n.x, n.y - n.t * Hh * 0.08) } ctx.globalAlpha = 1;
-    if (V.faixa) { const f = V.faixa; ctx.font = '800 ' + Math.round(Hh * 0.042) + 'px system-ui'; const tw = ctx.measureText(f.txt).width + 30; ctx.fillStyle = 'rgba(5,8,18,.78)'; ctx.fillRect(W / 2 - tw / 2, Hh * 0.08, tw, Hh * 0.08); ctx.fillStyle = f.cor; ctx.fillText(f.txt, W / 2, Hh * 0.135) }
-    if (V.est === 'hmorre' && V.t > 1) { ctx.font = '700 ' + Math.round(Hh * 0.036) + 'px system-ui'; ctx.fillStyle = '#d6dcea'; ctx.fillText('Descansando…', hx(), chaoY() - tamH() * 1.05) }
+    if (V.faixa) { const f = V.faixa; ctx.font = '800 ' + Math.round(Hh * 0.042 * EM) + 'px system-ui'; const tw = ctx.measureText(f.txt).width + 30; ctx.fillStyle = 'rgba(5,8,18,.78)'; ctx.fillRect(W / 2 - tw / 2, Hh * 0.08, tw, Hh * 0.08); ctx.fillStyle = f.cor; ctx.fillText(f.txt, W / 2, Hh * 0.135) }
+    if (V.est === 'hmorre' && V.t > 1) { ctx.font = '700 ' + Math.round(Hh * 0.036 * EM) + 'px system-ui'; ctx.fillStyle = '#d6dcea'; ctx.fillText('Descansando…', hx(), chaoY() - tamH() * 1.05) }
   }
-  function desenhaFx(f, y, F) { // efeitos simples (canvas): corte, giro, chão, raio, fogo e meteoro
-    const p = f.t / 0.7, mx = V.mx, my = y - F * 0.4, c = f.sk.cor; ctx.save(); ctx.globalAlpha = Math.max(0, 1 - p); ctx.strokeStyle = c; ctx.fillStyle = c; ctx.lineCap = 'round';
-    if (f.sk.fx === 'corte' || f.sk.fx === 'giro') { ctx.lineWidth = F * 0.05; const n = f.sk.fx === 'giro' ? 2 : 1; for (let i = 0; i < n; i++) { ctx.beginPath(); ctx.arc(mx, my, F * (0.32 + i * 0.12), -2.4 + p * 2 + i, -0.6 + p * 2 + i); ctx.stroke() } }
-    else if (f.sk.fx === 'chao') { ctx.lineWidth = F * 0.03; ctx.beginPath(); ctx.ellipse(mx, y - 2, F * 0.5 * (0.3 + p), F * 0.08 * (0.3 + p), 0, 0, 7); ctx.stroke() }
-    else if (f.sk.fx === 'raio') { ctx.lineWidth = F * 0.025; for (let i = -1; i <= 1; i++) { let x = mx + i * F * 0.12, yy = y - F * 1.3; ctx.beginPath(); ctx.moveTo(x, yy); while (yy < y - F * 0.1) { yy += F * 0.18; x += (Math.random() - 0.5) * F * 0.12; ctx.lineTo(x, yy) } ctx.stroke() } }
-    else if (f.sk.fx === 'fogo') { const r0 = F * (0.12 + 0.35 * p); ctx.globalAlpha *= 0.55; ctx.beginPath(); ctx.arc(mx, my, r0, 0, 7); ctx.fill(); ctx.globalAlpha = Math.max(0, 1 - p); ctx.fillStyle = '#ffe9a0'; ctx.beginPath(); ctx.arc(mx, my, r0 * 0.45, 0, 7); ctx.fill() }
-    else if (f.sk.fx === 'meteoro') { for (let i = 0; i < 4; i++) { const q = Math.min(1, p * 1.6 - i * 0.15); if (q <= 0) continue; const x = mx + (i - 1.5) * F * 0.14 + (1 - q) * F * 0.3, yy = y - F * 1.4 + q * F * 1.3; ctx.beginPath(); ctx.arc(x, yy, F * 0.05, 0, 7); ctx.fill(); ctx.lineWidth = F * 0.02; ctx.beginPath(); ctx.moveTo(x, yy); ctx.lineTo(x + F * 0.12, yy - F * 0.25); ctx.stroke() } }
+  // ---- efeitos das habilidades: partículas com brilho (modo 'lighter'), clarão e tremida; enquanto tem efeito, anima a ~24 quadros/s
+  const PARTS = [];
+  function solta(n, x, y, cor, vel, vida, tam, sobe) { for (let i = 0; i < n && PARTS.length < 90; i++) { const ang = Math.random() * 6.283, v = vel * (0.4 + Math.random() * 0.8); PARTS.push({ x, y, vx: Math.cos(ang) * v, vy: Math.sin(ang) * v - (sobe || 0), t: 0, vida: vida * (0.6 + Math.random() * 0.6), cor, tam: tam * (0.6 + Math.random() * 0.7) }) } }
+  function comecaFx(sk) { const F = tamH() / 0.85, y = chaoY() + Hh * 0.03, my = y - F * 0.4, mx = V.mx;
+    V.fx = { sk, t: 0, dur: sk.fx === 'meteoro' ? 1.1 : 0.85 }; V.skNome = { txt: sk.nome, cor: sk.cor, t: 0 };
+    if (sk.fx === 'corte') { V.dash = 1; solta(16, mx, my, sk.cor, F * 3, 0.5, F * 0.035) }
+    else if (sk.fx === 'giro') { solta(24, mx, my, sk.cor, F * 3.5, 0.6, F * 0.03); V.treme = 0.5 }
+    else if (sk.fx === 'chao') { solta(22, mx, y - 4, '#c8a070', F * 2.2, 0.7, F * 0.04, F * 2.5); solta(10, mx, y - 4, sk.cor, F * 2.5, 0.5, F * 0.035, F * 1.5); V.treme = 1 }
+    else if (sk.fx === 'raio') { V.flash = 1; solta(18, mx, y - F * 0.2, sk.cor, F * 2.5, 0.5, F * 0.03, F); V.treme = 0.6 }
+    else if (sk.fx === 'fogo') { V.treme = 0.4 }
+    else if (sk.fx === 'meteoro') { V.treme = 0.3 }
+    if (!V.anima) { V.anima = true; let t0 = performance.now(), ult = 0; const loop = t => { if (!V.on || (!V.fx && !PARTS.length)) { V.anima = false; return } if (t - ult >= 40) { const dt = Math.min(0.08, (t - t0) / 1000); t0 = t; ult = t; tickFx(dt); desenha() } requestAnimationFrame(loop) }; requestAnimationFrame(loop) } }
+  function tickFx(dt) { const F = tamH() / 0.85, y = chaoY() + Hh * 0.03, f = V.fx;
+    if (f) { const t0 = f.t; f.t += dt; const mx = V.mx, my = y - F * 0.4;
+      if (f.sk.fx === 'fogo' && t0 < 0.3 && f.t >= 0.3) { solta(26, mx, my, f.sk.cor, F * 3, 0.6, F * 0.045, F * 0.8); solta(10, mx, my, '#ffe9a0', F * 2, 0.4, F * 0.04); V.treme = 0.8 }
+      if (f.sk.fx === 'meteoro') for (let i = 0; i < 4; i++) { const tb = 0.25 + i * 0.15; if (t0 < tb && f.t >= tb) { solta(10, mx + (i - 1.5) * F * 0.14, y - 6, f.sk.cor, F * 2, 0.45, F * 0.04, F * 1.2); V.treme = 0.6 } }
+      if (f.t > f.dur) V.fx = null }
+    for (const q of PARTS) { q.t += dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vy += F * 4 * dt; q.vx *= 0.92 } for (let i = PARTS.length - 1; i >= 0; i--) if (PARTS[i].t > PARTS[i].vida || PARTS[i].y > y + 4) PARTS.splice(i, 1);
+    if (V.dash > 0) V.dash = Math.max(0, V.dash - dt * 2.5); if (V.treme > 0) V.treme = Math.max(0, V.treme - dt * 3); if (V.flash > 0) V.flash = Math.max(0, V.flash - dt * 4); if (V.skNome) V.skNome.t += 0 }
+  function desenhaParts() { if (!PARTS.length) return; ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (const q of PARTS) { const a = 1 - q.t / q.vida; ctx.globalAlpha = Math.max(0, a); ctx.fillStyle = q.cor; ctx.beginPath(); ctx.arc(q.x, q.y, q.tam * (0.5 + a * 0.5), 0, 7); ctx.fill() } ctx.restore() }
+  function brilho(x, y, r, cor, a) { const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(255,255,240,' + a + ')'); g.addColorStop(0.35, cor); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.globalAlpha = a; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill() }
+  function desenhaFx(f, y, F) {
+    const p = Math.min(1, f.t / f.dur), mx = V.mx, my = y - F * 0.4, c = f.sk.cor, hxx = hx() + F * 0.2; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = c; ctx.lineCap = 'round';
+    const lam = (r0, a0, a1, w) => { ctx.globalAlpha = Math.max(0, 1 - p) * 0.5; ctx.lineWidth = w * 2.2; ctx.beginPath(); ctx.arc(mx, my, r0, a0, a1); ctx.stroke(); ctx.globalAlpha = Math.max(0, 1 - p); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = w * 0.6; ctx.beginPath(); ctx.arc(mx, my, r0, a0, a1); ctx.stroke(); ctx.strokeStyle = c };
+    if (f.sk.fx === 'corte') { lam(F * 0.4, -2.2 + p * 1.5, -0.4 + p * 1.5, F * 0.06); brilho(mx, my, F * 0.35 * (1 - p), c, 0.6 * (1 - p)) }
+    else if (f.sk.fx === 'giro') { for (let i = 0; i < 2; i++) lam(F * (0.34 + i * 0.12), p * 9 + i * 3, p * 9 + i * 3 + 2.4, F * 0.05); brilho(mx, my, F * 0.5, c, 0.35 * (1 - p)) }
+    else if (f.sk.fx === 'chao') { ctx.globalAlpha = 1 - p; ctx.lineWidth = F * 0.05 * (1 - p) + 1; ctx.beginPath(); ctx.ellipse(mx, y - 2, F * 0.9 * p + 4, F * 0.14 * p + 2, 0, 0, 7); ctx.stroke(); brilho(mx, y - 4, F * 0.45, c, 0.5 * (1 - p)) }
+    else if (f.sk.fx === 'raio') { for (let i = -1; i <= 1; i++) { let x = mx + i * F * 0.14, yy = y - F * 1.6; const pts = [[x, yy]]; while (yy < y - F * 0.05) { yy += F * 0.16; x += (Math.random() - 0.5) * F * 0.16; pts.push([x, yy]) }
+        for (const [w, cor, al] of [[F * 0.07, c, 0.45], [F * 0.022, '#ffffff', 1]]) { ctx.globalAlpha = Math.max(0, 1 - p * 1.4) * al; ctx.strokeStyle = cor; ctx.lineWidth = w; ctx.beginPath(); pts.forEach(([a, b], k) => k ? ctx.lineTo(a, b) : ctx.moveTo(a, b)); ctx.stroke() } } brilho(mx, y - F * 0.1, F * 0.5, c, 0.5 * (1 - p)) }
+    else if (f.sk.fx === 'fogo') { if (f.t < 0.3) { const q = f.t / 0.3, bx = hxx + (mx - hxx) * q; brilho(bx, my, F * 0.2, c, 0.9); solta(1, bx, my, c, F * 0.4, 0.3, F * 0.03) } else { const q = (f.t - 0.3) / (f.dur - 0.3); brilho(mx, my, F * (0.25 + 0.5 * q), c, 0.9 * (1 - q)) } }
+    else if (f.sk.fx === 'meteoro') { for (let i = 0; i < 4; i++) { const tb = 0.25 + i * 0.15, q = (f.t - (tb - 0.25)) / 0.25; const x = mx + (i - 1.5) * F * 0.14; if (q > 0 && q < 1) { const sx = x + (1 - q) * F * 0.5, sy = y - F * 1.6 + q * F * 1.55; ctx.globalAlpha = 0.6; ctx.lineWidth = F * 0.05; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + F * 0.25, sy - F * 0.45); ctx.stroke(); brilho(sx, sy, F * 0.12, c, 1) } else if (q >= 1 && q < 2.2) brilho(x, y - 6, F * 0.3, c, Math.max(0, 0.8 * (1 - (q - 1) / 1.2))) } }
     ctx.restore() }
+  function desenhaBarra() { // barra das 5 habilidades com a recarga, embaixo no meio
+    const sk = V.H.skills, r0 = Math.round(Hh * 0.035 * EM), gap = r0 * 2.6, x0 = W / 2 - (sk.length - 1) * gap / 2, y0 = Hh - r0 * 3.1; ctx.save();
+    sk.forEach((x, i) => { const cx = x0 + i * gap, cd = V.st ? V.st.cd[i] || 0 : 0, sem = x.mana && V.st && V.st.mana < x.mana;
+      ctx.globalAlpha = 0.85; ctx.fillStyle = 'rgba(8,10,20,.8)'; ctx.beginPath(); ctx.arc(cx, y0, r0, 0, 7); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = cd || sem ? 'rgba(255,255,255,.2)' : x.cor; ctx.stroke();
+      ctx.fillStyle = cd || sem ? 'rgba(255,255,255,.35)' : x.cor; ctx.font = '800 ' + Math.round(r0 * 0.9) + 'px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(x.nome[0], cx, y0 + 1);
+      if (cd) { ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.beginPath(); ctx.moveTo(cx, y0); ctx.arc(cx, y0, r0, -1.57, -1.57 + 6.283 * cd / x.cd); ctx.fill() } });
+    ctx.restore(); ctx.textBaseline = 'alphabetic' }
   function desenhaHud() { const a = A(), H = heroi(), ch = a.z === a.maxZ; hud.innerHTML = '';
     const top = el('div', 'avTopo'), x = el('button', null, '✕'); x.setAttribute('aria-label', 'Fechar a aventura'); x.onclick = fecha;
     top.append(el('b', null, '🗺 ' + nomeZ(a.z)), el('span', null, '⭐ Nível ' + S.nv + ' (das tarefas)'), el('span', null, '🪙 ' + a.ouro), el('span', null, ch ? '👑 chefe em ' + Math.max(0, KILLS_CHEFE - a.kills) : '↩ treinando'), x); hud.append(top);
@@ -212,7 +253,9 @@
       lista.append(el('div', 'avSub', 'Em uso (a roupa segue a arma: espada = guerreira, cajado = maga)'));
       for (const s of ['arma', 'arm', 'amu']) lista.append(a.eq[s] ? linhaItem(a.eq[s], true) : el('div', 'avItem avVazio', SLOT[s][0] + ' nada equipado'));
       const tipo = tipoArma(); lista.append(el('div', 'avSub', 'Habilidades (do Age of Embers) · ' + (tipo === 'nu' ? 'equipe uma arma pra ter habilidades' : tipo === 'cajado' ? 'de magia, gastam mana' : 'de espada')));
-      if (tipo !== 'nu') SKILLS[tipo].forEach(x => { const ok = S.nv >= x.nv, d = el('div', 'avItem' + (ok ? '' : ' avVazio')); const t = el('span', 'avNome', (ok ? '✨ ' : '🔒 ') + x.nome); if (ok) t.style.color = x.cor; d.append(t, el('span', 'avInfo', ok ? 'dano x' + x.m + (x.mana ? ' · ' + x.mana + ' de mana' : '') : 'libera no nível ' + x.nv + ' das tarefas')); lista.append(d) });
+      if (tipo !== 'nu') { const em = ativas(tipo).map(x => x.nome); lista.append(el('div', 'avSub', 'Em uso: ' + em.length + ' de ' + BARRA + '. Toque em Usar ou Tirar pra montar a sua barra.'));
+        SKILLS[tipo].forEach(x => { const ok = S.nv >= x.nv, usa = em.includes(x.nome), d = el('div', 'avItem' + (ok ? '' : ' avVazio')); const t = el('span', 'avNome', (ok ? (usa ? '⭐ ' : '✨ ') : '🔒 ') + x.nome); if (ok) t.style.color = x.cor; d.append(t, el('span', 'avInfo', ok ? 'dano x' + x.m + (x.mana ? ' · ' + x.mana + ' de mana' : '') + (usa ? ' · na barra' : '') : 'libera no nível ' + x.nv + ' das tarefas'));
+          if (ok) { const b = el('button', usa ? null : 'avEquipa', usa ? 'Tirar' : 'Usar'); b.disabled = !usa && em.length >= BARRA; b.onclick = () => { a.build = a.build || {}; const cur = ativas(tipo).map(z => z.nome); a.build[tipo] = usa ? cur.filter(n => n !== x.nome) : cur.concat(x.nome); V.H = heroi(); salva(); desenhaBolsa() }; d.append(b) } lista.append(d) }) }
       lista.append(el('div', 'avSub', 'Na bolsa'));
       if (!a.bolsa.length) lista.append(el('div', 'avItem avVazio', 'Vazia. Tudo que cair dos monstros vem pra cá.'));
       const ord = a.bolsa.slice().sort((p, q) => (p.s > q.s ? 1 : p.s < q.s ? -1 : 0) || q.pct - p.pct); for (const it of ord) lista.append(linhaItem(it, false));
