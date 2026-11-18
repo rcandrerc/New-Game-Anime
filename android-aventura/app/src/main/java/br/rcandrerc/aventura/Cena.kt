@@ -19,11 +19,11 @@ class Cena(private val abrir: (String) -> Bitmap?) {
         private fun c(h: String) = Color.parseColor(h)
         // mesmas zonas do js/aventura.js
         private val ZONAS = listOf(
-            Zona("Campina", c("#05081a"), c("#16234a"), c("#0f2a1d"), c("#183222"), c("#25492e"), "mushroomking", listOf("mushroomking", "bunny", "frog", "birb", "alien")),
-            Zona("Bosque", c("#04130e"), c("#0f2c22"), c("#0a2016"), c("#16321d"), c("#22502a"), "orc", listOf("orc", "monkroose", "cactoro", "ninja", "tribal")),
-            Zona("Montanha Gelada", c("#060f24"), c("#22355a"), c("#1c2e4c"), c("#7f95b0"), c("#a9bdd4"), "yeti", listOf("yeti", "bluedemon", "ninja", "birb", "bunny")),
-            Zona("Pântano", c("#0d0918"), c("#231834"), c("#17241a"), c("#232b1d"), c("#34402a"), "orc_skull", listOf("orc_skull", "frog", "fish", "dino", "alien")),
-            Zona("Terra do Fogo", c("#140404"), c("#350c08"), c("#160806"), c("#31160f"), c("#4d2012"), "demon", listOf("demon", "bluedemon", "dino", "tribal", "orc_skull")))
+            Zona("Campina", c("#05081a"), c("#16234a"), c("#0f2a1d"), c("#183222"), c("#25492e"), "javali", listOf("javali", "porco", "pinto", "coelho", "vaca")),
+            Zona("Bosque", c("#04130e"), c("#0f2c22"), c("#0a2016"), c("#16321d"), c("#22502a"), "lobo", listOf("lobo", "raposa", "castor", "cervo", "macaco")),
+            Zona("Montanha Gelada", c("#060f24"), c("#22355a"), c("#1c2e4c"), c("#7f95b0"), c("#a9bdd4"), "urso", listOf("urso", "pinguim", "panda", "coala", "lobo")),
+            Zona("Pântano", c("#0d0918"), c("#231834"), c("#17241a"), c("#232b1d"), c("#34402a"), "elefante", listOf("elefante", "lagarta", "caranguejo", "abelha", "castor")),
+            Zona("Terra do Fogo", c("#140404"), c("#350c08"), c("#160806"), c("#31160f"), c("#4d2012"), "leao", listOf("leao", "tigre", "papagaio", "girafa", "macaco")))
         // mesmas habilidades do js/aventura.js (Age of Embers)
         // as do Quimera / Age of Embers, na ordem da barra (igual ao js/aventura.js); cd em trocas de golpe
         private val SKILLS = mapOf(
@@ -131,7 +131,7 @@ class Cena(private val abrir: (String) -> Bitmap?) {
     }
 
     private fun esp() = tam() * 0.72f
-    private fun alcance() = hx() + tam() * (if (arma == "cajado") 1.6f else 0.7f)
+    private fun alcance() = hx() + tam() * ((if (arma == "cajado") 1.6f else 0.7f) + (if (mobs.firstOrNull()?.chefe == true) 0.18f else 0f)) // chefe é maior: para mais longe
     // mesma conta do js/aventura.js: monstro nível 2z-1 (ou 2z), chefe a cada 10 (vem sozinho e mais forte)
     private fun criaMob(chefe: Boolean, i: Int): Mob { val zn = zona(); val m = 2 * z - 1 + (if (chefe) 2 else rnd.nextInt(2)); val k = if (chefe) 2.5f else 1f
         return Mob(if (chefe) zn.mon else zn.mons[rnd.nextInt(zn.mons.size)], W + tam() + i * esp(), (18f + 14 * m) * k, (18f + 14 * m) * k, (3f + 2.6f * m) * (if (chefe) 1.25f else 1f), chefe) }

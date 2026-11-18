@@ -47,4 +47,38 @@ window.gera = async (lista = ['MushroomKing', 'Orc', 'Yeti', 'Demon'], pasta = n
   }
   return R;
 };
+// Bichinhos fofos (Kenney Cube Pets 2.0, CC0), copiados do New-Game-Anime-fontes pra tmp_kk/pets/ (animal-X.glb + Textures/).
+// O pacote só tem idle/walk/run/gesture: o golpe (bote pra frente), o apanhar (tranco pra trás) e a queda (tomba de lado) são feitos aqui.
+// lista: [nome no jogo, arquivo, cor (tinge o bicho; ex. o cachorro cinza vira o lobo)]
+const PETS = [['Porco', 'pig'], ['Pinto', 'chick'], ['Coelho', 'bunny'], ['Vaca', 'cow'], ['Javali', 'hog'], ['Raposa', 'fox'], ['Lobo', 'dog', 0x9aa6bd],
+  ['Castor', 'beaver'], ['Cervo', 'deer'], ['Macaco', 'monkey'], ['Urso', 'polar'], ['Pinguim', 'penguin'], ['Panda', 'panda'], ['Coala', 'koala'],
+  ['Lagarta', 'caterpillar'], ['Caranguejo', 'crab'], ['Abelha', 'bee'], ['Elefante', 'elephant'], ['Leao', 'lion'], ['Tigre', 'tiger'], ['Papagaio', 'parrot'], ['Girafa', 'giraffe']];
+window.geraPets = async (so = null, pasta = '../tmp_kk/pets/') => {
+  const R = {};
+  for (const [nome, arq, cor] of PETS) { if (so && !so.includes(nome)) continue;
+    const gl = await carrega(pasta + 'animal-' + arq + '.glb'), root = gl.scene, g = new THREE.Group(); g.add(root); sc.add(g); root.rotation.y = -Math.PI / 2 * 0.72;
+    if (cor) root.traverse(o => { if (o.material) { const m = o.material = o.material.clone(); m.color.setHex(cor); const im = m.map && m.map.image; if (im) { // tira a cor da textura (cinza) e tinge
+      const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; const c = cv.getContext('2d'); c.filter = 'grayscale(1) brightness(1.25)'; c.drawImage(im, 0, 0);
+      const t = new THREE.CanvasTexture(cv); t.flipY = m.map.flipY; t.encoding = m.map.encoding; t.magFilter = m.map.magFilter; t.minFilter = m.map.minFilter; m.map = t } } });
+    const mix = new THREE.AnimationMixer(root), acts = {}; for (const c of gl.animations) acts[c.name] = mix.clipAction(c);
+    acts.idle.play(); mix.update(0.01); g.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(g);
+    const alt = bb.max.y - bb.min.y, lar = bb.max.x - bb.min.x, cx = (bb.min.x + bb.max.x) / 2, y0 = bb.min.y - alt * 0.04, lado = Math.max(alt * 1.25, lar * 1.45);
+    cam.left = -lado / 2; cam.right = lado / 2; cam.top = lado; cam.bottom = 0; cam.position.set(cx, y0, 20); cam.lookAt(cx, y0, 0); cam.updateProjectionMatrix();
+    const cent = new THREE.Vector3(cx, bb.min.y, (bb.min.z + bb.max.z) / 2); root.position.sub(cent); g.position.copy(cent); // pivô no pé, no meio do bicho
+    // [clipe, quadros, nome na folha, mexe(g, t de 0 a 1)]
+    const L = [['walk', 6, 'anda'], ['idle', 4, 'parada'],
+      ['run', 6, 'ataca', (g, t) => { const b = Math.sin(Math.min(1, t * 1.25) * Math.PI); g.position.x = cent.x - b * lar * 0.2; g.position.y = cent.y + b * alt * 0.15; g.rotation.z = b * 0.25 }],
+      ['gesture-negative', 4, 'apanha', (g, t) => { const b = Math.sin(t * Math.PI); g.position.x = cent.x + b * lar * 0.12; g.rotation.z = -b * 0.3; g.scale.set(1 + b * 0.08, 1 - b * 0.12, 1) }],
+      ['idle', 6, 'cai', (g, t) => { const e = Math.min(1, t * 1.4); g.rotation.z = -e * e * Math.PI * 0.45; g.position.x = cent.x - e * e * alt * 0.45; const th = e * e * Math.PI * 0.45; g.position.y = cent.y + Math.sin(th) * lar * 0.5 + Math.sin(e * Math.PI) * alt * 0.1 }]];
+    R[nome] = {};
+    for (const [an, n, fn, mexe] of L) {
+      const a = acts[an]; if (!a) { console.warn('sem', nome, an); continue }
+      mix.stopAllAction(); a.reset(); a.play(); const d = a.getClip().duration, cv = document.createElement('canvas'); cv.width = W * n; cv.height = H; const c = cv.getContext('2d');
+      for (let i = 0; i < n; i++) { const t = fn === 'cai' ? i / (n - 1) : i / n; mix.setTime(t * d); g.position.copy(cent); g.rotation.set(0, 0, 0); g.scale.set(1, 1, 1); if (mexe) mexe(g, t); g.updateMatrixWorld(true); r.render(sc, cam); c.drawImage(r.domElement, i * W, 0) }
+      R[nome][fn] = cv.toDataURL('image/png');
+    }
+    sc.remove(g);
+  }
+  return R;
+};
 </script></body></html>
