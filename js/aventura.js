@@ -3,19 +3,20 @@
 // fundo escuro, 8 quadros por segundo, e quando o app fica fechado o jogo calcula o que aconteceu (até 12 h).
 // Usa do habitos.html: S, salva, hoje, el, aviso, TELA, prendeTela, somLiga, plim. Sprites: aventura/*.png (tools/sprites_aventura.js).
 (() => {
-  const VER = 9; const EM = 1.8; // a cena ocupa só a metade de baixo da tela (o resto é preto puro): textos e bonecos compensam // sobe quando os sprites mudam (o celular não fica com imagem velha)
+  const VER = 10; const EM = 1.8; // a cena ocupa só a metade de baixo da tela (o resto é preto puro): textos e bonecos compensam // sobe quando os sprites mudam (o celular não fica com imagem velha)
   const DESCANSO_MAX = Infinity; // o André quer ela rodando enquanto não mexe (a tela já fica bem escura no descanso)
   const FPS = 8, MAX_FORA = 12 * 3600, KILLS_CHEFE = 10;
   const ZONAS = [
-    { nome: 'Campina', ceu: ['#05081a', '#16234a'], morro: '#121d36', arv: '#0f2a1d', chao: '#183222', chao2: '#25492e', mon: 'MushroomKing', mons: ['MushroomKing', 'Bunny', 'Frog', 'Birb', 'Alien'] },
-    { nome: 'Bosque', ceu: ['#04130e', '#0f2c22'], morro: '#0c241c', arv: '#0a2016', chao: '#16321d', chao2: '#22502a', mon: 'Orc', mons: ['Orc', 'Monkroose', 'Cactoro', 'Ninja', 'Tribal'] },
-    { nome: 'Montanha Gelada', ceu: ['#060f24', '#22355a'], morro: '#2e4266', arv: '#1c2e4c', chao: '#7f95b0', chao2: '#a9bdd4', mon: 'Yeti', mons: ['Yeti', 'BlueDemon', 'Ninja', 'Birb', 'Bunny'] },
-    { nome: 'Pântano', ceu: ['#0d0918', '#231834'], morro: '#1d1630', arv: '#17241a', chao: '#232b1d', chao2: '#34402a', mon: 'Orc_Skull', mons: ['Orc_Skull', 'Frog', 'Fish', 'Dino', 'Alien'] },
-    { nome: 'Terra do Fogo', ceu: ['#140404', '#350c08'], morro: '#240a08', arv: '#160806', chao: '#31160f', chao2: '#4d2012', mon: 'Demon', mons: ['Demon', 'BlueDemon', 'Dino', 'Tribal', 'Orc_Skull'] },
+    { nome: 'Campina', ceu: ['#05081a', '#16234a'], morro: '#121d36', arv: '#0f2a1d', chao: '#183222', chao2: '#25492e', mon: 'Javali', mons: ['Javali', 'Porco', 'Pinto', 'Coelho', 'Vaca'] },
+    { nome: 'Bosque', ceu: ['#04130e', '#0f2c22'], morro: '#0c241c', arv: '#0a2016', chao: '#16321d', chao2: '#22502a', mon: 'Lobo', mons: ['Lobo', 'Raposa', 'Castor', 'Cervo', 'Macaco'] },
+    { nome: 'Montanha Gelada', ceu: ['#060f24', '#22355a'], morro: '#2e4266', arv: '#1c2e4c', chao: '#7f95b0', chao2: '#a9bdd4', mon: 'Urso', mons: ['Urso', 'Pinguim', 'Panda', 'Coala', 'Lobo'] },
+    { nome: 'Pântano', ceu: ['#0d0918', '#231834'], morro: '#1d1630', arv: '#17241a', chao: '#232b1d', chao2: '#34402a', mon: 'Elefante', mons: ['Elefante', 'Lagarta', 'Caranguejo', 'Abelha', 'Castor'] },
+    { nome: 'Terra do Fogo', ceu: ['#140404', '#350c08'], morro: '#240a08', arv: '#160806', chao: '#31160f', chao2: '#4d2012', mon: 'Leao', mons: ['Leao', 'Tigre', 'Papagaio', 'Girafa', 'Macaco'] },
   ];
-  // 16 monstros (Ultimate Monsters, Quaternius, CC0); cada zona tem os seus 5 (o 1º/mon é o chefe)
-  const MONS = ['MushroomKing', 'Orc', 'Yeti', 'Demon', 'Alien', 'BlueDemon', 'Bunny', 'Cactoro', 'Dino', 'Frog', 'Monkroose', 'Ninja', 'Orc_Skull', 'Tribal', 'Birb', 'Fish'],
-    NOME_M = { MushroomKing: 'Cogumelo', Orc: 'Orc', Yeti: 'Yeti', Demon: 'Diabrete', Alien: 'Chifrudo', BlueDemon: 'Diabo Azul', Bunny: 'Coelhão', Cactoro: 'Cactoro', Dino: 'Dino', Frog: 'Sapão', Monkroose: 'Macacoso', Ninja: 'Ninja', Orc_Skull: 'Orc Caveira', Tribal: 'Tribal', Birb: 'Passarão', Fish: 'Peixe-Lobo' };
+  // bichinhos fofos (Kenney Cube Pets, CC0; folhas em tools/sprites_aventura.html, geraPets) em cada zona, 5 por zona (o 1º/mon é o chefe).
+  // Os 16 monstros antigos (Ultimate Monsters, Quaternius) continuam aqui e nas folhas, só não aparecem nas zonas.
+  const MONS = ['MushroomKing', 'Orc', 'Yeti', 'Demon', 'Alien', 'BlueDemon', 'Bunny', 'Cactoro', 'Dino', 'Frog', 'Monkroose', 'Ninja', 'Orc_Skull', 'Tribal', 'Birb', 'Fish', 'Porco', 'Pinto', 'Coelho', 'Vaca', 'Javali', 'Raposa', 'Lobo', 'Castor', 'Cervo', 'Macaco', 'Urso', 'Pinguim', 'Panda', 'Coala', 'Lagarta', 'Caranguejo', 'Abelha', 'Elefante', 'Leao', 'Tigre', 'Papagaio', 'Girafa'],
+    NOME_M = { MushroomKing: 'Cogumelo', Orc: 'Orc', Yeti: 'Yeti', Demon: 'Diabrete', Alien: 'Chifrudo', BlueDemon: 'Diabo Azul', Bunny: 'Coelhão', Cactoro: 'Cactoro', Dino: 'Dino', Frog: 'Sapão', Monkroose: 'Macacoso', Ninja: 'Ninja', Orc_Skull: 'Orc Caveira', Tribal: 'Tribal', Birb: 'Passarão', Fish: 'Peixe-Lobo', Porco: 'Porquinho', Pinto: 'Pintinho', Coelho: 'Coelhinho', Vaca: 'Vaquinha', Javali: 'Javali', Raposa: 'Raposinha', Lobo: 'Lobinho', Castor: 'Castor', Cervo: 'Cervinho', Macaco: 'Macaquinho', Urso: 'Urso Polar', Pinguim: 'Pinguim', Panda: 'Panda', Coala: 'Coala', Lagarta: 'Lagarta', Caranguejo: 'Caranguejo', Abelha: 'Abelhinha', Elefante: 'Elefantinho', Leao: 'Leão', Tigre: 'Tigrinho', Papagaio: 'Papagaio', Girafa: 'Girafinha' };
   const RAR = [['comum', 1, '#c9d2e0'], ['raro', 1.4, '#6fb8ff'], ['épico', 2, '#c98bff']];
   const CAJADOS = ['Varinha', 'Cajado de carvalho', 'Cajado de cristal', 'Cajado rúnico', 'Cajado estelar'];
   // Habilidades: as do Quimera / Age of Embers (rpg-realista, shared/progresso.js HABS), na mesma ordem da barra e
@@ -140,7 +141,7 @@
     const dt = 1 / FPS, a = A(); V.t += dt; V.quadro++; a.t = Date.now();
     TELA.ult = Date.now(); // tela acesa enquanto a aventura está aberta
     if (V.est === 'anda') { V.rolagem += dt * 1.8; V.hhp = Math.min(V.H.hp, V.hhp + V.H.hp * 0.25 * dt); if (V.t > 2) novoMonstro() }
-    else if (V.est === 'chega') { if (!V.segue) V.rolagem += dt * 1.8; V.mx -= W * 0.45 * dt; poeFila(); if (V.mx <= hx() + tamH() * 0.62) { V.mx = hx() + tamH() * 0.62; V.est = 'luta'; V.t = 0; V.vez = 'h'; V.troca = 0; if (!V.segue || !V.st) V.st = { cd: [0, 0, 0, 0, 0, 0, 0, 0, 0], mana: V.st ? V.st.mana : MANA, pm: A().pm, pmu: 0 } } }
+    else if (V.est === 'chega') { if (!V.segue) V.rolagem += dt * 1.8; V.mx -= W * 0.45 * dt; poeFila(); const enc = hx() + tamH() * (V.M.chefe ? 0.8 : 0.62); if (V.mx <= enc) { V.mx = enc; V.est = 'luta'; V.t = 0; V.vez = 'h'; V.troca = 0; if (!V.segue || !V.st) V.st = { cd: [0, 0, 0, 0, 0, 0, 0, 0, 0], mana: V.st ? V.st.mana : MANA, pm: A().pm, pmu: 0 } } }
     else if (V.est === 'luta') {
       V.troca += dt; if (V.troca >= 0.8) { V.troca = 0; const H = V.H, M = V.M;
         if (V.vez === 'h') { V.st.pm = A().pm; const pm0 = V.st.pmu, g = golpe(H, V.st, Math.random), c = g.c, d = Math.round(g.d); if (V.st.pmu > pm0) { A().pm = Math.max(0, A().pm - 1); V.st.pmu = pm0; num('🔷 mana', hx(), chaoY() - tamH() * 1.15, '#8fc8ff') }
