@@ -351,6 +351,22 @@
   #menuTela .grade button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;font-size:12.5px;font-weight:700}
   #menuTela .grade button span{font-size:24px}
   #abas .voltaHoje{flex:0 0 auto;background:var(--accent);color:var(--ink);font-weight:800}
+
+  /* ---------- cronômetro das tarefas com tempo ---------- */
+  .hItem .play{flex:none;padding:6px 10px;border-radius:12px;font-size:13px;font-weight:800;background:var(--card2);white-space:nowrap}
+  .hItem .play.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
+  #cron{position:fixed;inset:0;z-index:36;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:radial-gradient(circle at 50% 40%,#22304d,#0b0f19);color:var(--fg);padding:16px;text-align:center}
+  #cron.on{display:flex}
+  #cron .cNome{font-size:18px;font-weight:800;color:#ffe7a8}
+  #cron .cFase{font-size:15px;color:var(--fg2);font-weight:700;min-height:20px}
+  #cron .cTempo{font:900 clamp(56px,17vmin,120px)/1 system-ui,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:1px}
+  #cron.desc .cTempo{color:#7fd8ff} #cron.livre .cTempo{font-size:clamp(36px,10vmin,64px)} #cron.pausa .cTempo{opacity:.45}
+  #cron .cFimEm{font-size:13px;color:var(--fg2);min-height:18px}
+  #cron .cBts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px}
+  #cron .cBts button{padding:11px 16px;font-weight:800;font-size:15px;border-radius:14px}
+  #cron .cBts .grande{background:var(--accent);color:var(--ink);border-color:var(--accent)}
+  #cron .cMin{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:12px;font-size:13px;padding:7px 11px}
+  #cron .cDica{font-size:12px;color:var(--fg2);max-width:420px;margin-top:4px}
 </style></head>
 <body class="lobby">
 <div id="arena">
@@ -391,6 +407,7 @@
 </div>
 <div id="hoje" role="main" aria-label="Hoje"></div>
 <div id="menuTela" role="dialog" aria-label="Menu"></div>
+<div id="cron" role="dialog" aria-label="Cronômetro"></div>
 <div id="aviso"></div>
 <div id="ed" role="dialog" aria-label="Configurar tarefa"></div>
 <div id="calTela" role="dialog" aria-label="Calendário"></div>
@@ -495,7 +512,7 @@ if (!(S.rotina >= 6)) { // 29/10/2026: pesar todo dia (ele ajusta os dias depois
 }
 // rotina enxuta (v7, 18/11/2026): menos coisa pra marcar. Pra trocar a rotina: mude a lista e suba o número em ROTINA_V.
 // [nome, dificuldade, categoria, dias da semana (0 = domingo) ou {mes: dia (-1 = último)}, horário, tipo ('' tarefa, 'extra' bônus que não cobra, 'fixo' compromisso só com horário)]
-const ROTINA_V = 7, ROTINA_NOVA = [
+const ROTINA_V = 8, ROTINA_NOVA = [
   ['Registrar peso no MyFitnessPal', 'f', 'saude', [0, 1, 2, 3, 4, 5, 6], '08:00', ''],
   ['Pedal', 'd', 'esporte', 'plano', '08:30', ''], // os dias e o treino vêm do calendário do app GPS Ciclismo (PLANO_URL)
   ['Barra 5x6', 'm', 'esporte', [1], '09:30', ''], ['Flexão 5x10', 'm', 'esporte', [2, 5], '09:30', ''], ['Prancha 5x40s', 'm', 'esporte', [3], '09:30', ''],
@@ -524,6 +541,11 @@ if (!(S.rotina >= ROTINA_V)) {
   }
   S.rotina = ROTINA_V; salva();
 }
+// v8 (18/11/2026): cronômetro já pronto nas tarefas com tempo (só põe onde ainda não tem; ele muda na ficha da tarefa)
+const CRON_PADRAO = { 'Quimera ou programação (1h30)': { t: 'min', min: 90 }, 'Programação (quinta)': { t: 'min', min: 90 }, 'Quimera ou programação (1h a 2h)': { t: 'min', min: 60 },
+  'Prancha 5x40s': { t: 'ser', n: 5, trab: 40, desc: 60 }, 'Prancha 5x40s (sábado)': { t: 'ser', n: 5, trab: 40, desc: 60 },
+  'Barra 5x6': { t: 'ser', n: 5, trab: 0, desc: 90 }, 'Barra 5x6 (quinta)': { t: 'ser', n: 5, trab: 0, desc: 90 }, 'Flexão 5x10': { t: 'ser', n: 5, trab: 0, desc: 60 } };
+if (!(S.cronV >= 1)) { for (const d of S.diar) if (CRON_PADRAO[d.t] && !d.cron) d.cron = Object.assign({}, CRON_PADRAO[d.t]); S.cronV = 1; salva() }
 // ---------------- pedal pelo plano do treinador: o calendário do app GPS Ciclismo (o treinador atualiza lá) ----------------
 const PLANO_URL = 'https://raw.githubusercontent.com/rcandrerc/Gps-ciclismo/main/plano/calendario.json';
 function puxaPlano() { // guarda os dias com treino; sem internet fica com a última cópia
@@ -2593,6 +2615,11 @@ function desenhaEd(doTopo) {
     if (D.freq.t === 'mes') { seg(s, [['dia', 'Num dia do mês'], ['ult', 'Último dia do mês']], D.freq.n === -1 ? 'ult' : 'dia', v => D.freq.n = v === 'ult' ? -1 : 1);
       if (D.freq.n !== -1) s.append(linha(el('span', null, 'Dia'), num(D.freq.n, 1, 31, v => D.freq.n = v), el('span', null, 'de cada mês'))) }
     if (D.freq.t === 'plano') s.append(el('p', 'dica', 'Aparece só nos dias com treino no calendário do app GPS Ciclismo (o treinador atualiza lá).'));
+    { const c = campo('Cronômetro (botão ▶ no Hoje)'), k = D.cron ? D.cron.t : '';
+      seg(c, [['', 'Nenhum'], ['min', 'Tempo'], ['ser', 'Séries']], k, v => { D.cron = v === 'min' ? { t: 'min', min: (D.cron && D.cron.min) || 30 } : v === 'ser' ? { t: 'ser', n: 5, trab: 40, desc: 60 } : null });
+      if (k === 'min') c.append(linha(num(D.cron.min, 1, 600, v => D.cron.min = v), el('span', null, 'minutos (ex.: 90 = 1h30)')));
+      if (k === 'ser') { c.append(linha(num(D.cron.n, 1, 30, v => D.cron.n = v), el('span', null, 'séries')), linha(num(D.cron.trab, 0, 3600, v => D.cron.trab = v), el('span', null, 'segundos de exercício (0 = por repetição: você toca quando terminar a série)')),
+        linha(num(D.cron.desc, 0, 1800, v => D.cron.desc = v), el('span', null, 'segundos de descanso entre as séries'))) } }
     seg(campo('Como conta'), [['tarefa', 'Tarefa'], ['extra', 'Bônus (se der)'], ['fixo', 'Compromisso']], D.fixo ? 'fixo' : D.extra ? 'extra' : 'tarefa', v => { D.fixo = v === 'fixo'; D.extra = v === 'extra' });
     if (D.fixo || D.extra) fic.lastChild.append(el('p', 'dica', D.fixo ? 'Só aparece no Hoje com o horário, sem marcar (ex.: levar na escola, trabalho).' : 'Dá XP se fizer, mas não conta como falta se não der.'));
     const m = campo('Como medir');
@@ -2811,7 +2838,7 @@ function desenhaHoje() {
     const ex = []; if (t.freq.t === 'plano') { const w = treinoDe(h); if (w) ex.push(w.t + ' · ' + w.min + ' min' + (w.onde ? ' · ' + w.onde : '')) } if (t.det) ex.push(t.det); if (t.extra) ex.push('bônus, se der'); const rc = rachaVista(t); if (rc > 1) ex.push('🔥 ' + rc + ' dias seguidos'); const ft = t.freq.t === 'mes' ? freqTxt(t) : ''; if (ft) ex.push(ft);
     if (ex.length) nome.append(el('small', null, ex.join('  ·  ')));
     if (f) it.classList.add('feito'); else if (!prox && !t.extra) { prox = true; it.classList.add('prox') }
-    it.append(hora, b, nome); lst.append(it);
+    it.append(hora, b, nome); if (t.cron && !f) it.append(botaoCron(t)); lst.append(it);
   }
   if (!L.length) lst.append(el('div', 'hFim', 'Nada marcado pra hoje. Aproveite! 😊'));
   else if (r.tot && r.ok === r.tot) { const fim = el('div', 'hFim', '✨ Dia completo!'); if (S.bauDia !== h) { const bb = el('button', null, '🎁 Abrir o baú do dia'); bb.onclick = () => { abreBau(); desenhaHoje() }; fim.append(el('br'), bb) } lst.append(fim) }
@@ -2834,9 +2861,87 @@ function abreMenu() {
   f.append(el('p', 'dica', 'No jogo, o botão 🏠 Hoje (nas abas) volta pra cá.')); f.lastChild.style.marginTop = '10px';
   menuEl.onclick = e => { if (e.target === menuEl) menuEl.classList.remove('on') }; menuEl.classList.add('on');
 }
+
+// ---------------- cronômetro (18/11/2026): conta pelo relógio (hora de terminar salva), então continua certo mesmo saindo do app ----------------
+const cronEl = document.getElementById('cron'); let cronT = null, cronMin = false;
+const cronDe = id => S.diar.find(d => d.id === id);
+function durTxt(c) { if (c.t === 'min') { const h = Math.floor(c.min / 60), m = c.min % 60; return h ? h + 'h' + (m ? String(m).padStart(2, '0') : '') : m + ' min' } return c.n + 'x' + (c.trab ? c.trab + 's' : '') }
+function relogio(seg) { seg = Math.max(0, Math.ceil(seg)); const h = Math.floor(seg / 3600), m = Math.floor(seg / 60) % 60, x = seg % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0') }
+const horaDe = ms => { const d = new Date(ms); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') };
+function botaoCron(t) { const C = S.cron, on = C && C.id === t.id, b = el('button', 'play' + (on ? ' on' : ''), on ? '⏱ ' + (C.pausa != null ? 'pausado' : C.fase === 'livre' ? 'série ' + C.serie : relogio((C.fim - Date.now()) / 1000)) : '▶ ' + durTxt(t.cron));
+  b.setAttribute('aria-label', on ? 'Abrir o cronômetro' : 'Começar o cronômetro de ' + t.t + ' (' + durTxt(t.cron) + ')'); b.onclick = () => { somLiga(); if (on) mostraCron(); else iniciaCron(t) }; return b }
+function relogioCel(t, seg) { // abre o timer do app Relógio do Android já com o tempo (Chrome no Android entende esse link)
+  if (!/Android/i.test(navigator.userAgent)) return false;
+  const a = document.createElement('a'); a.href = 'intent:#Intent;action=android.intent.action.SET_TIMER;i.android.intent.extra.alarm.LENGTH=' + Math.round(seg) + ';S.android.intent.extra.alarm.MESSAGE=' + encodeURIComponent(t.t.slice(0, 40)) + ';B.android.intent.extra.alarm.SKIP_UI=true;end';
+  a.click(); return true;
+}
+function iniciaCron(t) {
+  if (S.cron && S.cron.id !== t.id && !confirm('Parar o cronômetro de "' + ((cronDe(S.cron.id) || {}).t || '') + '" e começar este?')) return;
+  const c = t.cron; S.cron = { id: t.id, serie: 1, pausa: null };
+  if (c.t === 'min') { S.cron.fase = 'trab'; S.cron.fim = Date.now() + c.min * 60000 } else faseSerie();
+  salva(); pedeAviso(); mostraCron(); avisoFundo();
+  if (c.t === 'min' && S.relogioCel !== false) setTimeout(() => relogioCel(t, c.min * 60), 300);
+}
+function faseSerie() { const c = cronDe(S.cron.id).cron; if (c.trab > 0) { S.cron.fase = 'trab'; S.cron.fim = Date.now() + c.trab * 1000 } else { S.cron.fase = 'livre'; S.cron.fim = null } }
+function proximaFase() { // acabou um trecho: descanso, próxima série ou fim
+  const t = cronDe(S.cron.id), c = t.cron, C = S.cron; bip(2);
+  if (c.t === 'min') { C.fase = 'alarme'; C.fim = null; salva(); mostraCron(); return } // alarme tocando até ele tocar em Parar
+  if (C.fase !== 'desc' && C.serie >= c.n) { terminaCron(true); return }
+  if (C.fase === 'desc') { C.serie++; faseSerie() } else if (c.desc > 0) { C.fase = 'desc'; C.fim = Date.now() + c.desc * 1000 } else { C.serie++; faseSerie() }
+  salva(); avisoFundo(); desenhaCron();
+}
+function terminaCron(ok) {
+  const t = S.cron && cronDe(S.cron.id); S.cron = null; salva(); fechaAvisoFundo(); cronEl.classList.remove('on'); clearInterval(cronT); cronT = null;
+  if (ok && t) { bip(3); if (!feito(t)) { t.nao = false; t.ok = true; confere(t); salva(); hud() } aviso('⏱ ' + t.t + ': tempo completo! ✓', 3) }
+  desenhaHoje();
+}
+function bip(n = 1) { try { navigator.vibrate && navigator.vibrate(n > 1 ? [200, 120, 200, 120, 400].slice(0, n * 2 - 1) : 150) } catch (e) {} for (let i = 0; i < n; i++) setTimeout(() => plim(i === n - 1 ? 7 : 0, 0.5), i * 260) }
+function mostraCron() { cronMin = false; cronEl.classList.add('on'); desenhaCron(); clearInterval(cronT); cronT = setInterval(tickCron, 250); prendeTela() }
+function tickCron() {
+  const C = S.cron; if (!C) { clearInterval(cronT); cronT = null; return }
+  if (C.fase === 'alarme') { if (!C.ultAl || Date.now() - C.ultAl > 1400) { C.ultAl = Date.now(); bip(3) } TELA.ult = Date.now(); return }
+  if (C.pausa == null && C.fim && Date.now() >= C.fim) { proximaFase(); return }
+  if (C.pausa == null && C.fim) { const r = (C.fim - Date.now()) / 1000; if (r < 3.2 && r > 0 && Math.ceil(r) !== C.ultBip) { C.ultBip = Math.ceil(r); plim(-5, 0.3) } }
+  TELA.ult = Date.now(); // tela acesa enquanto o cronômetro está na frente
+  if (cronEl.classList.contains('on')) { const tp = cronEl.querySelector('.cTempo'); if (tp && C.fim) tp.textContent = relogio(((C.pausa != null ? C.pausa : C.fim - Date.now())) / 1000) }
+  else if (hojeOn()) { const b = hojeEl.querySelector('.play.on'); if (b && C.fim && C.pausa == null) b.textContent = '⏱ ' + relogio((C.fim - Date.now()) / 1000) }
+}
+function desenhaCron() {
+  const C = S.cron, t = C && cronDe(C.id); if (!t) { terminaCron(false); return } const c = t.cron;
+  if (C.fase === 'alarme') { cronEl.className = 'on'; cronEl.innerHTML = ''; const b = el('button', null, '✓ Parar o alarme'); b.style.cssText = 'padding:16px 26px;font-size:18px;font-weight:900;background:var(--accent);color:var(--ink);border-color:var(--accent);border-radius:16px;margin-top:10px';
+    b.onclick = () => terminaCron(true); cronEl.append(el('div', 'cNome', t.t), el('div', 'cTempo', '⏰ Deu o tempo!'), b); cronEl.querySelector('.cTempo').style.fontSize = 'clamp(36px,10vmin,64px)'; return }
+  cronEl.className = 'on' + (C.fase === 'desc' ? ' desc' : C.fase === 'livre' ? ' livre' : '') + (C.pausa != null ? ' pausa' : ''); cronEl.innerHTML = '';
+  const fase = c.t === 'min' ? (C.pausa != null ? 'Pausado' : '') : (C.fase === 'desc' ? 'Descanso · depois vem a série ' + (C.serie + 1) + ' de ' + c.n : 'Série ' + C.serie + ' de ' + c.n);
+  const tp = el('div', 'cTempo', C.fase === 'livre' ? 'Faça a série' : relogio((C.pausa != null ? C.pausa : C.fim - Date.now()) / 1000));
+  const fimEm = el('div', 'cFimEm', c.t === 'min' && C.pausa == null ? 'Termina às ' + horaDe(C.fim) + '. Pode sair do app: o alarme do Relógio do celular toca na hora.' : '');
+  const bts = el('div', 'cBts'), bt = (txt, cls, f) => { const b = el('button', cls, txt); b.onclick = () => { somLiga(); f() }; bts.append(b) };
+  if (C.fase === 'livre') bt('✓ Série feita', 'grande', proximaFase);
+  else if (C.pausa != null) bt('▶ Continuar', 'grande', () => { C.fim = Date.now() + C.pausa; C.pausa = null; salva(); avisoFundo(); desenhaCron() });
+  else bt('⏸ Pausar', null, () => { C.pausa = C.fim - Date.now(); salva(); fechaAvisoFundo(); desenhaCron() });
+  if (C.fase === 'desc') bt('⏭ Pular descanso', 'grande', proximaFase);
+  if (c.t === 'min' && C.pausa == null) bt('+5 min', null, () => { C.fim += 300000; salva(); avisoFundo(); desenhaCron() });
+  if (c.t === 'min' && C.pausa == null && /Android/i.test(navigator.userAgent)) bt('⏰ Pôr no Relógio do celular', null, () => relogioCel(t, (C.fim - Date.now()) / 1000));
+  if (c.t === 'ser' && C.fase === 'trab') bt('✓ Terminei', null, proximaFase);
+  bt(c.t === 'min' ? '✓ Terminei antes' : '⏹ Parar', null, () => { if (c.t === 'min') terminaCron(true); else if (confirm('Parar o treino? A tarefa fica sem marcar.')) terminaCron(false) });
+  const mn = el('button', 'cMin', '▾ Minimizar'); mn.onclick = () => { cronMin = true; cronEl.classList.remove('on'); desenhaHoje() };
+  cronEl.append(mn, el('div', 'cNome', t.t), el('div', 'cFase', fase), tp, fimEm, bts);
+  if (c.t === 'min' && 'Notification' in window && Notification.permission !== 'granted') cronEl.append(el('div', 'cDica', 'Dica: permita as notificações do app pra ver a hora de terminar na barra do celular.'));
+}
+// aviso na barra do celular: com o app fechado o navegador não deixa tocar alarme, então fica uma notificação com a hora de terminar
+function pedeAviso() { try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission().then(() => avisoFundo()) } catch (e) {} }
+function avisoFundo() {
+  const C = S.cron, t = C && cronDe(C.id); if (!t || !C.fim || C.pausa != null || !('Notification' in window) || Notification.permission !== 'granted' || !navigator.serviceWorker) return;
+  navigator.serviceWorker.ready.then(r => r.showNotification('⏱ ' + t.t, { body: (C.fase === 'desc' ? 'Descanso até ' : 'Termina às ') + horaDe(C.fim), tag: 'cron', silent: true, renotify: false, icon: 'icones/habitos-192.png', badge: 'icones/habitos-192.png' })).catch(() => {});
+}
+function fechaAvisoFundo() { try { navigator.serviceWorker && navigator.serviceWorker.ready.then(r => r.getNotifications({ tag: 'cron' })).then(ns => ns.forEach(n => n.close())).catch(() => {}) } catch (e) {} }
+document.addEventListener('visibilitychange', () => { // voltou pro app: confere quanto passou pelo relógio
+  if (document.visibilityState !== 'visible' || !S.cron) return; const C = S.cron;
+  if (C.pausa == null && C.fim && Date.now() >= C.fim) { const t = cronDe(C.id); if (t && t.cron.t === 'min') { terminaCron(true); return } mostraCron(); tickCron(); return }
+  if (!cronMin) mostraCron(); else if (!cronT) cronT = setInterval(tickCron, 250);
+});
 setInterval(() => { if (hojeOn() && !edEl.classList.contains('on')) desenhaHoje() }, 60000); // vira o dia e anda o "próximo" sozinho
 document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') return; puxaPlano(); if (hojeOn()) { try { viraDia() } catch (e) {} desenhaHoje() } });
-comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); try { trocaAba(aba) } catch (e) { console.error(e) } try { hud() } catch (e) { console.error(e) } requestAnimationFrame(quadro); mostraHoje(); puxaPlano(); try { viraDia(); chefeSemana(); lista() } catch (e) { console.error(e) } // abre direto nas tarefas, com a heroína no acampamento do lado (sem janela por cima); um erro na lista nunca pode travar o carregamento
+comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); try { trocaAba(aba) } catch (e) { console.error(e) } try { hud() } catch (e) { console.error(e) } requestAnimationFrame(quadro); mostraHoje(); puxaPlano(); if (S.cron) { if (cronDe(S.cron.id)) mostraCron(); else S.cron = null } try { viraDia(); chefeSemana(); lista() } catch (e) { console.error(e) } // abre direto nas tarefas, com a heroína no acampamento do lado (sem janela por cima); um erro na lista nunca pode travar o carregamento
 // ---------------- tela acesa: o celular não apaga enquanto joga; só depois de uns minutos sem tocar (Screen Wake Lock) ----------------
 const TELA = { trava: null, ult: Date.now() };
 function telaMin() { return S.tela == null ? 8 : S.tela } // (função, não const: a aba Herói usa antes desta linha rodar) minutos sem tocar até deixar o celular apagar (0 = o tempo normal do celular)
