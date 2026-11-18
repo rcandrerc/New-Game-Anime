@@ -35,16 +35,7 @@ async function folha(obj, mix, acts, lista, bb, vrm) { // lista: [nome da anima�
 }
 window.gera = async () => {
   const R = {};
-  { // heroína (Hana)
-    const gl = await carrega('../personagens/sendagaya_shino.glb'), A = VRMC.prep(gl), root = A.gl.scene; sc.add(root); root.rotation.y = Math.PI / 2 * 0.72; // olhando pra direita, um pouco de frente
-    const mix = new THREE.AnimationMixer(root), acts = {}; for (const c of A.an.animations) acts[c.name] = mix.clipAction(c);
-    const vrm = { root, act: acts }; VRMC.fix(vrm);
-    root.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(root); // medida antes da espada
-    let mao = null; root.traverse(o => { if (o.name === 'handslotr' || o.name === 'handslot.r') mao = o }); if (!mao) root.traverse(o => { if (!mao && /^handr$|^hand\.?r$/.test(o.name)) mao = o }); if (mao) espada(mao);
-    bb.min.x -= 0.25; bb.max.x += 0.25;
-    R.heroi = await folha(root, mix, acts, [['Walking_A', 8, 'anda'], ['Melee_1H_Attack_Slice_Diagonal', 6, 'ataca'], ['Idle_A', 6, 'parada'], ['Hit_A', 4, 'apanha'], ['Death_A', 6, 'cai'], ['Ranged_Magic_Raise', 6, 'comemora']], bb, vrm);
-    sc.remove(root);
-  }
+  // a heroína agora é KayKit: veja tools/sprites_kaykit.js
   for (const nome of ['MushroomKing', 'Orc', 'Yeti', 'Demon']) {
     const gl = await carrega('../monstros/' + nome + '.glb'), root = gl.scene; sc.add(root); root.rotation.y = -Math.PI / 2 * 0.72; // olhando pra esquerda
     const mix = new THREE.AnimationMixer(root), acts = {}; for (const c of gl.animations) acts[c.name] = mix.clipAction(c);

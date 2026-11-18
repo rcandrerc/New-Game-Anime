@@ -34,7 +34,7 @@ async function folha(obj, mix, acts, lista, bb, vrm) { // lista: [nome da anima�
   }
   return out;
 }
-window.gera = async (quem, arma) => { // personagem KayKit (estilo fofinho) com as animações do Rig_Medium
+window.gera = async (quem, arma, golpe) => { // personagem KayKit (estilo fofinho) com as animações do Rig_Medium
   const pasta = '../tmp_kk/' // copie aqui os .glb/.gltf do KayKit Adventurers e as animações Rig_Medium (estão no New-Game-Anime-fontes)
  ,_ = 0, gl = await carrega(pasta + quem + '.glb'), root = gl.scene; sc.add(root); root.rotation.y = Math.PI / 2 * 0.72;
   const mix = new THREE.AnimationMixer(root), acts = {};
@@ -43,7 +43,7 @@ window.gera = async (quem, arma) => { // personagem KayKit (estilo fofinho) com 
   let mao = null; root.traverse(o => { if (o.name === 'handslotr' || o.name === 'handslot.r') mao = o });
   if (mao && arma) { const w = await carrega(pasta + arma + '.gltf'); mao.add(w.scene) }
   bb.min.x -= 0.25; bb.max.x += 0.25;
-  const R = {}; R.heroi = await folha(root, mix, acts, [['Walking_A', 8, 'anda'], ['Melee_1H_Attack_Slice_Diagonal', 6, 'ataca'], ['Idle_A', 6, 'parada'], ['Hit_A', 4, 'apanha'], ['Death_A', 6, 'cai'], ['Cheering', 6, 'comemora']], bb);
+  const R = {}; R.heroi = await folha(root, mix, acts, [['Walking_A', 8, 'anda'], [golpe || 'Melee_1H_Attack_Slice_Diagonal', 6, 'ataca'], ['Idle_A', 6, 'parada'], ['Hit_A', 4, 'apanha'], ['Death_A', 6, 'cai'], ['Cheering', 6, 'comemora']], bb);
   sc.remove(root); return R;
 };
 </script></body></html>
