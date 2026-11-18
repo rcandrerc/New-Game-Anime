@@ -58,8 +58,8 @@
   const cv = document.createElement('canvas'), ctx = cv.getContext('2d'), hud = document.createElement('div'), escuro = document.createElement('div');
   hud.className = 'avHud'; escuro.className = 'avEscuro'; tela.append(cv, escuro, hud); document.body.append(tela);
   const IMG = {}, TINT = {}, QUADROS = { anda: 8, ataca: 6, parada: 6, apanha: 4, cai: 6, comemora: 6 }, QM = { anda: 6, ataca: 6, parada: 4, apanha: 4, cai: 6 };
-  const VISUAIS = [['heroi', 'Hana'], ['kai', 'Ruiva fofinha'], ['maga', 'Maguinha']]; // kai e maga: KayKit Adventurers (Rogue e Mage), CC0
-  function visual() { const v = A().vis; return VISUAIS.some(x => x[0] === v) ? v : 'heroi' }
+  const VISUAIS = [['kai', 'Ruiva fofinha'], ['maga', 'Maguinha']]; // kai e maga: KayKit Adventurers (Rogue e Mage), CC0
+  function visual() { const v = A().vis; return VISUAIS.some(x => x[0] === v) ? v : 'kai' }
   function img(quem, an) { const k = quem + '_' + an; if (!IMG[k]) { const i = new Image(); i.src = 'aventura/' + k.toLowerCase() + '.png'; IMG[k] = i } return IMG[k] }
   function tingida(quem, an, rd) { if (!rd) return img(quem, an); const k = quem + an + rd; if (TINT[k]) return TINT[k]; const i = img(quem, an); if (!i.complete || !i.naturalWidth) return i;
     const c = document.createElement('canvas'); c.width = i.naturalWidth; c.height = i.naturalHeight; const x = c.getContext('2d'); x.filter = 'hue-rotate(' + (rd * 75) + 'deg) saturate(1.2)'; x.drawImage(i, 0, 0); TINT[k] = c; return c }
@@ -116,7 +116,7 @@
     let an = 'parada', i = q; if (V.est === 'anda' || V.est === 'chega') an = 'anda'; else if (V.est === 'hmorre') { an = 'cai'; i = Math.min(5, Math.floor(V.t * 6)) } else if (V.est === 'festa') an = 'comemora'; else if (V.golpeH > 0) { an = 'ataca'; i = Math.min(5, Math.floor((0.75 - V.golpeH) * 8)) } else if (V.ferH > 0) an = 'apanha';
     // sombra
     ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(hx(), y - 2, tamH() * 0.2, tamH() * 0.04, 0, 0, 7); ctx.fill();
-    const vis = visual(); sprite(vis, an, QUADROS[an], i, hx() - (vis !== 'heroi' && an === 'cai' ? F * 0.3 : 0), y, F, 0, V.ferH > 0.3);
+    const vis = visual(); sprite(vis, an, QUADROS[an], i, hx() - (an === 'cai' ? F * 0.3 : 0), y, F, 0, V.ferH > 0.3);
     if (V.M) { const M = V.M, k = M.chefe ? 1.4 : 1, rd = rodada(a.z); let am = 'anda', j = q;
       if (V.est === 'luta') { if (V.golpeM > 0) { am = 'ataca'; j = Math.min(5, Math.floor((0.75 - V.golpeM) * 8)) } else if (V.ferM > 0) am = 'apanha'; else am = 'parada' } else if (V.est === 'mmorre') { am = 'cai'; j = Math.min(5, Math.floor(V.t * 7)) }
       ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(V.mx, y - 2, tamH() * 0.22 * k, tamH() * 0.045, 0, 0, 7); ctx.fill();
