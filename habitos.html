@@ -367,6 +367,27 @@
   #cron .cBts .grande{background:var(--accent);color:var(--ink);border-color:var(--accent)}
   #cron .cMin{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:12px;font-size:13px;padding:7px 11px}
   #cron .cDica{font-size:12px;color:var(--fg2);max-width:420px;margin-top:4px}
+
+  /* ---------- peso: registrar (número + foto da balança) e histórico ---------- */
+  #pesoTela{position:fixed;inset:0;z-index:35;display:none;flex-direction:column;background:var(--bg);color:var(--fg);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}
+  #pesoTela.on{display:flex}
+  #pesoTela .pCab{flex:none;display:flex;align-items:center;gap:10px;padding:10px 16px 6px;max-width:680px;width:100%;margin:0 auto}
+  #pesoTela .pCab b{flex:1;font-size:19px;color:#ffe7a8}
+  #pesoTela .pCorpo{flex:1;min-height:0;overflow-y:auto;padding:4px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+  #pesoTela .pCorpo > *{max-width:648px;margin-left:auto;margin-right:auto}
+  .pForm{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+  .pForm input{font:800 26px system-ui,sans-serif;width:130px;padding:8px 10px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;user-select:text;-webkit-user-select:text}
+  .pForm .kg{font-size:18px;font-weight:800;color:var(--fg2)}
+  .pForm .foto{padding:10px 14px;font-weight:800}
+  .pForm .salvar{padding:10px 16px;font-weight:800;background:var(--accent);color:var(--ink);border-color:var(--accent);margin-left:auto}
+  .pForm img{width:56px;height:56px;object-fit:cover;border-radius:8px}
+  .pResumo{display:flex;gap:8px;margin-top:10px} .pResumo div{flex:1;background:var(--card);border-radius:10px;padding:7px 6px;text-align:center;font-size:12px;color:var(--fg2)} .pResumo b{display:block;font-size:17px;color:var(--fg)}
+  .pGraf{margin-top:10px;background:var(--card);border-radius:12px;padding:8px} .pGraf svg{width:100%;height:150px;display:block}
+  .pPer{display:flex;gap:6px;margin-top:10px} .pPer button{flex:1;padding:7px 4px;font-size:12.5px;font-weight:700} .pPer button.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
+  .pLin{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line)}
+  .pLin .d{width:74px;font-size:13px;color:var(--fg2)} .pLin .v{flex:1;font-size:17px;font-weight:800} .pLin .df{font-size:12.5px;font-weight:800}
+  .pLin img{width:44px;height:44px;object-fit:cover;border-radius:6px;cursor:pointer} .pLin .x{background:none;border:none;color:var(--fg2);padding:4px 8px}
+  #fotoGrande{position:fixed;inset:0;z-index:46;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.9)} #fotoGrande.on{display:flex} #fotoGrande img{max-width:96vw;max-height:92vh;border-radius:8px}
 </style></head>
 <body class="lobby">
 <div id="arena">
@@ -408,6 +429,8 @@
 <div id="hoje" role="main" aria-label="Hoje"></div>
 <div id="menuTela" role="dialog" aria-label="Menu"></div>
 <div id="cron" role="dialog" aria-label="Cronômetro"></div>
+<div id="pesoTela" role="dialog" aria-label="Peso"></div>
+<div id="fotoGrande" role="dialog" aria-label="Foto da balança"></div>
 <div id="aviso"></div>
 <div id="ed" role="dialog" aria-label="Configurar tarefa"></div>
 <div id="calTela" role="dialog" aria-label="Calendário"></div>
@@ -512,8 +535,8 @@ if (!(S.rotina >= 6)) { // 29/10/2026: pesar todo dia (ele ajusta os dias depois
 }
 // rotina enxuta (v7, 18/11/2026): menos coisa pra marcar. Pra trocar a rotina: mude a lista e suba o número em ROTINA_V.
 // [nome, dificuldade, categoria, dias da semana (0 = domingo) ou {mes: dia (-1 = último)}, horário, tipo ('' tarefa, 'extra' bônus que não cobra, 'fixo' compromisso só com horário)]
-const ROTINA_V = 8, ROTINA_NOVA = [
-  ['Registrar peso no MyFitnessPal', 'f', 'saude', [0, 1, 2, 3, 4, 5, 6], '08:00', ''],
+const ROTINA_V = 9, ROTINA_NOVA = [
+  ['Pesar (número + foto da balança)', 'f', 'saude', [0, 1, 2, 3, 4, 5, 6], '08:00', ''],
   ['Pedal', 'd', 'esporte', 'plano', '08:30', ''], // os dias e o treino vêm do calendário do app GPS Ciclismo (PLANO_URL)
   ['Barra 5x6', 'm', 'esporte', [1], '09:30', ''], ['Flexão 5x10', 'm', 'esporte', [2, 5], '09:30', ''], ['Prancha 5x40s', 'm', 'esporte', [3], '09:30', ''],
   ['Barra 5x6 (quinta)', 'm', 'esporte', [4], '08:15', ''], ['Prancha 5x40s (sábado)', 'm', 'esporte', [6], '', ''],
@@ -528,7 +551,7 @@ const ROTINA_V = 8, ROTINA_NOVA = [
   ['Aporte de R$ 200 na Rico', 'm', 'grana', { mes: 16 }, '', ''],
   ['Mandar print da Rico pro Claude', 'f', 'grana', { mes: -1 }, '', ''],
 ];
-const ROTINA_NOMES = { 'Almoço da filha e louça': 'Almoço da filha', 'Quimera ou programação (1h45)': 'Quimera ou programação (1h30)', 'Pedal (1h40 a 2h)': 'Pedal' }; // nome antigo → novo (mantém o histórico)
+const ROTINA_NOMES = { 'Registrar peso no MyFitnessPal': 'Pesar (número + foto da balança)', 'Almoço da filha e louça': 'Almoço da filha', 'Quimera ou programação (1h45)': 'Quimera ou programação (1h30)', 'Pedal (1h40 a 2h)': 'Pedal' }; // nome antigo → novo (mantém o histórico)
 const ROTINA_SAI = ['Pedal (fim de semana)', 'Acordar e café leve', 'Jogar 50 min', 'Jogar 1h30', 'Jogar 1h30 (segunda)', 'Jogar 1h30 (fim de semana)'];
 if (!(S.rotina >= ROTINA_V)) {
   const h = hoje(); S.rotinaAntiga = JSON.parse(JSON.stringify(S.diar)); // cópia de segurança antes de trocar
@@ -539,6 +562,7 @@ if (!(S.rotina >= ROTINA_V)) {
     let d = S.diar.find(x => x.t === t); if (!d) { d = { id: uid(), t, ok: false, ini: h, criado: h }; S.diar.push(d) }
     Object.assign(d, { d: dif, cat, hora, freq: dias === 'plano' ? { t: 'plano' } : Array.isArray(dias) ? (dias.length === 7 ? { t: 'todo' } : { t: 'semana', dias }) : { t: 'mes', n: dias.mes }, fixo: tipo === 'fixo', extra: tipo === 'extra' });
   }
+  for (const d of S.diar) if (d.t === 'Pesar (número + foto da balança)') d.peso = true; // tocar nela abre a tela de peso
   S.rotina = ROTINA_V; salva();
 }
 // v8 (18/11/2026): cronômetro já pronto nas tarefas com tempo (só põe onde ainda não tem; ele muda na ficha da tarefa)
@@ -2318,12 +2342,13 @@ function secGrafico(sec) {
   if (L.length) { s.append(el('div', 'grupo', 'Últimos 7 dias × 7 antes')); for (const [d, a, b] of L) { const r = el('div', 'tend'), v = el('span'); v.textContent = a + '%' + (b == null ? '' : a > b ? ' ▲' + (a - b) : a < b ? ' ▼' + (b - a) : ' ='); if (b != null && a !== b) v.className = a > b ? 'up' : 'dn'; r.append(el('span', null, d.t), v); s.append(r) } }
 }
 // ---------------- backup e app ----------------
-function exportaBackup() { S.backup = hoje(); salva(); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S)], { type: 'application/json' })); a.download = 'habitos-backup-' + hoje() + '.json';
-  document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove() }, 2000); aviso('💾 Backup salvo nos downloads do celular.'); lista() }
+function exportaBackup() { S.backup = hoje(); salva(); (typeof fotoTodas === 'function' ? fotoTodas() : Promise.resolve({})).then(fotos => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(Object.assign({}, S, { _fotosPeso: fotos }))], { type: 'application/json' })); a.download = 'habitos-backup-' + hoje() + '.json';
+  document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove() }, 2000); aviso('💾 Backup salvo nos downloads do celular.'); lista() }) }
 function importaBackup() { const i = document.createElement('input'); i.type = 'file'; i.accept = '.json,application/json';
   i.onchange = () => { const f = i.files[0]; if (!f) return; f.text().then(t => { let d; try { d = JSON.parse(t) } catch (e) { d = null }
     if (!d || !Array.isArray(d.diar) || !Array.isArray(d.hab)) { aviso('Esse arquivo não é um backup do jogo.'); return }
-    if (!confirm('Trocar tudo pelo backup' + (d.backup ? ' de ' + ddmm(d.backup) : '') + '? O que está no celular agora some.')) return; localStorage.setItem(CHAVE, JSON.stringify(d)); location.reload() }) }; i.click() }
+    if (!confirm('Trocar tudo pelo backup' + (d.backup ? ' de ' + ddmm(d.backup) : '') + '? O que está no celular agora some.')) return; const fotos = d._fotosPeso || {}; delete d._fotosPeso; localStorage.setItem(CHAVE, JSON.stringify(d));
+    Promise.all(Object.entries(fotos).map(([k, u]) => fotoPoe(k, u).catch(() => {}))).then(() => location.reload()) }) }; i.click() }
 let instalaEv = null; addEventListener('beforeinstallprompt', e => { e.preventDefault(); instalaEv = e; if (aba === 'her') lista() });
 function instalaApp() { if (!instalaEv) return; instalaEv.prompt(); instalaEv.userChoice.finally(() => { instalaEv = null; lista() }) }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw-habitos.js').catch(() => {});
@@ -2809,7 +2834,7 @@ function doDia(dt) { // tudo do dia: tarefas, bônus e compromissos; sem horári
   return S.diar.map(prep).filter(d => naAgenda(d, dt)).map((d, i) => [d, i]).sort((a, b) => (a[0].hora || '') < (b[0].hora || '') ? -1 : (a[0].hora || '') > (b[0].hora || '') ? 1 : a[1] - b[1]).map(x => x[0]);
 }
 function marcaHoje(t) {
-  somLiga(); if (t.tipo === 'num') { registra(t); desenhaHoje(); return } if (t.tipo === 'lista') { abreJogo('diar'); return }
+  somLiga(); if (t.peso && !t.ok) { abrePeso(t); return } if (t.tipo === 'num') { registra(t); desenhaHoje(); return } if (t.tipo === 'lista') { abreJogo('diar'); return }
   t.nao = false; t.ok = !t.ok; confere(t); salva(); hud(); desenhaHoje();
   if (t.ok && t.dado) aviso('✓ ' + t.t + '  ·  +' + t.dado.xp + ' XP', 1.6);
 }
@@ -2856,7 +2881,7 @@ function abreMenu() {
   cab.style.cssText = 'display:flex;justify-content:space-between;align-items:center'; cab.append(el('b', null, 'Menu'), x); x.onclick = () => menuEl.classList.remove('on'); f.append(cab);
   const g = el('div', 'grade'); f.append(g);
   for (const [ic, txt, fn] of [['🎮', 'Jogo', () => abreJogo()], ['✅', 'Todas as tarefas', () => abreJogo('diar')], ['💪', 'Hábitos', () => abreJogo('hab')], ['📝', 'Afazeres', () => abreJogo('afz')],
-    ['📅', 'Agenda', () => abreJogo('cal')], ['🏆', 'Progresso', () => abreJogo('prog')], ['🦸', 'Herói', () => abreJogo('her')], ['🎒', 'Itens', () => abreJogo('inv')]]) {
+    ['📅', 'Agenda', () => abreJogo('cal')], ['🏆', 'Progresso', () => abreJogo('prog')], ['⚖️', 'Peso', () => { menuEl.classList.remove('on'); abrePeso() }], ['🦸', 'Herói', () => abreJogo('her')], ['🎒', 'Itens', () => abreJogo('inv')]]) {
     const b = el('button'); b.append(el('span', null, ic), txt); b.onclick = fn; g.append(b) }
   f.append(el('p', 'dica', 'No jogo, o botão 🏠 Hoje (nas abas) volta pra cá.')); f.lastChild.style.marginTop = '10px';
   menuEl.onclick = e => { if (e.target === menuEl) menuEl.classList.remove('on') }; menuEl.classList.add('on');
@@ -2939,6 +2964,68 @@ document.addEventListener('visibilitychange', () => { // voltou pro app: confere
   if (C.pausa == null && C.fim && Date.now() >= C.fim) { const t = cronDe(C.id); if (t && t.cron.t === 'min') { terminaCron(true); return } mostraCron(); tickCron(); return }
   if (!cronMin) mostraCron(); else if (!cronT) cronT = setInterval(tickCron, 250);
 });
+
+// ---------------- peso (18/11/2026): número no S.pesos {data: kg}; a foto da balança (bem leve) fica no IndexedDB do aparelho ----------------
+const pesoEl = document.getElementById('pesoTela'), fotoEl = document.getElementById('fotoGrande');
+const FOTOS = { db: null };
+function fotosDb() { if (FOTOS.db) return FOTOS.db; FOTOS.db = new Promise((ok, erro) => { const r = indexedDB.open('nga-habitos-fotos', 1); r.onupgradeneeded = () => r.result.createObjectStore('peso'); r.onsuccess = () => ok(r.result); r.onerror = () => erro(r.error) }); return FOTOS.db }
+function fotoOp(modo, f) { return fotosDb().then(db => new Promise((ok, erro) => { const tx = db.transaction('peso', modo), q = f(tx.objectStore('peso')); tx.oncomplete = () => ok(q && q.result); tx.onerror = () => erro(tx.error) })) }
+const fotoPega = dt => fotoOp('readonly', st => st.get(dt)).catch(() => null);
+const fotoPoe = (dt, url) => fotoOp('readwrite', st => st.put(url, dt));
+const fotoTira = dt => fotoOp('readwrite', st => st.delete(dt)).catch(() => {});
+const fotoTodas = () => fotoOp('readonly', st => { const o = {}, c = st.openCursor(); c.onsuccess = () => { const k = c.result; if (k) { o[k.key] = k.value; k.continue() } }; return { get result() { return o } } }).catch(() => ({}));
+function encolheFoto(arq) { // 360 px no lado maior, JPEG baixo: uns 15 KB por foto
+  return new Promise((ok, erro) => { const u = URL.createObjectURL(arq), im = new Image(); im.onload = () => { const k = Math.min(1, 360 / Math.max(im.width, im.height)), c = document.createElement('canvas');
+    c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); ok(c.toDataURL('image/jpeg', 0.45)) }; im.onerror = () => { URL.revokeObjectURL(u); erro() }; im.src = u });
+}
+let pesoPer = 90, pesoFoto = null, pesoTarefa = null;
+function abrePeso(t) { pesoTarefa = t || null; pesoFoto = null; pesoEl.classList.add('on'); desenhaPeso() }
+function fechaPeso() { pesoEl.classList.remove('on'); pesoEl.innerHTML = ''; desenhaHoje() }
+function pesoLista() { return Object.entries(S.pesos || {}).sort((a, b) => a[0] < b[0] ? -1 : 1) }
+function desenhaPeso() {
+  const h = hoje(), L = pesoLista(), hojeV = (S.pesos || {})[h]; pesoEl.innerHTML = '';
+  const cab = el('div', 'pCab'), x = el('button', null, '✕ Fechar'); x.onclick = fechaPeso; cab.append(el('b', null, '⚖️ Peso'), x); pesoEl.append(cab);
+  const corpo = el('div', 'pCorpo'); pesoEl.append(corpo);
+  // registrar o de hoje
+  const f = el('div', 'pForm'), inp = el('input'), cam = el('input'), bf = el('button', 'foto', '📷 Foto da balança'), sv = el('button', 'salvar', hojeV ? 'Atualizar' : 'Salvar'), mini = el('img');
+  inp.type = 'text'; inp.inputMode = 'decimal'; inp.placeholder = '00,0'; inp.value = hojeV ? String(hojeV).replace('.', ',') : ''; inp.setAttribute('aria-label', 'Peso de hoje em kg');
+  cam.type = 'file'; cam.accept = 'image/*'; cam.setAttribute('capture', 'environment'); cam.hidden = true; mini.hidden = true; mini.alt = 'Foto da balança';
+  bf.onclick = () => cam.click();
+  cam.onchange = () => { const a = cam.files[0]; if (!a) return; bf.textContent = '⏳ …'; encolheFoto(a).then(u => { pesoFoto = u; mini.src = u; mini.hidden = false; bf.textContent = '📷 Trocar foto' }).catch(() => { bf.textContent = '📷 Foto da balança'; aviso('Não deu pra ler a foto.') }) };
+  if (hojeV) fotoPega(h).then(u => { if (u && !pesoFoto) { mini.src = u; mini.hidden = false; bf.textContent = '📷 Trocar foto' } });
+  sv.onclick = () => { const v = parseFloat(inp.value.replace(',', '.')); if (!(v > 20 && v < 400)) { aviso('Digite o peso em kg (ex.: 82,4).'); inp.focus(); return }
+    S.pesos = S.pesos || {}; S.pesos[h] = Math.round(v * 10) / 10; salva();
+    const fim = () => { const t = pesoTarefa || S.diar.find(d => d.peso); if (t && naAgenda(t, h) && !t.ok) { t.nao = false; t.ok = true; confere(t); salva(); hud() } aviso('⚖️ ' + String(S.pesos[h]).replace('.', ',') + ' kg salvo' + (pesoFoto ? ' com a foto' : ''), 2.4); pesoFoto = null; desenhaPeso() };
+    if (pesoFoto) fotoPoe(h, pesoFoto).then(fim, () => { aviso('A foto não coube no aparelho; o peso foi salvo.'); fim() }); else fim() };
+  f.append(el('span', null, 'Hoje'), inp, el('span', 'kg', 'kg'), bf, mini, sv, cam); corpo.append(f);
+  if (!L.length) { corpo.append(el('p', 'dica', 'Ainda não tem nenhum peso. Registre o primeiro aqui em cima. O histórico e o gráfico aparecem aqui.')); corpo.lastChild.style.marginTop = '12px'; return }
+  // resumo
+  const ult = L[L.length - 1], ini = L[0], des = L.filter(([d]) => difDias(d, h) <= 30), m30 = des.length ? des[0][1] : ult[1], kg = v => String(Math.round(v * 10) / 10).replace('.', ','), sinal = v => (v > 0 ? '+' : '') + kg(v);
+  const rs = el('div', 'pResumo'), cx = (a, b) => { const d = el('div'); d.append(el('b', null, b), a); rs.append(d) };
+  cx('último (' + ddmm(ult[0]) + ')', kg(ult[1]) + ' kg'); cx('em 30 dias', sinal(ult[1] - m30) + ' kg'); cx('desde ' + ddmm(ini[0]), sinal(ult[1] - ini[1]) + ' kg'); corpo.append(rs);
+  // gráfico
+  const per = el('div', 'pPer'); for (const [n, txt] of [[30, '30 dias'], [90, '3 meses'], [365, '1 ano'], [0, 'Tudo']]) { const b = el('button', pesoPer === n ? 'on' : null, txt); b.onclick = () => { pesoPer = n; desenhaPeso() }; per.append(b) } corpo.append(per);
+  const G = L.filter(([d]) => !pesoPer || difDias(d, h) <= pesoPer), gr = el('div', 'pGraf'); corpo.append(gr);
+  if (G.length < 2) gr.append(el('p', 'dica', 'O gráfico aparece com 2 pesos ou mais nesse período.'));
+  else { const W = 600, H = 150, vs = G.map(x => x[1]), lo = Math.min(...vs) - 0.5, hi = Math.max(...vs) + 0.5, d0 = G[0][0], dn = Math.max(1, difDias(d0, G[G.length - 1][0]));
+    const px = d => 34 + (W - 44) * difDias(d0, d) / dn, py = v => 10 + (H - 30) * (hi - v) / (hi - lo);
+    const pts = G.map(([d, v]) => px(d).toFixed(1) + ',' + py(v).toFixed(1)).join(' ');
+    gr.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="Gráfico do peso">' +
+      [hi - 0.5, (hi + lo) / 2, lo + 0.5].map(v => '<line x1="34" x2="' + (W - 6) + '" y1="' + py(v) + '" y2="' + py(v) + '" stroke="rgba(255,255,255,.1)"/><text x="2" y="' + (py(v) + 4) + '" fill="#b9c2d6" font-size="11">' + kg(v) + '</text>').join('') +
+      '<polyline points="' + pts + '" fill="none" stroke="#f0a83a" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>' +
+      G.map(([d, v]) => '<circle cx="' + px(d) + '" cy="' + py(v) + '" r="3" fill="#ffe7a8"/>').join('') +
+      '<text x="34" y="' + (H - 4) + '" fill="#b9c2d6" font-size="11">' + ddmm(G[0][0]) + '</text><text x="' + (W - 6) + '" y="' + (H - 4) + '" fill="#b9c2d6" font-size="11" text-anchor="end">' + ddmm(G[G.length - 1][0]) + '</text></svg>' }
+  // lista (mais novo primeiro), com a foto
+  corpo.append(el('div', 'hSec', 'Histórico'));
+  const R = L.slice().reverse(); R.forEach(([d, v], i) => { const ln = el('div', 'pLin'), ant = R[i + 1], df = ant ? v - ant[1] : null, im = el('img'), xb = el('button', 'x', '🗑');
+    im.hidden = true; im.alt = 'Foto da balança de ' + ddmm(d); fotoPega(d).then(u => { if (u) { im.src = u; im.hidden = false } }); im.onclick = () => { fotoEl.innerHTML = ''; const g = el('img'); g.src = im.src; fotoEl.append(g); fotoEl.classList.add('on') };
+    xb.setAttribute('aria-label', 'Apagar o peso de ' + ddmm(d)); xb.onclick = () => { if (!confirm('Apagar o peso de ' + ddmm(d) + '?')) return; delete S.pesos[d]; salva(); fotoTira(d); desenhaPeso() };
+    const dfe = el('span', 'df', df == null || !df ? '' : sinal(df)); dfe.style.color = df > 0 ? '#ff9a8a' : '#7be0a0';
+    ln.append(el('span', 'd', ddmm(d) + '/' + d.slice(2, 4)), el('span', 'v', kg(v) + ' kg'), dfe, im, xb); corpo.append(ln) });
+  const bk = el('button', 'hNovo', '💾 Fazer backup (tarefas, peso e fotos)'); bk.onclick = exportaBackup; corpo.append(bk);
+  corpo.append(el('p', 'dica', 'Tudo fica só neste celular. Se limpar os dados do Chrome ou trocar de celular, perde. Faça um backup de vez em quando (Herói → Backup também tem).')); corpo.lastChild.style.marginTop = '8px';
+}
+fotoEl.onclick = () => fotoEl.classList.remove('on');
 setInterval(() => { if (hojeOn() && !edEl.classList.contains('on')) desenhaHoje() }, 60000); // vira o dia e anda o "próximo" sozinho
 document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') return; puxaPlano(); if (hojeOn()) { try { viraDia() } catch (e) {} desenhaHoje() } });
 comecaEstagio(S.est || 1, true); painelCheio(!!S.cheio); try { trocaAba(aba) } catch (e) { console.error(e) } try { hud() } catch (e) { console.error(e) } requestAnimationFrame(quadro); mostraHoje(); puxaPlano(); if (S.cron) { if (cronDe(S.cron.id)) mostraCron(); else S.cron = null } try { viraDia(); chefeSemana(); lista() } catch (e) { console.error(e) } // abre direto nas tarefas, com a heroína no acampamento do lado (sem janela por cima); um erro na lista nunca pode travar o carregamento
