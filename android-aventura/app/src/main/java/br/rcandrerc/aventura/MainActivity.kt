@@ -39,6 +39,8 @@ class MainActivity : Activity() {
             true
         } catch (e: Exception) { false }
         @JavascriptInterface fun versao(): String = BuildConfig.VERSION_NAME
+        // alarmes das tarefas com horário: [{em: ms, t: nome, h: "08:30"}] dos próximos dias (o jogo manda de novo quando muda)
+        @JavascriptInterface fun alarmes(json: String) { Alarme.guarda(this@MainActivity, json); if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != android.content.pm.PackageManager.PERMISSION_GRANTED) runOnUiThread { requestPermissions(arrayOf("android.permission.POST_NOTIFICATIONS"), 5) } }
         // login com Google: o WebView não pode fazer (o Google bloqueia), então o app faz e entrega o token pro jogo (js/nuvem.js → window.nuvemToken)
         @JavascriptInterface fun loginGoogle() { runOnUiThread { entraGoogle() } }
         @JavascriptInterface fun loginChrome() { runOnUiThread { try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SITE + "login.html"))) } catch (e: Exception) { devolveToken(null, "Não consegui abrir o Chrome.") } } }
@@ -116,7 +118,7 @@ class MainActivity : Activity() {
 
     override fun onSaveInstanceState(o: Bundle) { super.onSaveInstanceState(o); web.saveState(o) }
     override fun onPause() { super.onPause(); web.evaluateJavascript("window.paraNativo&&paraNativo()", null); web.onPause() }
-    override fun onResume() { super.onResume(); web.onResume() }
+    override fun onResume() { super.onResume(); web.onResume(); Alarme.para(this) } // abriu o app: o alarme para
 
     @Deprecated("back") override fun onBackPressed() {
         // o jogo fecha os painéis com o voltar? se não tiver histórico, só manda o app pro fundo (não fecha a página)
