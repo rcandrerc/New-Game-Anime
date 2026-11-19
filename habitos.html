@@ -626,6 +626,7 @@ if (!(S.rotina >= ROTINA_V)) {
   for (const d of S.diar) if (d.t === 'Pesar (número + foto da balança)') d.peso = true; // tocar nela abre a tela de peso
   S.rotina = ROTINA_V; salva();
 }
+{ const h = hoje(); let m = 0; for (const d of S.diar) { if (d.criado && d.criado > h) { d.criado = h; m = 1 } if (d.ini && d.ini > h) { d.ini = h; m = 1 } } if (m) salva() } // 19/11/2026: num jogo novo (app, outro celular) a rotina nascia 'começa amanhã' e o dia ficava em branco; agora vale já hoje
 // v8 (18/11/2026): cronômetro já pronto nas tarefas com tempo (só põe onde ainda não tem; ele muda na ficha da tarefa)
 const CRON_PADRAO = { 'Quimera ou programação (1h30)': { t: 'min', min: 90 }, 'Programação (quinta)': { t: 'min', min: 90 }, 'Quimera ou programação (1h a 2h)': { t: 'min', min: 60 },
   'Prancha 5x40s': { t: 'ser', n: 5, trab: 40, desc: 60 }, 'Prancha 5x40s (sábado)': { t: 'ser', n: 5, trab: 40, desc: 60 },
