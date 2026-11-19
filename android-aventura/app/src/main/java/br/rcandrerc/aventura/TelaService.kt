@@ -37,4 +37,4 @@ class TelaService : Service() {
 }
 
 // Celular ligou de novo: volta a escutar (se estiver ligado nas opções)
-class LigouReceiver : BroadcastReceiver() { override fun onReceive(c: Context, i: Intent) { try { TelaService.inicia(c) } catch (e: Exception) {} } }
+class LigouReceiver : BroadcastReceiver() { override fun onReceive(c: Context, i: Intent) { try { Alarme.proximo(c) } catch (e: Exception) {}; try { TelaService.inicia(c) } catch (e: Exception) {} } }
